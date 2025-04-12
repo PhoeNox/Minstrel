@@ -7,3 +7,9 @@ public record Song(
 	string Artist,
 	string Album,
 	TimeSpan Length);
+
+public enum GamePhase
+{
+	Day,
+	Night,
+}

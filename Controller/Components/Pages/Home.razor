@@ -3,15 +3,25 @@
 @using Fluxor
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 @inject IDispatcher Dispatcher
+@inject IState<Controller.Game.State> GameState
 @inject IState<State> PlaylistState
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+@if (GamePhase is null)
+{
+	<p>Loading...</p>
+}
+else
+{
+	<h1>@GamePhase</h1>
+}
 
-Welcome to your new Fluent Blazor app.
-
-@if (Playlist != null)
+@if (Playlist is null)
+{
+	<p>Loading...</p>
+}
+else
 {
 	<ul>
 		@foreach (var song in Playlist.Songs)
@@ -20,13 +30,10 @@ Welcome to your new Fluent Blazor app.
 		}
 	</ul>
 }
-else
-{
-	<p>Loading...</p>
-}
 
 @code {
 	Playlist? Playlist => PlaylistState.Value.Playlist;
+	GamePhase? GamePhase => GameState.Value.GamePhase;
 	
 	protected override async Task OnInitializedAsync()
 	{
