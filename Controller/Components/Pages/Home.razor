@@ -1,5 +1,5 @@
 ﻿@page "/"
-@using Microsoft.AspNetCore.SignalR.Client
+@inject Controller.Playlist.Client PlaylistClient
 
 <PageTitle>Home</PageTitle>
 
@@ -24,24 +24,15 @@ else
 @code {
 	Playlist? Playlist { get; set; }
 	
-	HubConnection? hubConnection;
-	
 	protected override async Task OnInitializedAsync()
 	{
 		await base.OnInitializedAsync();
-		
-		hubConnection = new HubConnectionBuilder()
-			.WithUrl("https://localhost:7194/playlistHub")
-			.Build();
-		
-		hubConnection.On<Playlist>("PlaylistUpdated", playlist =>
+
+		PlaylistClient.PlaylistUpdated += playlist =>
 		{
 			Playlist = playlist;
 			InvokeAsync(StateHasChanged);
-		});
-		
-		await hubConnection.StartAsync();
-
-		await hubConnection.SendAsync("UpdatePlaylist");
+		};
+		await PlaylistClient.UpdatePlaylist();
 	}
 }
