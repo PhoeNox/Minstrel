@@ -7,19 +7,21 @@ public class Client
 {
 	private readonly HubConnection hubConnection;
 
-	public event Action<Playlist> PlaylistUpdated = _ => { };
+	public event Action<Playlists> PlaylistsUpdated = _ => { };
 
 	public Client()
 	{
 		hubConnection = new HubConnectionBuilder()
 			.WithUrl("https://localhost:7194/playlistHub")
 			.Build();
-		hubConnection.On<Playlist>("PlaylistUpdated", playlist => PlaylistUpdated.Invoke(playlist));
+		hubConnection.On<Playlists>(
+			"PlaylistsUpdated",
+			playlists => PlaylistsUpdated.Invoke(playlists));
 		hubConnection.StartAsync().Wait();
 	}
 	
-	public async Task UpdatePlaylist()
+	public async Task UpdatePlaylists()
 	{
-		await hubConnection.SendAsync("UpdatePlaylist");
+		await hubConnection.SendAsync("UpdatePlaylists");
 	}
 }

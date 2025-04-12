@@ -17,22 +17,22 @@ else
 	<h1>@GamePhase</h1>
 }
 
-@if (Playlist is null)
+@if (Playlists is null)
 {
 	<p>Loading...</p>
 }
 else
 {
 	<ul>
-		@foreach (var song in Playlist.Songs)
+		@foreach (var song in Playlists.DayPlaylist.Songs)
 		{
-			<li>@song.Title</li>
+			<li>@song.Title @song.Artist @song.Album @song.Length</li>
 		}
 	</ul>
 }
 
 @code {
-	Playlist? Playlist => PlaylistState.Value.Playlist;
+	Playlists? Playlists => PlaylistState.Value.Playlists;
 	GamePhase? GamePhase => GameState.Value.GamePhase;
 	
 	protected override async Task OnInitializedAsync()

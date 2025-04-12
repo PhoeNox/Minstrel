@@ -6,5 +6,5 @@ using Playlist = Shared.Playlist;
 [FeatureState]
 public record State
 {
-	public Playlist Playlist { get; init; } = new([]);
+	public Playlists Playlists { get; init; } = new(new Playlist([]), new Playlist([]));
 }
