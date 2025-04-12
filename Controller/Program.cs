@@ -1,8 +1,11 @@
 using Microsoft.FluentUI.AspNetCore.Components;
 using Controller.Components;
+using Fluxor;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
+
+builder.Services.AddFluxor(options => options.ScanAssemblies(typeof(Program).Assembly));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

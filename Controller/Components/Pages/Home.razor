@@ -1,5 +1,9 @@
 ﻿@page "/"
-@inject Controller.Playlist.Client PlaylistClient
+@using Controller.Playlist
+@using Fluxor
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+@inject IDispatcher Dispatcher
+@inject IState<State> PlaylistState
 
 <PageTitle>Home</PageTitle>
 
@@ -22,17 +26,11 @@ else
 }
 
 @code {
-	Playlist? Playlist { get; set; }
+	Playlist? Playlist => PlaylistState.Value.Playlist;
 	
 	protected override async Task OnInitializedAsync()
 	{
 		await base.OnInitializedAsync();
-
-		PlaylistClient.PlaylistUpdated += playlist =>
-		{
-			Playlist = playlist;
-			InvokeAsync(StateHasChanged);
-		};
-		await PlaylistClient.UpdatePlaylist();
+		Dispatcher.Dispatch(new UpdatePlaylistAction());
 	}
 }
