@@ -1,7 +1,47 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.SignalR.Client
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new Fluent Blazor app.
+
+@if (Playlist != null)
+{
+	<ul>
+		@foreach (var song in Playlist.Songs)
+		{
+			<li>@song.Title</li>
+		}
+	</ul>
+}
+else
+{
+	<p>Loading...</p>
+}
+
+@code {
+	Playlist? Playlist { get; set; }
+	
+	HubConnection? hubConnection;
+	
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl("https://localhost:7194/playlistHub")
+			.Build();
+		
+		hubConnection.On<Playlist>("PlaylistUpdated", playlist =>
+		{
+			Playlist = playlist;
+			InvokeAsync(StateHasChanged);
+		});
+		
+		await hubConnection.StartAsync();
+
+		await hubConnection.SendAsync("UpdatePlaylist");
+	}
+}

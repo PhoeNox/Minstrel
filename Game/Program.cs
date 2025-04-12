@@ -1,3 +1,4 @@
+using Game;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Game.Components;
 
@@ -26,5 +27,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode();
+
+app.MapHub<PlaylistHub>("playlistHub");
 
 await app.RunAsync();
