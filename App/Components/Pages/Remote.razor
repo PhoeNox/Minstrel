@@ -58,12 +58,8 @@
 	}
 
 	void Play()
-	{
-		Interactions.Play();
-	}
+		=> Interactions.Play();
 
 	void Switch()
-	{
-		//Dispatcher.Dispatch(new SwitchGamePhaseAction());
-	}
+		=> Interactions.Switch();
 }

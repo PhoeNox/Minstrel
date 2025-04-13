@@ -26,13 +26,9 @@
 		destination = await context.GetDestinationAsync();
 
 		Interactions.OnPlaylistsLoaded += playlists => _ = PreloadFirstSong(playlists);
-		Interactions.OnPlaybackChanged += () =>
-		{
-			_ = Play(AppState.CurrentSong, AppState.CurrentSongStarted);
-		};
+		Interactions.OnPlaybackChanged += () => _ = PlayCurrentSong();
 
-		if (AppState.CurrentSong is not null)
-			await Play(AppState.CurrentSong, AppState.CurrentSongStarted);
+		await PlayCurrentSong();
 	}
 
 	private async Task PreloadFirstSong(Playlists playlists)
@@ -44,14 +40,7 @@
 		Interactions.NotifyPreloaded();
 	}
 
-	private async Task<AudioBuffer> Preload(string path)
-	{
-		var buffer = await File.ReadAllBytesAsync(path);
-		var audioBuffer = await context.DecodeAudioDataAsync(buffer);
-		return audioBuffer;
-	}
-
-	private async Task Play(Song? song, DateTime? started)
+	private async Task PlayCurrentSong()
 	{
 		if (songNodes.TryGetValue(currentSongPath, out var songNode))
 		{
@@ -59,10 +48,10 @@
 			await songNode.DisposeAsync();
 		}
 
-		if (song is null)
+		if (AppState.CurrentSong is null)
 			return;
 
-		currentSongPath = song.Path;
+		currentSongPath = AppState.CurrentSong.Path;
 
 		if (!preloadedSongs.ContainsKey(currentSongPath))
 			preloadedSongs.Add(currentSongPath, Preload(currentSongPath));
@@ -75,14 +64,36 @@
 
 		songNodes[currentSongPath] = currentSongNode;
 
-		if (started is null)
+		if (AppState.CurrentSongStarted is null)
 		{
 			await currentSongNode.StartAsync();
 		}
 		else
 		{
-			var delay = (DateTime.Now - started.Value).TotalSeconds;
+			var delay = (DateTime.Now - AppState.CurrentSongStarted.Value).TotalSeconds;
 			await currentSongNode.StartAsync(offset: delay);
 		}
+		
+		PreloadAndStore(AppState.NextSong?.Path);
+		PreloadAndStore(AppState.SongOnOtherPlaylist?.Path);
+	}
+	
+	void PreloadAndStore(string? path)
+	{
+		if (string.IsNullOrEmpty(path))
+			return;
+		
+		if (!preloadedSongs.ContainsKey(path))
+		{
+			var preloadTask = Preload(path);
+			preloadedSongs.Add(path, preloadTask);
+		}
+	}
+	
+	private async Task<AudioBuffer> Preload(string path)
+	{
+		var buffer = await File.ReadAllBytesAsync(path);
+		var audioBuffer = await context.DecodeAudioDataAsync(buffer);
+		return audioBuffer;
 	}
 }

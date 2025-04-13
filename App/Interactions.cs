@@ -28,6 +28,35 @@ public class Interactions(AppState state)
 		OnPlaybackChanged();
 	}
 
+	public void Switch()
+	{
+		if (state.CurrentSong is null || state.CurrentSongStarted is null)
+			return;
+		
+		state.GamePhase = state.GamePhase == GamePhase.Day
+			? GamePhase.Night
+			: GamePhase.Day;
+		
+		var currentSong = state.SongOnOtherPlaylist;
+		var currentSongStarted = DateTime.Now - state.TimeOnOtherPlaylist;
+		
+		var currentPlaylist = state.GamePhase == GamePhase.Day
+			? state.Playlists.DayPlaylist
+			: state.Playlists.NightPlaylist;
+		
+		var indexOfCurrentSong = Array.IndexOf(currentPlaylist.Songs, currentSong);
+		
+		state.SongOnOtherPlaylist = state.CurrentSong;
+		state.TimeOnOtherPlaylist = DateTime.Now - (DateTime)state.CurrentSongStarted;
+		
+		state.NextSong = currentPlaylist.Songs[indexOfCurrentSong + 1 % currentPlaylist.Songs.Length];
+		
+		state.CurrentSong = currentSong;
+		state.CurrentSongStarted = currentSongStarted;
+		
+		OnPlaybackChanged();
+	}
+
 	public void NotifyPreloaded()
 		=> OnFirstSongPreloaded();
 }
