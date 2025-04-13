@@ -1,0 +1,85 @@
+﻿@page "/"
+@using KristofferStrube.Blazor.WebAudio
+@using Playlists = Core.Playlists
+@inject IJSRuntime JsRuntime
+@inject AppState AppState
+@inject Interactions Interactions
+
+<PageTitle>Blood on the Clocktower - Player</PageTitle>
+
+<img src="Images/BloodOnTheClocktower.jpg" alt="Blood on the Clocktower"/>
+
+@code {
+	string currentSongPath = string.Empty;
+
+	AudioContext context = null!;
+	AudioDestinationNode destination = null!;
+
+	readonly Dictionary<string, Task<AudioBuffer>> preloadedSongs = new();
+	readonly Dictionary<string, AudioBufferSourceNode> songNodes = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+
+		context = await AudioContext.CreateAsync(JsRuntime);
+		destination = await context.GetDestinationAsync();
+
+		Interactions.OnPlaylistsLoaded += PreloadFirstSong;
+		Interactions.OnPlaybackChanged += () =>
+		{
+			_ = Play(AppState.CurrentSong, AppState.CurrentSongStarted);
+		};
+
+		if (AppState.CurrentSong is not null)
+			await Play(AppState.CurrentSong, AppState.CurrentSongStarted);
+	}
+
+	private void PreloadFirstSong(Playlists playlists)
+	{
+		var songPath = playlists.DayPlaylist.Songs[0].Path;
+		preloadedSongs.Add(songPath, Preload(songPath));
+	}
+
+	private async Task<AudioBuffer> Preload(string path)
+	{
+		var buffer = await File.ReadAllBytesAsync(path);
+		var audioBuffer = await context.DecodeAudioDataAsync(buffer);
+		return audioBuffer;
+	}
+
+	private async Task Play(Song? song, DateTime? started)
+	{
+		if (songNodes.TryGetValue(currentSongPath, out var songNode))
+		{
+			await songNode.StopAsync();
+			await songNode.DisposeAsync();
+		}
+
+		if (song is null)
+			return;
+
+		currentSongPath = song.Path;
+
+		if (!preloadedSongs.ContainsKey(currentSongPath))
+			preloadedSongs.Add(currentSongPath, Preload(currentSongPath));
+
+		var nextSongBuffer = await preloadedSongs[currentSongPath];
+
+		var currentSongNode = await context.CreateBufferSourceAsync();
+		await currentSongNode.SetBufferAsync(nextSongBuffer);
+		await currentSongNode.ConnectAsync(destination);
+
+		songNodes[currentSongPath] = currentSongNode;
+
+		if (started is null)
+		{
+			await currentSongNode.StartAsync();
+		}
+		else
+		{
+			var delay = (DateTime.Now - started.Value).TotalSeconds;
+			await currentSongNode.StartAsync(offset: delay);
+		}
+	}
+}

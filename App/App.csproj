@@ -14,7 +14,19 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
-      <ProjectReference Include="..\Shared\Shared.csproj" />
+      <ProjectReference Include="..\Core\Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Images\BloodOnTheClocktower.jpg" />
+      <None Include="wwwroot\Music\Day\Clocktower Ambience.mp3" />
+      <None Include="wwwroot\Music\Day\playlist.txt" />
+      <None Include="wwwroot\Music\Night\Miracle Of Sound - Level 10 - 06 A Thousand Eyes (ft. Aviators).mp3" />
+      <None Include="wwwroot\Music\Night\Miracle Of Sound - Level 7 - 09 Clockworks.mp3" />
+      <None Include="wwwroot\Music\Night\playlist.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Resource Include="wwwroot\Images\BloodOnTheClocktower.jpg" />
     </ItemGroup>
 </Project>

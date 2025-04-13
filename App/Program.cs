@@ -1,18 +1,15 @@
+using App;
 using Microsoft.FluentUI.AspNetCore.Components;
-using Controller.Components;
-using Fluxor;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.AddServiceDefaults();
-
-builder.Services.AddFluxor(options => options.ScanAssemblies(typeof(Program).Assembly));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
 
-builder.Services.AddScoped<Controller.Playlist.Client>();
+builder.Services.AddSingleton<AppState>();
+builder.Services.AddSingleton<Interactions>();
 
 var app = builder.Build();
 
@@ -29,7 +26,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
+app.MapRazorComponents<App.Components.App>()
 	.AddInteractiveServerRenderMode();
 
 await app.RunAsync();

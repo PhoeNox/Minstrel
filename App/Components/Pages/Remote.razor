@@ -1,0 +1,60 @@
+@page "/Remote"
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@inject AppState AppState
+@inject Interactions Interactions
+
+<h3>Remote</h3>
+
+<h4>Day</h4>
+<ul>
+	@foreach (var song in AppState.Playlists.DayPlaylist.Songs)
+	{
+		<li>@song</li>
+	}
+</ul>
+
+@if (AppState.CurrentSong is null)
+{
+	<FluentButton
+		Appearance="Appearance.Accent"
+		IconStart="new Size24.Play()"
+		OnClick="Play">
+		Play
+	</FluentButton>
+}
+else
+{
+	<FluentButton
+		Appearance="Appearance.Accent"
+		IconStart="new Size24.ArrowRepeatAll()"
+		OnClick="Switch">
+		Switch
+	</FluentButton>
+}
+
+<h4>Night</h4>
+<ul>
+	@foreach (var song in AppState.Playlists.NightPlaylist.Songs)
+	{
+		<li>@song</li>
+	}
+</ul>
+
+@code {
+	
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		Interactions.LoadPlaylists();
+	}
+
+	void Play()
+	{
+		Interactions.Play();
+	}
+
+	void Switch()
+	{
+		//Dispatcher.Dispatch(new SwitchGamePhaseAction());
+	}
+}
