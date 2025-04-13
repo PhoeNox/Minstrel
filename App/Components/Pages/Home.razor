@@ -25,7 +25,7 @@
 		context = await AudioContext.CreateAsync(JsRuntime);
 		destination = await context.GetDestinationAsync();
 
-		Interactions.OnPlaylistsLoaded += PreloadFirstSong;
+		Interactions.OnPlaylistsLoaded += playlists => _ = PreloadFirstSong(playlists);
 		Interactions.OnPlaybackChanged += () =>
 		{
 			_ = Play(AppState.CurrentSong, AppState.CurrentSongStarted);
@@ -35,10 +35,13 @@
 			await Play(AppState.CurrentSong, AppState.CurrentSongStarted);
 	}
 
-	private void PreloadFirstSong(Playlists playlists)
+	private async Task PreloadFirstSong(Playlists playlists)
 	{
 		var songPath = playlists.DayPlaylist.Songs[0].Path;
-		preloadedSongs.Add(songPath, Preload(songPath));
+		var preloadTask = Preload(songPath);
+		preloadedSongs.Add(songPath, preloadTask);
+		await preloadTask;
+		Interactions.NotifyPreloaded();
 	}
 
 	private async Task<AudioBuffer> Preload(string path)

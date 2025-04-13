@@ -13,23 +13,26 @@
 	}
 </ul>
 
-@if (AppState.CurrentSong is null)
+@if (firstSongPreloaded)
 {
-	<FluentButton
-		Appearance="Appearance.Accent"
-		IconStart="new Size24.Play()"
-		OnClick="Play">
-		Play
-	</FluentButton>
-}
-else
-{
-	<FluentButton
-		Appearance="Appearance.Accent"
-		IconStart="new Size24.ArrowRepeatAll()"
-		OnClick="Switch">
-		Switch
-	</FluentButton>
+	if (AppState.CurrentSong is null)
+	{
+		<FluentButton
+			Appearance="Appearance.Accent"
+			IconStart="new Size24.Play()"
+			OnClick="Play">
+			Play
+		</FluentButton>
+	}
+	else if (firstSongPreloaded)
+	{
+		<FluentButton
+			Appearance="Appearance.Accent"
+			IconStart="new Size24.ArrowRepeatAll()"
+			OnClick="Switch">
+			Switch
+		</FluentButton>
+	}
 }
 
 <h4>Night</h4>
@@ -41,10 +44,16 @@ else
 </ul>
 
 @code {
+	bool firstSongPreloaded;
 	
 	protected override void OnInitialized()
 	{
 		base.OnInitialized();
+		Interactions.OnFirstSongPreloaded += () =>
+		{
+			firstSongPreloaded = true;
+			StateHasChanged();
+		};
 		Interactions.LoadPlaylists();
 	}
 

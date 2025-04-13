@@ -7,6 +7,8 @@ public class Interactions(AppState state)
 	public event Action<Core.Playlists> OnPlaylistsLoaded = _ => { };
 	
 	public event Action OnPlaybackChanged = () => { };
+
+	public event Action OnFirstSongPreloaded = () => { };
 	
 	public void LoadPlaylists()
 	{
@@ -25,4 +27,7 @@ public class Interactions(AppState state)
 		state.SongOnOtherPlaylist = state.Playlists.NightPlaylist.Songs[0];
 		OnPlaybackChanged();
 	}
+
+	public void NotifyPreloaded()
+		=> OnFirstSongPreloaded();
 }
