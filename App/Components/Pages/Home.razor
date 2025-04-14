@@ -16,7 +16,7 @@
 	AudioDestinationNode destination = null!;
 
 	readonly Dictionary<string, Task<AudioBuffer>> preloadedSongs = new();
-	readonly Dictionary<string, AudioBufferSourceNode> songNodes = new();
+	readonly Dictionary<string, (GainNode GainNode, AudioBufferSourceNode SongNode)> activeNodes = new();
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -42,11 +42,8 @@
 
 	private async Task PlayCurrentSong()
 	{
-		if (songNodes.TryGetValue(currentSongPath, out var songNode))
-		{
-			await songNode.StopAsync();
-			await songNode.DisposeAsync();
-		}
+		if (activeNodes.TryGetValue(currentSongPath, out var nodes))
+			_ = FadeoutAndDispose(nodes.GainNode, nodes.SongNode);
 
 		if (AppState.CurrentSong is null)
 			return;
@@ -60,9 +57,15 @@
 
 		var currentSongNode = await context.CreateBufferSourceAsync();
 		await currentSongNode.SetBufferAsync(nextSongBuffer);
-		await currentSongNode.ConnectAsync(destination);
+		
+		var currentGainNode = await context.CreateGainAsync();
+		var gain = await currentGainNode.GetGainAsync();
+		await gain.SetValueAsync(0);
+		
+		await currentSongNode.ConnectAsync(currentGainNode);
+		await currentGainNode.ConnectAsync(destination);
 
-		songNodes[currentSongPath] = currentSongNode;
+		activeNodes[currentSongPath] = (currentGainNode, currentSongNode);
 
 		if (AppState.CurrentSongStarted is null)
 		{
@@ -74,6 +77,8 @@
 			await currentSongNode.StartAsync(offset: delay);
 		}
 		
+		_ = FadeIn(currentGainNode);
+
 		PreloadAndStore(AppState.NextSong?.Path);
 		PreloadAndStore(AppState.SongOnOtherPlaylist?.Path);
 	}
@@ -95,5 +100,28 @@
 		var buffer = await File.ReadAllBytesAsync(path);
 		var audioBuffer = await context.DecodeAudioDataAsync(buffer);
 		return audioBuffer;
+	}
+	
+	private async Task FadeoutAndDispose(GainNode gainNode, AudioBufferSourceNode songNode)
+	{
+		var currentTime = await context.GetCurrentTimeAsync();
+		
+		var gain = await gainNode.GetGainAsync();
+		await gain.LinearRampToValueAtTimeAsync(0, currentTime + 5);
+		await Task.Delay(5000);
+
+		await songNode.StopAsync();
+		
+		await gainNode.DisposeAsync();
+		await songNode.DisposeAsync();
+	}
+	
+	private async Task FadeIn(GainNode gainNode)
+	{
+		var currentTime = await context.GetCurrentTimeAsync();
+		
+		var gain = await gainNode.GetGainAsync();
+		await gain.LinearRampToValueAtTimeAsync(1, currentTime + 5);
+		await Task.Delay(5000);
 	}
 }
