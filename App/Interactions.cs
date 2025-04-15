@@ -59,4 +59,25 @@ public class Interactions(AppState state)
 
 	public void NotifyPreloaded()
 		=> OnFirstSongPreloaded();
+
+	public void NotifySongEnded()
+	{
+		if (state.CurrentSong is null || state.CurrentSongStarted is null)
+			return;
+		
+		var currentSong = state.NextSong;
+		
+		var currentPlaylist = state.GamePhase == GamePhase.Day
+			? state.Playlists.DayPlaylist
+			: state.Playlists.NightPlaylist;
+		
+		var indexOfCurrentSong = Array.IndexOf(currentPlaylist.Songs, currentSong);
+		
+		state.NextSong = currentPlaylist.Songs[(indexOfCurrentSong + 1) % currentPlaylist.Songs.Length];
+		
+		state.CurrentSong = currentSong;
+		state.CurrentSongStarted = DateTime.Now;
+		
+		OnPlaybackChanged();
+	}
 }

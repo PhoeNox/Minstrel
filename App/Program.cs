@@ -10,6 +10,7 @@ builder.Services.AddFluentUIComponents();
 
 builder.Services.AddSingleton<AppState>();
 builder.Services.AddSingleton<Interactions>();
+builder.Services.AddScoped<PlaybackService>();
 
 var app = builder.Build();
 
