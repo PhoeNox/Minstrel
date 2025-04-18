@@ -4,17 +4,16 @@ using Playlists;
 
 public class Interactions(AppState state)
 {
-	public event Action<Core.Playlists> OnPlaylistsLoaded = _ => { };
-	
-	public event Action OnPlaybackChanged = () => { };
-
-	public event Action OnFirstSongPreloaded = () => { };
+	public event Action<Core.Playlists> PlaylistsLoaded = _ => { };
+	public event Action PlaybackChanged = () => { };
+	public event Action FirstSongPreloaded = () => { };
+	public event Action<GamePhase> GamePhaseChanged = _ => { };
 	
 	public void LoadPlaylists()
 	{
 		var playlists = Loader.LoadPlaylists();
 		state.Playlists = playlists;
-		OnPlaylistsLoaded(playlists);
+		PlaylistsLoaded(playlists);
 	}
 
 	public void StartPlaying()
@@ -25,7 +24,7 @@ public class Interactions(AppState state)
 			? state.Playlists.DayPlaylist.Songs[1]
 			: state.Playlists.DayPlaylist.Songs[0];
 		state.SongOnOtherPlaylist = state.Playlists.NightPlaylist.Songs[0];
-		OnPlaybackChanged();
+		PlaybackChanged();
 	}
 
 	public void SwitchGamePhase()
@@ -36,6 +35,7 @@ public class Interactions(AppState state)
 		state.GamePhase = state.GamePhase == GamePhase.Day
 			? GamePhase.Night
 			: GamePhase.Day;
+		GamePhaseChanged(state.GamePhase);
 		
 		var currentSong = state.SongOnOtherPlaylist;
 		var currentSongStarted = DateTime.Now - state.TimeOnOtherPlaylist;
@@ -54,11 +54,11 @@ public class Interactions(AppState state)
 		state.CurrentSong = currentSong;
 		state.CurrentSongStarted = currentSongStarted;
 		
-		OnPlaybackChanged();
+		PlaybackChanged();
 	}
 
 	public void NotifyPreloaded()
-		=> OnFirstSongPreloaded();
+		=> FirstSongPreloaded();
 
 	public void PlayNextSong()
 	{
@@ -78,6 +78,6 @@ public class Interactions(AppState state)
 		state.CurrentSong = currentSong;
 		state.CurrentSongStarted = DateTime.Now;
 		
-		OnPlaybackChanged();
+		PlaybackChanged();
 	}
 }

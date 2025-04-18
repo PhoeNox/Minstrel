@@ -5,25 +5,39 @@
 
 <PageTitle>Blood on the Clocktower - Player</PageTitle>
 
-<img src="Images/BloodOnTheClocktower.jpg" alt="Blood on the Clocktower"/>
+<div class="full-page-container">
+	<img 
+		src="Images/BloodOnTheClocktower.jpg"
+		alt="Blood on the Clocktower"
+		class="full-page-image @backgroundClasses"/>
+</div>
 
 @code {
+	private string backgroundClasses = string.Empty;
+	
 	protected override async Task OnInitializedAsync()
 	{
 		await base.OnInitializedAsync();
 		await PlaybackService.Initialize();
 		
-		Interactions.OnPlaylistsLoaded += async playlists =>
+		Interactions.PlaylistsLoaded += async playlists =>
 		{
 			await PlaybackService.SongRepository.Load(playlists.DayPlaylist.Songs[0]);
 			Interactions.NotifyPreloaded();
 		};
 		
-		Interactions.OnPlaybackChanged += () => _ = PlayCurrentSong();
+		Interactions.PlaybackChanged += () => _ = PlayCurrentSong();
+		Interactions.GamePhaseChanged += UpdateImage;
 
 		PlaybackService.SongEnded += Interactions.PlayNextSong;
 
 		await PlayCurrentSong();
+	}
+
+	private void UpdateImage(GamePhase gamePhase)
+	{
+		backgroundClasses = gamePhase == GamePhase.Night ? "night-mode" : string.Empty;
+		InvokeAsync(StateHasChanged);
 	}
 
 	private async Task PlayCurrentSong()
