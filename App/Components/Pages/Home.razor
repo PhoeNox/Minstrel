@@ -21,6 +21,8 @@
 		
 		Interactions.OnPlaybackChanged += () => _ = PlayCurrentSong();
 
+		PlaybackService.SongEnded += Interactions.PlayNextSong;
+
 		await PlayCurrentSong();
 	}
 

@@ -17,7 +17,7 @@ public class Interactions(AppState state)
 		OnPlaylistsLoaded(playlists);
 	}
 
-	public void Play()
+	public void StartPlaying()
 	{
 		state.CurrentSong = state.Playlists.DayPlaylist.Songs[0];
 		state.CurrentSongStarted = DateTime.Now;
@@ -28,7 +28,7 @@ public class Interactions(AppState state)
 		OnPlaybackChanged();
 	}
 
-	public void Switch()
+	public void SwitchGamePhase()
 	{
 		if (state.CurrentSong is null || state.CurrentSongStarted is null)
 			return;
@@ -60,7 +60,7 @@ public class Interactions(AppState state)
 	public void NotifyPreloaded()
 		=> OnFirstSongPreloaded();
 
-	public void NotifySongEnded()
+	public void PlayNextSong()
 	{
 		if (state.CurrentSong is null || state.CurrentSongStarted is null)
 			return;
