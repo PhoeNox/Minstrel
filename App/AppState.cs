@@ -7,10 +7,8 @@ public class AppState
 	public GamePhase GamePhase { get; set; } = GamePhase.Day;
 	
 	public Song? CurrentSong { get; set; }
-	public DateTime? CurrentSongStarted { get; set; } 
 
 	public Song? NextSong { get; set; }
 	
 	public Song? SongOnOtherPlaylist { get; set; }
-	public TimeSpan TimeOnOtherPlaylist { get; set; } = TimeSpan.Zero;
 }

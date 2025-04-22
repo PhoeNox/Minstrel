@@ -47,12 +47,11 @@
 				|| AppState.SongOnOtherPlaylist is null)
 			return;
 		
-		var fadeoutTask = PlaybackService.StopCurrentlyPlayingSong();
-		var fadeInTask = PlaybackService.PlaySong(AppState.CurrentSong, AppState.CurrentSongStarted);
+		var fadeInTask = PlaybackService.PlaySong(AppState.CurrentSong);
 
 		var loadNextSongTask = PlaybackService.SongRepository.Load(AppState.NextSong);
 		var loadSongOnOtherPlaylistTask = PlaybackService.SongRepository.Load(AppState.SongOnOtherPlaylist);
 		
-		await Task.WhenAll(fadeoutTask, fadeInTask, loadNextSongTask, loadSongOnOtherPlaylistTask);
+		await Task.WhenAll(fadeInTask, loadNextSongTask, loadSongOnOtherPlaylistTask);
 	}
 }
