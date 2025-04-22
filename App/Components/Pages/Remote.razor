@@ -5,13 +5,13 @@
 
 <FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="DayGain" />
 
-<h4>Day</h4>
-<ul>
-	@foreach (var song in AppState.Playlists.DayPlaylist.Songs)
-	{
-		<li>@song.Title</li>
-	}
-</ul>
+<div>
+	<h4>Day</h4>
+	<FluentDataGrid Items="DaySongs">
+		<SelectColumn SelectMode="DataGridSelectMode.Single" @bind-SelectedItems="CurrentDaySongs"/>
+		<PropertyColumn Property="@(s => s.Title)"/>
+	</FluentDataGrid>
+</div>
 
 @if (firstSongPreloaded)
 {
@@ -35,13 +35,13 @@
 	}
 }
 
-<h4>Night</h4>
-<ul>
-	@foreach (var song in AppState.Playlists.NightPlaylist.Songs)
-	{
-		<li>@song.Title</li>
-	}
-</ul>
+<div>
+	<h4>Night</h4>
+	<FluentDataGrid Items="NightSongs">
+		<SelectColumn SelectMode="DataGridSelectMode.Single" @bind-SelectedItems="CurrentNightSongs"/>
+		<PropertyColumn Property="@(s => s.Title)"/>
+	</FluentDataGrid>
+</div>
 
 <FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="NightGain" />
 
@@ -58,6 +58,32 @@
 	{
 		get => AppState.NightGain;
 		set => Interactions.SetNightGain(value);
+	}
+	
+	public IQueryable<Song> DaySongs => AppState.Playlists.DayPlaylist.Songs.AsQueryable();
+
+	private Song[] currentDaySongs = [];
+	public IEnumerable<Song> CurrentDaySongs
+	{
+		get => currentDaySongs;
+		set
+		{
+			currentDaySongs = value.ToArray();
+			Interactions.SetDaySong(value.First());
+		}
+	}
+
+	public IQueryable<Song> NightSongs => AppState.Playlists.NightPlaylist.Songs.AsQueryable();
+
+	private Song[] currentNightSongs = [];
+	public IEnumerable<Song> CurrentNightSongs
+	{
+		get => currentNightSongs;
+		set
+		{
+			currentNightSongs = value.ToArray();
+			Interactions.SetNightSong(value.First());
+		}
 	}
 
 	protected override void OnInitialized()

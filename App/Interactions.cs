@@ -6,6 +6,7 @@ public class Interactions(AppState state)
 {
 	public event Action<Core.Playlists> PlaylistsLoaded = _ => { };
 	public event Action PlaybackChanged = () => { };
+	public event Action SongOnOtherPlaylistChanged = () => { };
 	public event Action FirstSongPreloaded = () => { };
 	public event Action<GamePhase> GamePhaseChanged = _ => { };
 	public event Action<float> GainChanged = _ => { };
@@ -37,18 +38,8 @@ public class Interactions(AppState state)
 			: GamePhase.Day;
 		GamePhaseChanged(state.GamePhase);
 
-		var currentSong = state.SongOnOtherPlaylist;
-
-		var currentPlaylist = state.GamePhase == GamePhase.Day
-			? state.Playlists.DayPlaylist
-			: state.Playlists.NightPlaylist;
-		var indexOfCurrentSong = Array.IndexOf(currentPlaylist.Songs, currentSong);
-		var nextSong = currentPlaylist.Songs[(indexOfCurrentSong + 1) % currentPlaylist.Songs.Length];
-
-		state.SongOnOtherPlaylist = state.CurrentSong;
-		state.NextSong = nextSong;
-		state.CurrentSong = currentSong;
-
+		(state.SongOnOtherPlaylist, state.CurrentSong) = (state.CurrentSong, state.SongOnOtherPlaylist);
+		state.NextSong = GetNextSong();
 		PlaybackChanged();
 	}
 
@@ -59,17 +50,8 @@ public class Interactions(AppState state)
 	{
 		if (state.CurrentSong is null)
 			return;
-
-		var currentSong = state.NextSong;
-
-		var currentPlaylist = state.GamePhase == GamePhase.Day
-			? state.Playlists.DayPlaylist
-			: state.Playlists.NightPlaylist;
-		var indexOfCurrentSong = Array.IndexOf(currentPlaylist.Songs, currentSong);
-
-		state.NextSong = currentPlaylist.Songs[(indexOfCurrentSong + 1) % currentPlaylist.Songs.Length];
-		state.CurrentSong = currentSong;
-
+		state.CurrentSong = state.NextSong;
+		state.NextSong = GetNextSong();
 		PlaybackChanged();
 	}
 
@@ -85,5 +67,44 @@ public class Interactions(AppState state)
 		state.NightGain = (float) value;
 		if (state.GamePhase == GamePhase.Night)
 			GainChanged(state.NightGain);
+	}
+	
+	public void SetDaySong(Song song)
+	{
+		if (state.GamePhase == GamePhase.Night)
+		{
+			state.SongOnOtherPlaylist = song;
+			SongOnOtherPlaylistChanged();
+		}
+		else
+		{
+			state.CurrentSong = song;
+			state.NextSong = GetNextSong();
+			PlaybackChanged();
+		}
+	}
+
+	public void SetNightSong(Song song)
+	{
+		if (state.GamePhase == GamePhase.Day)
+		{
+			state.SongOnOtherPlaylist = song;
+			SongOnOtherPlaylistChanged();
+		}
+		else
+		{
+			state.CurrentSong = song;
+			state.NextSong = GetNextSong();
+			PlaybackChanged();
+		}
+	}
+
+	private Song GetNextSong()
+	{
+		var currentPlaylist = state.GamePhase == GamePhase.Day
+			? state.Playlists.DayPlaylist
+			: state.Playlists.NightPlaylist;
+		var indexOfCurrentSong = Array.IndexOf(currentPlaylist.Songs, state.CurrentSong);
+		return currentPlaylist.Songs[(indexOfCurrentSong + 1) % currentPlaylist.Songs.Length];
 	}
 }

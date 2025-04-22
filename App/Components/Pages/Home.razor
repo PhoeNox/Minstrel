@@ -25,6 +25,11 @@
 			await PlaybackService.SongRepository.Load(playlists.DayPlaylist.Songs[0]);
 			Interactions.NotifyPreloaded();
 		};
+
+		Interactions.SongOnOtherPlaylistChanged += async () =>
+		{
+			await PlaybackService.SongRepository.Load(AppState.SongOnOtherPlaylist!);
+		};
 		
 		Interactions.PlaybackChanged += () => _ = PlayCurrentSong();
 		Interactions.GamePhaseChanged += UpdateImage;
