@@ -8,7 +8,8 @@ public class Interactions(AppState state)
 	public event Action PlaybackChanged = () => { };
 	public event Action FirstSongPreloaded = () => { };
 	public event Action<GamePhase> GamePhaseChanged = _ => { };
-	
+	public event Action<float> GainChanged = _ => { };
+
 	public void LoadPlaylists()
 	{
 		var playlists = Loader.LoadPlaylists();
@@ -30,24 +31,24 @@ public class Interactions(AppState state)
 	{
 		if (state.CurrentSong is null)
 			return;
-		
+
 		state.GamePhase = state.GamePhase == GamePhase.Day
 			? GamePhase.Night
 			: GamePhase.Day;
 		GamePhaseChanged(state.GamePhase);
-		
+
 		var currentSong = state.SongOnOtherPlaylist;
-		
+
 		var currentPlaylist = state.GamePhase == GamePhase.Day
 			? state.Playlists.DayPlaylist
 			: state.Playlists.NightPlaylist;
 		var indexOfCurrentSong = Array.IndexOf(currentPlaylist.Songs, currentSong);
 		var nextSong = currentPlaylist.Songs[(indexOfCurrentSong + 1) % currentPlaylist.Songs.Length];
-		
+
 		state.SongOnOtherPlaylist = state.CurrentSong;
 		state.NextSong = nextSong;
 		state.CurrentSong = currentSong;
-		
+
 		PlaybackChanged();
 	}
 
@@ -58,17 +59,31 @@ public class Interactions(AppState state)
 	{
 		if (state.CurrentSong is null)
 			return;
-		
+
 		var currentSong = state.NextSong;
-		
+
 		var currentPlaylist = state.GamePhase == GamePhase.Day
 			? state.Playlists.DayPlaylist
 			: state.Playlists.NightPlaylist;
 		var indexOfCurrentSong = Array.IndexOf(currentPlaylist.Songs, currentSong);
-		
+
 		state.NextSong = currentPlaylist.Songs[(indexOfCurrentSong + 1) % currentPlaylist.Songs.Length];
 		state.CurrentSong = currentSong;
-		
+
 		PlaybackChanged();
+	}
+
+	public void SetDayGain(double value)
+	{
+		state.DayGain = (float) value;
+		if (state.GamePhase == GamePhase.Day)
+			GainChanged(state.DayGain);
+	}
+
+	public void SetNightGain(double value)
+	{
+		state.NightGain = (float) value;
+		if (state.GamePhase == GamePhase.Night)
+			GainChanged(state.NightGain);
 	}
 }

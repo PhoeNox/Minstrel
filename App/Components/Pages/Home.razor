@@ -28,6 +28,7 @@
 		
 		Interactions.PlaybackChanged += () => _ = PlayCurrentSong();
 		Interactions.GamePhaseChanged += UpdateImage;
+		Interactions.GainChanged += async gain => await PlaybackService.SetGain(gain);
 
 		PlaybackService.SongEnded += Interactions.PlayNextSong;
 
@@ -46,12 +47,16 @@
 				|| AppState.NextSong is null
 				|| AppState.SongOnOtherPlaylist is null)
 			return;
-		
-		var fadeInTask = PlaybackService.PlaySong(AppState.CurrentSong);
+
+		var gain = GetCurrentGain();
+		var fadeInTask = PlaybackService.PlaySong(AppState.CurrentSong, gain);
 
 		var loadNextSongTask = PlaybackService.SongRepository.Load(AppState.NextSong);
 		var loadSongOnOtherPlaylistTask = PlaybackService.SongRepository.Load(AppState.SongOnOtherPlaylist);
 		
 		await Task.WhenAll(fadeInTask, loadNextSongTask, loadSongOnOtherPlaylistTask);
 	}
+	
+	private float GetCurrentGain()
+		=> AppState.GamePhase == GamePhase.Day ? AppState.DayGain : AppState.NightGain;
 }
