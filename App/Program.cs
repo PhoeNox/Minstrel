@@ -3,7 +3,9 @@ using Microsoft.FluentUI.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://*:5000");
+var urls = builder.Configuration["Urls"];
+if (!string.IsNullOrEmpty(urls))
+	builder.WebHost.UseUrls(urls);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
