@@ -22,18 +22,36 @@ public class Effects(
 		return Task.CompletedTask;
 	}
 
+	[EffectMethod]
+	public Task OnPlayNextSong(PlayNextSongAction action, IDispatcher dispatcher)
+	{
+		var currentSong = state.Value.CurrentSong!;
+		var currentPlaylist = gamePhaseState.Value.Phase == GamePhase.Day
+			? playlistState.Value.DayPlaylist
+			: playlistState.Value.NightPlaylist;
+		var nextSong = GetNextSong(currentSong, currentPlaylist);
+		
+		if (gamePhaseState.Value.Phase == GamePhase.Day)
+			dispatcher.Dispatch(new SetCurrentSongForDayAction(nextSong));
+		else
+			dispatcher.Dispatch(new SetCurrentSongForNightAction(nextSong));
+		
+		SetCurrentSong(dispatcher);
+		return Task.CompletedTask;
+	}
+	
 	private void SetCurrentSong(IDispatcher dispatcher)
 	{
 		var (currentSong, nextSong, songOnOtherPlaylist, gain) = GetSongsAndGainForCurrentGamePhase();
 		dispatcher.Dispatch(new CurrentSongChangedAction(currentSong, nextSong, songOnOtherPlaylist, gain));
 	}
-
+	
 	private (Song CurrentSong, Song NextSong, Song SongOnOtherPlaylist, float Gain) GetSongsAndGainForCurrentGamePhase()
 	{
 		if (gamePhaseState.Value.Phase == GamePhase.Day)
 		{
 			var currentSong = playlistState.Value.DayPlaylist.CurrentSong!;
-			var nextSong = playlistState.Value.DayPlaylist.CurrentSong!;
+			var nextSong = GetNextSong(currentSong, playlistState.Value.DayPlaylist);
 			var songOnOtherPlaylist = playlistState.Value.NightPlaylist.CurrentSong!;
 			var gain = playlistState.Value.DayPlaylist.Gain;
 			return (currentSong, nextSong, songOnOtherPlaylist, gain);
@@ -41,11 +59,17 @@ public class Effects(
 		else
 		{
 			var currentSong = playlistState.Value.NightPlaylist.CurrentSong!;
-			var nextSong = playlistState.Value.NightPlaylist.CurrentSong!;
+			var nextSong = GetNextSong(currentSong, playlistState.Value.NightPlaylist);
 			var songOnOtherPlaylist = playlistState.Value.DayPlaylist.CurrentSong!;
 			var gain = playlistState.Value.NightPlaylist.Gain;
 			return (currentSong, nextSong, songOnOtherPlaylist, gain);
 		}
+	}
+
+	private Song GetNextSong(Song song, Playlist playlist)
+	{
+		var indexOfSong = Array.IndexOf(playlist.Songs, song);
+		return playlist.Songs[(indexOfSong + 1) % playlist.Songs.Length];
 	}
 	
 	[EffectMethod]
