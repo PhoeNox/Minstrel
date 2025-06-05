@@ -140,6 +140,8 @@ public class PlaybackService(IJSRuntime jsRuntime)
 
 		var gainNode = activeSong.GainNode;
 		var gain = await gainNode.GetGainAsync();
+		var currentTime = await context.GetCurrentTimeAsync();
+		await gain.CancelScheduledValuesAsync(currentTime);
 		await gain.SetValueAsync(currentGain);
 	}
 	
