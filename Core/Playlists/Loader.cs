@@ -1,21 +1,21 @@
-namespace App.Playlists;
+namespace Core.Playlists;
 
-using Playlists = Core.Playlists;
+using Core;
 
 public static class Loader
 {
-	public static Playlists LoadPlaylists()
+	public static async Task<(Playlist DayPlaylist, Playlist NightPlaylist)> LoadPlaylists()
 	{
-		var dayPlaylist = LoadPlaylist("Day");
-		var nightPlaylist = LoadPlaylist("Night");
-		return new Playlists(dayPlaylist, nightPlaylist);
+		var dayPlaylist = await LoadPlaylist("Day");
+		var nightPlaylist = await LoadPlaylist("Night");
+		return (dayPlaylist, nightPlaylist);
 	}
 
-	private static Playlist LoadPlaylist(string playlistName)
+	private static async Task<Playlist> LoadPlaylist(string playlistName)
 	{
 		var musicDirectory = Path.Combine("wwwroot", "Music");
 		var playlistPath = Path.Combine(musicDirectory, playlistName, "playlist.txt");
-		var songFiles = File.ReadAllLines(playlistPath);
+		var songFiles = await File.ReadAllLinesAsync(playlistPath);
 		var songs = songFiles
 			.Select(x => Path.Combine(musicDirectory, playlistName, x))
 			.Select(CreateSong)

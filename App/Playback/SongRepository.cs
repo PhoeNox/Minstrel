@@ -1,4 +1,4 @@
-namespace App;
+namespace App.Playback;
 
 using KristofferStrube.Blazor.WebAudio;
 

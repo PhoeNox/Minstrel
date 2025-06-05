@@ -1,12 +1,18 @@
 ﻿@page "/"
-@inject AppState AppState
-@inject Interactions Interactions
+@using Core.GamePhases
+@using Core.Playback
+@using Core.Playlists
+@using global::App.Playback
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+
 @inject PlaybackService PlaybackService
+@inject IState<Core.Playback.State> PlaybackState
+@inject IDispatcher Dispatcher
 
 <PageTitle>Blood on the Clocktower - Player</PageTitle>
 
 <div class="full-page-container">
-	<img 
+	<img
 		src="Images/BloodOnTheClocktower.jpg"
 		alt="Blood on the Clocktower"
 		class="full-page-image @backgroundClasses"/>
@@ -14,54 +20,52 @@
 
 @code {
 	private string backgroundClasses = string.Empty;
-	
+
 	protected override async Task OnInitializedAsync()
 	{
 		await base.OnInitializedAsync();
 		await PlaybackService.Initialize();
+
+		SubscribeToAction<SetPlaylistsAction>(a => _ = LoadSong(a.DayPlaylist.CurrentSong));
+		SubscribeToAction<SongOnOtherPlaylistChangedAction>(a => _ = LoadSong(a.Song));
 		
-		Interactions.PlaylistsLoaded += async playlists =>
-		{
-			await PlaybackService.SongRepository.Load(playlists.DayPlaylist.Songs[0]);
-			Interactions.NotifyPreloaded();
-		};
-
-		Interactions.SongOnOtherPlaylistChanged += async () =>
-		{
-			await PlaybackService.SongRepository.Load(AppState.SongOnOtherPlaylist!);
-		};
+		SubscribeToAction<CurrentSongChangedAction>(a => _ = PlayCurrentSong(a));
+		SubscribeToAction<SetGamePhaseAction>(UpdateImage);
 		
-		Interactions.PlaybackChanged += () => _ = PlayCurrentSong();
-		Interactions.GamePhaseChanged += UpdateImage;
-		Interactions.GainChanged += async gain => await PlaybackService.SetGain(gain);
+		SubscribeToAction<GainChangedAction>(a => _ = PlaybackService.SetGain(a.Gain));
 
-		PlaybackService.SongEnded += Interactions.PlayNextSong;
+		PlaybackService.SongEnded += PlayNextSong;
 
-		await PlayCurrentSong();
+		if (PlaybackState.Value.CurrentSong is not null)
+		{
+			await PlaybackService.PlaySong(
+				PlaybackState.Value.CurrentSong,
+				PlaybackState.Value.Gain);
+		}
 	}
 
-	private void UpdateImage(GamePhase gamePhase)
+	void PlayNextSong()
+		=> Dispatcher.Dispatch(new PlayNextSongAction());
+
+	void UpdateImage(SetGamePhaseAction action)
+		=> backgroundClasses = action.GamePhase == GamePhase.Night ? "night-mode" : string.Empty;
+
+	async Task PlayCurrentSong(CurrentSongChangedAction action)
 	{
-		backgroundClasses = gamePhase == GamePhase.Night ? "night-mode" : string.Empty;
-		InvokeAsync(StateHasChanged);
-	}
+		var fadeInTask = PlaybackService.PlaySong(action.CurrentSong, action.Gain);
 
-	private async Task PlayCurrentSong()
-	{
-		if (AppState.CurrentSong is null
-				|| AppState.NextSong is null
-				|| AppState.SongOnOtherPlaylist is null)
-			return;
+		var loadNextSongTask = LoadSong(action.NextSong);
+		var loadSongOnOtherPlaylistTask = LoadSong(action.SongOnOtherPlaylist);
 
-		var gain = GetCurrentGain();
-		var fadeInTask = PlaybackService.PlaySong(AppState.CurrentSong, gain);
-
-		var loadNextSongTask = PlaybackService.SongRepository.Load(AppState.NextSong);
-		var loadSongOnOtherPlaylistTask = PlaybackService.SongRepository.Load(AppState.SongOnOtherPlaylist);
-		
 		await Task.WhenAll(fadeInTask, loadNextSongTask, loadSongOnOtherPlaylistTask);
 	}
 	
-	private float GetCurrentGain()
-		=> AppState.GamePhase == GamePhase.Day ? AppState.DayGain : AppState.NightGain;
+	async Task LoadSong(Song? song)
+	{
+		if (song is not null)
+		{
+			await PlaybackService.SongRepository.Load(song);
+			Dispatcher.Dispatch(new SongLoadedAction(song));
+		}
+	}
 }

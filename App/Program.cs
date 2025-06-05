@@ -1,4 +1,5 @@
-using App;
+using App.Playback;
+using Fluxor;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,9 +13,12 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
 
-builder.Services.AddSingleton<AppState>();
-builder.Services.AddSingleton<Interactions>();
 builder.Services.AddScoped<PlaybackService>();
+
+var coreAssembly = typeof(Song).Assembly;
+builder.Services.AddFluxor(options => options
+	.ScanAssemblies(coreAssembly)
+	.WithLifetime(StoreLifetime.Singleton));
 
 var app = builder.Build();
 

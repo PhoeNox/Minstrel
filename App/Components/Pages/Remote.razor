@@ -1,9 +1,15 @@
 @page "/Remote"
-@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
-@inject AppState AppState
-@inject Interactions Interactions
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
-<FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="DayGain" />
+@using Core.GamePhases
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+
+@inject IDispatcher Dispatcher
+@inject IState<State> GamePhaseState
+@inject IState<Core.Playlists.State> PlaylistState
+@inject IState<Core.Playback.State> PlaybackState
+
+<FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="DayGain"/>
 
 <div>
 	<h4>Day</h4>
@@ -13,26 +19,36 @@
 	</FluentDataGrid>
 </div>
 
-@if (firstSongPreloaded)
+@if (PlaybackState.Value.IsPlaying is false
+		 && PlaylistState.Value.DayPlaylist.CurrentSong is not null
+		 && PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))
 {
-	if (AppState.CurrentSong is null)
-	{
-		<FluentButton
-			Appearance="Appearance.Accent"
-			IconStart="new Size24.Play()"
-			OnClick="Interactions.StartPlaying">
-			Play
-		</FluentButton>
-	}
-	else if (firstSongPreloaded)
-	{
-		<FluentButton
-			Appearance="Appearance.Accent"
-			IconStart="new Size24.ArrowRepeatAll()"
-			OnClick="Interactions.SwitchGamePhase">
-			Switch
-		</FluentButton>
-	}
+	<FluentButton
+		Appearance="Appearance.Accent"
+		IconStart="new Size24.Play()"
+		OnClick="Play">
+		Play
+	</FluentButton>
+}
+
+@if (PlaybackState.Value.IsPlaying)
+{
+	<FluentButton
+		Appearance="Appearance.Accent"
+		IconStart="new Size24.Pause()"
+		OnClick="Pause">
+		Pause
+	</FluentButton>
+}
+
+@if (PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable)
+{
+	<FluentButton
+		Appearance="Appearance.Accent"
+		IconStart="new Size24.ArrowRepeatAll()"
+		OnClick="SwitchGamePhase">
+		Switch
+	</FluentButton>
 }
 
 <div>
@@ -43,58 +59,80 @@
 	</FluentDataGrid>
 </div>
 
-<FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="NightGain" />
+<FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="NightGain"/>
 
 @code {
-	bool firstSongPreloaded;
-
-	public double DayGain
-	{
-		get => AppState.DayGain;
-		set => Interactions.SetDayGain(value);
-	}
-
-	public double NightGain
-	{
-		get => AppState.NightGain;
-		set => Interactions.SetNightGain(value);
-	}
 	
-	public IQueryable<Song> DaySongs => AppState.Playlists.DayPlaylist.Songs.AsQueryable();
-
-	private Song[] currentDaySongs = [];
-	public IEnumerable<Song> CurrentDaySongs
+	bool IsSongOnOtherPlaylistAvailable
 	{
-		get => currentDaySongs;
-		set
+		get
 		{
-			currentDaySongs = value.ToArray();
-			Interactions.SetDaySong(value.First());
+			var songOnOtherPlaylist = GamePhaseState.Value.Phase == GamePhase.Day
+				? PlaylistState.Value.NightPlaylist.CurrentSong
+				: PlaylistState.Value.DayPlaylist.CurrentSong;
+			return songOnOtherPlaylist is not null
+						 && PlaybackState.Value.LoadedSongs.Contains(songOnOtherPlaylist);
 		}
 	}
 
-	public IQueryable<Song> NightSongs => AppState.Playlists.NightPlaylist.Songs.AsQueryable();
-
-	private Song[] currentNightSongs = [];
-	public IEnumerable<Song> CurrentNightSongs
+	double DayGain
 	{
-		get => currentNightSongs;
+		get => PlaylistState.Value.DayPlaylist.Gain;
+		set => Dispatcher.Dispatch(new Core.Playlists.SetDayGainAction((float) value));
+	}
+
+	double NightGain
+	{
+		get => PlaylistState.Value.NightPlaylist.Gain;
+		set => Dispatcher.Dispatch(new Core.Playlists.SetNightGainAction((float) value));
+	}
+	
+	public IQueryable<Song> DaySongs => PlaylistState.Value.DayPlaylist.Songs.AsQueryable();
+	
+	public IEnumerable<Song> CurrentDaySongs
+	{
+		get
+		{
+			var currentDaySong = PlaylistState.Value.DayPlaylist.CurrentSong;
+			return currentDaySong is null ? [] : [currentDaySong];
+		}
 		set
 		{
-			currentNightSongs = value.ToArray();
-			Interactions.SetNightSong(value.First());
+			var currentDaySong = value.FirstOrDefault();
+			if (currentDaySong is not null)
+				Dispatcher.Dispatch(new Core.Playlists.SetCurrentSongForDayAction(currentDaySong));
+		}
+	}
+
+	public IQueryable<Song> NightSongs => PlaylistState.Value.NightPlaylist.Songs.AsQueryable();
+
+	public IEnumerable<Song> CurrentNightSongs
+	{
+		get
+		{
+			var currentNightSong = PlaylistState.Value.NightPlaylist.CurrentSong;
+			return currentNightSong is null ? [] : [currentNightSong];
+		}
+		set
+		{
+			var currentNightSong = value.FirstOrDefault();
+			if (currentNightSong is not null)
+				Dispatcher.Dispatch(new Core.Playlists.SetCurrentSongForNightAction(currentNightSong));
 		}
 	}
 
 	protected override void OnInitialized()
 	{
 		base.OnInitialized();
-
-		Interactions.FirstSongPreloaded += () =>
-		{
-			firstSongPreloaded = true;
-			StateHasChanged();
-		};
-		Interactions.LoadPlaylists();
+		Dispatcher.Dispatch(new Core.Playlists.LoadPlaylistsAction());
 	}
+
+	void Play()
+		=> Dispatcher.Dispatch(new Core.Playback.PlayAction());
+
+	void Pause()
+		=> Dispatcher.Dispatch(new Core.Playback.PauseAction());
+
+	void SwitchGamePhase()
+		=> Dispatcher.Dispatch(new SwitchGamePhaseAction());
 }
