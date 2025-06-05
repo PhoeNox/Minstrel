@@ -35,8 +35,8 @@ public class PlaybackService(IJSRuntime jsRuntime)
 		    && activeSongs.TryGetValue(currentSongPath, out var currentlyPlayingSong))
 		{
 			_ = StopCurrentlyPlayingSong(currentlyPlayingSong);
-			if (currentlyPlayingSong.Song.Path == song.Path)
-				activeSongs.Remove(currentlyPlayingSong.Song.Path);
+			if (currentSongPath == song.Path)
+				activeSongs.Remove(currentSongPath);
 		}
 
 		currentSongPath = song.Path;
@@ -62,7 +62,8 @@ public class PlaybackService(IJSRuntime jsRuntime)
 	{
 		await Fadeout(activeSong.GainNode);
 		activeSong.AlreadyPlayed += DateTime.Now - activeSong.LastStarted!.Value;
-		await Pause(activeSong.SongNode);
+		if (activeSong.Song.Path != currentSongPath)
+			await Pause(activeSong.SongNode);
 	}
 
 	private async Task<ActiveSong> GetOrCreateActiveSong(Song song)
@@ -115,6 +116,7 @@ public class PlaybackService(IJSRuntime jsRuntime)
 	{
 		var currentTime = await context.GetCurrentTimeAsync();
 		var gain = await gainNode.GetGainAsync();
+		await gain.CancelScheduledValuesAsync(currentTime);
 		var gainValue = await gain.GetValueAsync();
 		await gain.SetValueAtTimeAsync(gainValue, currentTime);
 		await gain.LinearRampToValueAtTimeAsync(currentGain, currentTime + fadeDuration.TotalSeconds);
@@ -125,6 +127,7 @@ public class PlaybackService(IJSRuntime jsRuntime)
 	{
 		var currentTime = await context.GetCurrentTimeAsync();
 		var gain = await gainNode.GetGainAsync();
+		await gain.CancelScheduledValuesAsync(currentTime);
 		var gainValue = await gain.GetValueAsync();
 		await gain.SetValueAtTimeAsync(gainValue, currentTime);
 		await gain.LinearRampToValueAtTimeAsync(0, currentTime + fadeDuration.TotalSeconds);
