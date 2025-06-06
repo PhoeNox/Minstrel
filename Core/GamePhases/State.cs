@@ -3,7 +3,7 @@ namespace Core.GamePhases;
 [FeatureState]
 public record State
 {
-	public GamePhase Phase { get; set; } = GamePhase.Day;
+	public GamePhase Phase { get; init; } = GamePhase.Day;
 }
 
 public enum GamePhase

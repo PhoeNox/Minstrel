@@ -66,7 +66,7 @@ public class Effects(
 		}
 	}
 
-	private Song GetNextSong(Song song, Playlist playlist)
+	private static Song GetNextSong(Song song, Playlist playlist)
 	{
 		var indexOfSong = Array.IndexOf(playlist.Songs, song);
 		return playlist.Songs[(indexOfSong + 1) % playlist.Songs.Length];
