@@ -1,5 +1,6 @@
 using App.Playback;
 using Fluxor;
+using Infrastructure.FileSystem;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddFluentUIComponents();
 
 builder.Services.AddScoped<PlaybackService>();
+builder.Services.AddSingleton<IPlaylistLoader, PlaylistLoader>();
 
 var coreAssembly = typeof(Song).Assembly;
 builder.Services.AddFluxor(options => options

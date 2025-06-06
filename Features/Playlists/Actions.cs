@@ -1,4 +1,4 @@
-namespace Core.Playlists;
+namespace Features.Playlists;
 
 public record LoadPlaylistsAction;
 public record SetPlaylistsAction(Playlist DayPlaylist, Playlist NightPlaylist);

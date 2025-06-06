@@ -2,14 +2,18 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App", "App\App.csproj", "{C5CCA219-C247-468E-AC3F-5CE1188C90E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{0452644B-B57A-4F05-9E3D-DC93C126C12B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Features", "Features\Features.csproj", "{0452644B-B57A-4F05-9E3D-DC93C126C12B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".configs", ".configs", "{78EEDE03-E436-47DF-8524-01CABAF4C2CC}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Tests", "Core.Tests\Core.Tests.csproj", "{1DCD5000-A3C0-4F79-ACC7-6FDAC51D52BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Features.Tests", "Features.Tests\Features.Tests.csproj", "{1DCD5000-A3C0-4F79-ACC7-6FDAC51D52BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.FileSystem", "Infrastructure.FileSystem\Infrastructure.FileSystem.csproj", "{D36063FE-24DE-4FB9-ADB7-44FC11736A8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{A3804FA8-F225-40BB-905F-F4E832BCCE09}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +33,14 @@ Global
 		{1DCD5000-A3C0-4F79-ACC7-6FDAC51D52BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1DCD5000-A3C0-4F79-ACC7-6FDAC51D52BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1DCD5000-A3C0-4F79-ACC7-6FDAC51D52BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D36063FE-24DE-4FB9-ADB7-44FC11736A8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D36063FE-24DE-4FB9-ADB7-44FC11736A8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D36063FE-24DE-4FB9-ADB7-44FC11736A8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D36063FE-24DE-4FB9-ADB7-44FC11736A8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3804FA8-F225-40BB-905F-F4E832BCCE09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3804FA8-F225-40BB-905F-F4E832BCCE09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3804FA8-F225-40BB-905F-F4E832BCCE09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3804FA8-F225-40BB-905F-F4E832BCCE09}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

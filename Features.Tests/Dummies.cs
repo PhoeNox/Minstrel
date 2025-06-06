@@ -1,4 +1,4 @@
-namespace Core.Tests;
+namespace Features.Tests;
 
 public static class Dummies
 {

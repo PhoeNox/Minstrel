@@ -1,13 +1,14 @@
 @page "/Remote"
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
-@using Core.GamePhases
+@using Core
+@using Features.GamePhases
 @using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 
 @inject IDispatcher Dispatcher
 @inject IState<State> GamePhaseState
-@inject IState<Core.Playlists.State> PlaylistState
-@inject IState<Core.Playback.State> PlaybackState
+@inject IState<Features.Playlists.State> PlaylistState
+@inject IState<Features.Playback.State> PlaybackState
 
 <FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="DayGain"/>
 
@@ -78,13 +79,13 @@
 	double DayGain
 	{
 		get => PlaylistState.Value.DayPlaylist.Gain;
-		set => Dispatcher.Dispatch(new Core.Playlists.SetDayGainAction((float) value));
+		set => Dispatcher.Dispatch(new Features.Playlists.SetDayGainAction((float) value));
 	}
 
 	double NightGain
 	{
 		get => PlaylistState.Value.NightPlaylist.Gain;
-		set => Dispatcher.Dispatch(new Core.Playlists.SetNightGainAction((float) value));
+		set => Dispatcher.Dispatch(new Features.Playlists.SetNightGainAction((float) value));
 	}
 	
 	public IQueryable<Song> DaySongs => PlaylistState.Value.DayPlaylist.Songs.AsQueryable();
@@ -100,7 +101,7 @@
 		{
 			var currentDaySong = value.FirstOrDefault();
 			if (currentDaySong is not null)
-				Dispatcher.Dispatch(new Core.Playlists.SetCurrentSongForDayAction(currentDaySong));
+				Dispatcher.Dispatch(new Features.Playlists.SetCurrentSongForDayAction(currentDaySong));
 		}
 	}
 
@@ -117,21 +118,21 @@
 		{
 			var currentNightSong = value.FirstOrDefault();
 			if (currentNightSong is not null)
-				Dispatcher.Dispatch(new Core.Playlists.SetCurrentSongForNightAction(currentNightSong));
+				Dispatcher.Dispatch(new Features.Playlists.SetCurrentSongForNightAction(currentNightSong));
 		}
 	}
 
 	protected override void OnInitialized()
 	{
 		base.OnInitialized();
-		Dispatcher.Dispatch(new Core.Playlists.LoadPlaylistsAction());
+		Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
 	}
 
 	void Play()
-		=> Dispatcher.Dispatch(new Core.Playback.PlayAction());
+		=> Dispatcher.Dispatch(new Features.Playback.PlayAction());
 
 	void Pause()
-		=> Dispatcher.Dispatch(new Core.Playback.PauseAction());
+		=> Dispatcher.Dispatch(new Features.Playback.PauseAction());
 
 	void SwitchGamePhase()
 		=> Dispatcher.Dispatch(new SwitchGamePhaseAction());

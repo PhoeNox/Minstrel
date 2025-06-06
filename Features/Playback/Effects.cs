@@ -1,4 +1,4 @@
-namespace Core.Playback;
+namespace Features.Playback;
 
 using GamePhases;
 using Playlists;

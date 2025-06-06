@@ -1,4 +1,4 @@
-namespace Core.Playback;
+namespace Features.Playback;
 
 public static class Reducers
 {

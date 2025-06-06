@@ -1,4 +1,4 @@
-namespace Core.GamePhases;
+namespace Features.GamePhases;
 
 [FeatureState]
 public record State

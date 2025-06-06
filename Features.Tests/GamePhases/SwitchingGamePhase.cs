@@ -1,10 +1,10 @@
-namespace Core.Tests.GamePhases;
+namespace Features.Tests.GamePhases;
 
-using Core.GamePhases;
+using Features.GamePhases;
 using Fluxor;
 using Microsoft.Extensions.DependencyInjection;
 using Playlists;
-using State = Core.GamePhases.State;
+using State = Features.GamePhases.State;
 
 public class SwitchingGamePhase
 {

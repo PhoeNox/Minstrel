@@ -1,4 +1,4 @@
-namespace Core.Playlists;
+namespace Features.Playlists;
 
 public static class Reducers
 {

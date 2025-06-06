@@ -1,10 +1,15 @@
-namespace Core.Playlists;
+namespace Infrastructure.FileSystem;
 
 using Core;
 
-public static class Loader
+public interface IPlaylistLoader
 {
-	public static async Task<(Playlist DayPlaylist, Playlist NightPlaylist)> LoadPlaylists()
+	Task<(Playlist DayPlaylist, Playlist NightPlaylist)> LoadPlaylists();
+}
+
+public class PlaylistLoader : IPlaylistLoader
+{
+	public async Task<(Playlist DayPlaylist, Playlist NightPlaylist)> LoadPlaylists()
 	{
 		var dayPlaylist = await LoadPlaylist("Day");
 		var nightPlaylist = await LoadPlaylist("Night");

@@ -1,21 +1,27 @@
-namespace Core.Tests;
+namespace Features.Tests;
 
 using Fluxor;
+using Infrastructure.FileSystem;
 using Microsoft.Extensions.DependencyInjection;
 
 public class TestContext
 {
     public ServiceProvider Services { get; }
+    
+    public Mock<IPlaylistLoader> PlaylistLoader { get; } = new();
 
     public TestContext()
     {
         var serviceCollection = new ServiceCollection();
+        
         var coreAssembly = typeof(Song).Assembly;
         serviceCollection.AddFluxor(o =>
         {
             o.ScanAssemblies(coreAssembly);
             o.WithLifetime(StoreLifetime.Singleton);
         });
+        
+        serviceCollection.AddSingleton(PlaylistLoader.Object);
         
         Services = serviceCollection.BuildServiceProvider();
         

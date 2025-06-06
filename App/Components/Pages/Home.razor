@@ -1,12 +1,13 @@
 ﻿@page "/"
-@using Core.GamePhases
-@using Core.Playback
-@using Core.Playlists
+@using Core
+@using Features.GamePhases
+@using Features.Playback
+@using Features.Playlists
 @using global::App.Playback
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @inject PlaybackService PlaybackService
-@inject IState<Core.Playback.State> PlaybackState
+@inject IState<Features.Playback.State> PlaybackState
 @inject IDispatcher Dispatcher
 
 <PageTitle>Blood on the Clocktower - Player</PageTitle>
