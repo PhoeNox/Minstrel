@@ -17,7 +17,7 @@ builder.Services.AddFluentUIComponents();
 builder.Services.AddScoped<PlaybackService>();
 builder.Services.AddSingleton<IPlaylistLoader, PlaylistLoader>();
 
-var coreAssembly = typeof(Song).Assembly;
+var coreAssembly = typeof(Features.Playback.State).Assembly;
 builder.Services.AddFluxor(options => options
 	.ScanAssemblies(coreAssembly)
 	.WithLifetime(StoreLifetime.Singleton));

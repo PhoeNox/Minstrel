@@ -14,7 +14,7 @@ public class TestContext
     {
         var serviceCollection = new ServiceCollection();
         
-        var coreAssembly = typeof(Song).Assembly;
+        var coreAssembly = typeof(Playback.State).Assembly;
         serviceCollection.AddFluxor(o =>
         {
             o.ScanAssemblies(coreAssembly);
