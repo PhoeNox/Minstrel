@@ -4,28 +4,27 @@ using Core;
 
 public interface IPlaylistLoader
 {
-	Task<(Playlist DayPlaylist, Playlist NightPlaylist)> LoadPlaylists();
+	Task<(Song[] DayPlaylist, Song[] NightPlaylist)> LoadPlaylists();
 }
 
 public class PlaylistLoader : IPlaylistLoader
 {
-	public async Task<(Playlist DayPlaylist, Playlist NightPlaylist)> LoadPlaylists()
+	public async Task<(Song[] DayPlaylist, Song[] NightPlaylist)> LoadPlaylists()
 	{
 		var dayPlaylist = await LoadPlaylist("Day");
 		var nightPlaylist = await LoadPlaylist("Night");
 		return (dayPlaylist, nightPlaylist);
 	}
 
-	private static async Task<Playlist> LoadPlaylist(string playlistName)
+	private static async Task<Song[]> LoadPlaylist(string playlistName)
 	{
 		var musicDirectory = Path.Combine("wwwroot", "Music");
 		var playlistPath = Path.Combine(musicDirectory, playlistName, "playlist.txt");
 		var songFiles = await File.ReadAllLinesAsync(playlistPath);
-		var songs = songFiles
+		return songFiles
 			.Select(x => Path.Combine(musicDirectory, playlistName, x))
 			.Select(CreateSong)
 			.ToArray();
-		return new Playlist(songs);
 	}
 
 	private static Song CreateSong(string path)
