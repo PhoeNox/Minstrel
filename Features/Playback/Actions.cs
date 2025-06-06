@@ -12,7 +12,5 @@ public record CurrentSongChangedAction(
 	float Gain);
 
 public record SongOnOtherPlaylistChangedAction(Song Song);
-
 public record GainChangedAction(float Gain);
-
 public record SongLoadedAction(Song Song);
