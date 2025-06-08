@@ -2,12 +2,16 @@
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @using Features.GamePhases
+@using Features.Timer
 @using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@using State = Features.GamePhases.State
 
 @inject IDispatcher Dispatcher
 @inject IState<State> GamePhaseState
 @inject IState<Features.Playlists.State> PlaylistState
 @inject IState<Features.Playback.State> PlaybackState
+@inject IState<Features.Timer.State> TimerState
+@inject IDialogService DialogService
 
 <FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="DayGain"/>
 
@@ -20,8 +24,8 @@
 </div>
 
 @if (PlaybackState.Value.IsPlaying is false
-		 && PlaylistState.Value.DayPlaylist.CurrentSong is not null
-		 && PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))
+     && PlaylistState.Value.DayPlaylist.CurrentSong is not null
+     && PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))
 {
 	<FluentButton
 		Appearance="Appearance.Accent"
@@ -61,8 +65,31 @@
 
 <FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="NightGain"/>
 
+@if (GamePhaseState.Value.Phase == GamePhase.Day)
+{
+	@if (TimerState.Value.IsRunning is false)
+	{
+		<FluentButton
+			Appearance="Appearance.Accent"
+			IconStart="new Size24.Timer()"
+			OnClick="OpenTimerDialog">
+			Start Timer
+		</FluentButton>
+	}
+	else
+	{
+		<FluentLabel>Timer: @TimerState.Value.TimeLeft.ToString(@"mm\:ss")</FluentLabel>
+		<FluentButton
+			Appearance="Appearance.Accent"
+			IconStart="new Size24.Stop()"
+			OnClick="StopTimer">
+			Stop Timer
+		</FluentButton>
+	}
+}
+
 @code {
-	
+
 	bool IsSongOnOtherPlaylistAvailable
 	{
 		get
@@ -71,7 +98,7 @@
 				? PlaylistState.Value.NightPlaylist.CurrentSong
 				: PlaylistState.Value.DayPlaylist.CurrentSong;
 			return songOnOtherPlaylist is not null
-						 && PlaybackState.Value.LoadedSongs.Contains(songOnOtherPlaylist);
+			       && PlaybackState.Value.LoadedSongs.Contains(songOnOtherPlaylist);
 		}
 	}
 
@@ -86,9 +113,9 @@
 		get => PlaylistState.Value.NightPlaylist.Gain;
 		set => Dispatcher.Dispatch(new Features.Playlists.SetNightGainAction((float) value));
 	}
-	
+
 	public IQueryable<Song> DaySongs => PlaylistState.Value.DayPlaylist.Songs.AsQueryable();
-	
+
 	public IEnumerable<Song> CurrentDaySongs
 	{
 		get
@@ -135,4 +162,27 @@
 
 	void SwitchGamePhase()
 		=> Dispatcher.Dispatch(new SwitchGamePhaseAction());
+
+	async Task OpenTimerDialog()
+	{
+		var dialogOptions = new DialogParameters
+		{
+			Title = "Start Timer",
+			PrimaryAction = "Start Timer",
+		};
+
+		var dialog = await DialogService.ShowDialogAsync<TimerDialog>(
+			new TimerDialog.Result {Minutes = 8}, dialogOptions);
+		var result = await dialog.Result;
+		if (result is {Cancelled: false, Data: TimerDialog.Result dialogResult})
+		{
+			var timerDuration = TimeSpan.FromMinutes(dialogResult.Minutes);
+			if (timerDuration > TimeSpan.Zero)
+				Dispatcher.Dispatch(new Features.Timer.StartTimerAction(timerDuration));
+		}
+	}
+
+	void StopTimer()
+		=> Dispatcher.Dispatch(new SetIsTimeRunningAction(false));
+
 }

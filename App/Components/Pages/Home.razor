@@ -3,6 +3,7 @@
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @inject IState<Features.GamePhases.State> GamePhaseState
+@inject IState<Features.Timer.State> TimerState
 
 <PageTitle>Blood on the Clocktower - Player</PageTitle>
 
@@ -14,6 +15,15 @@
 		alt="Blood on the Clocktower"
 		class="full-page-image @BackgroundClasses"/>
 </div>
+
+@if (TimerState.Value.IsRunning)
+{
+	<div class="timer-container">
+		<div class="timer-box">
+			<span class="timer-label">@TimerState.Value.TimeLeft.ToString(@"mm\:ss")</span>
+		</div>
+	</div>
+}
 
 @code {
 	string BackgroundClasses

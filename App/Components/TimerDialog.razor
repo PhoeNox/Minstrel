@@ -1,0 +1,18 @@
+@implements IDialogContentComponent<TimerDialog.Result>
+
+<FluentNumberField Min="1" @bind-Value="Content.Minutes" Label="Minutes" Style="width: 150px"/>
+
+@code {
+
+	[Parameter]
+	public Result Content { get; set; } = new();
+
+	[CascadingParameter]
+	public IDialogReference DialogReference { get; set; } = null!;
+
+	public record Result
+	{
+		public int Minutes { get; set; }
+	}
+
+}
