@@ -64,13 +64,15 @@ public class PlaybackService(IJSRuntime jsRuntime)
 		SongEnded(activeSong.Song);
 	}
 
-	public async Task PauseSong(Song song)
+	public async Task PauseSong(Song song, bool reset)
 	{
 		var activeSong = activeSongs[song.Path];
 		await activeSong.CancellationTokenSource!.CancelAsync();
 		await Fadeout(activeSong.GainNode);
 		activeSong.AlreadyPlayed += DateTime.Now - activeSong.LastStarted!.Value;
 		await Pause(activeSong.SongNode);
+		if (reset)
+			activeSongs.Remove(song.Path);
 	}
 	
 	private static async Task Play(AudioBufferSourceNode songNode)

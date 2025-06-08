@@ -3,7 +3,6 @@ namespace Features.Playback;
 using Playlists;
 
 public class Effects(
-	IState<State> state,
 	IState<Playlists.State> playlistState,
 	IState<GamePhases.State> gamePhaseState)
 {
@@ -64,6 +63,31 @@ public class Effects(
 	{
 		var indexOfSong = Array.IndexOf(playlist.Songs, song);
 		return playlist.Songs[(indexOfSong + 1) % playlist.Songs.Length];
+	}
+
+	[EffectMethod]
+	public Task OnSongEnded(SongEndedSignal signal, IDispatcher dispatcher)
+	{
+		var endedSong = signal.Song;
+		dispatcher.Dispatch(new PauseSignal(endedSong, Reset: true));
+
+		if (gamePhaseState.Value.Phase == GamePhase.Day)
+		{
+			var nextSong = GetNextSong(endedSong, playlistState.Value.DayPlaylist);
+			dispatcher.Dispatch(new SetCurrentSongForDayAction(nextSong));
+			dispatcher.Dispatch(new PlaySignal(nextSong, playlistState.Value.DayPlaylist.Gain));
+			var songAfterNextSong = GetNextSong(nextSong, playlistState.Value.DayPlaylist);
+			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
+		}
+		else
+		{
+			var nextSong = GetNextSong(endedSong, playlistState.Value.NightPlaylist);
+			dispatcher.Dispatch(new SetCurrentSongForNightAction(nextSong));
+			dispatcher.Dispatch(new PlaySignal(nextSong, playlistState.Value.NightPlaylist.Gain));
+			var songAfterNextSong = GetNextSong(nextSong, playlistState.Value.NightPlaylist);
+			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
+		}
+		return Task.CompletedTask;	
 	}
 	
 	[EffectMethod]

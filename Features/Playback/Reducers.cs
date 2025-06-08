@@ -24,4 +24,15 @@ public static class Reducers
 		playingSongs.Add(new PlayingSong(signal.Song, signal.Gain));
 		return state with { PlayingSongs = playingSongs };
 	}
+
+	[ReducerMethod]
+	public static State OnResetSignal(State state, PauseSignal signal)
+	{
+		if (signal.Reset is false)
+			return state;
+		
+		var playingSongs = state.PlayingSongs;
+		playingSongs.RemoveWhere(x => x.Song == signal.Song);
+		return state with { PlayingSongs = playingSongs };
+	}
 }
