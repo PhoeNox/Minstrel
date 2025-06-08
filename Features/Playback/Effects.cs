@@ -96,8 +96,9 @@ public class Effects(
 		if (gamePhaseState.Value.Phase != GamePhase.Day)
 			return Task.CompletedTask;
 		
+		var song = playlistState.Value.DayPlaylist.CurrentSong!;
 		var gain = playlistState.Value.DayPlaylist.Gain;
-		dispatcher.Dispatch(new GainChangedAction(gain));
+		dispatcher.Dispatch(new SetGainSignal(song, gain));
 		return Task.CompletedTask;
 	}
 	
@@ -106,9 +107,10 @@ public class Effects(
 	{
 		if (gamePhaseState.Value.Phase != GamePhase.Night)
 			return Task.CompletedTask;
-		
+
+		var song = playlistState.Value.NightPlaylist.CurrentSong!;
 		var gain = playlistState.Value.NightPlaylist.Gain;
-		dispatcher.Dispatch(new GainChangedAction(gain));
+		dispatcher.Dispatch(new SetGainSignal(song, gain));
 		return Task.CompletedTask;
 	}
 }
