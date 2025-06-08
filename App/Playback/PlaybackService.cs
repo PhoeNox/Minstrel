@@ -26,12 +26,17 @@ public class PlaybackService(IJSRuntime jsRuntime)
 	public async Task PlaySong(Song song, float gain)
 	{
 		var activeSong = await GetOrCreateActiveSong(song);
-		activeSong.CancellationTokenSource = new CancellationTokenSource();
-		_ = MonitorSongEnd(activeSong, activeSong.CancellationTokenSource!.Token);
+		if (activeSong.FadeOutCts is not null)
+		{
+			await activeSong.FadeOutCts.CancelAsync();
+			activeSong.FadeOutCts = null;
+		}
+		activeSong.SongEndMonitoringCts = new CancellationTokenSource();
+		_ = MonitorSongEnd(activeSong, activeSong.SongEndMonitoringCts!.Token);
 
 		await Play(activeSong.SongNode);
 		activeSongs[song.Path].LastStarted = DateTime.Now;
-		await FadeIn(activeSong.GainNode, gain, activeSong.CancellationTokenSource!.Token);
+		await FadeIn(activeSong.GainNode, gain, activeSong.SongEndMonitoringCts!.Token);
 	}
 	
 	private async Task<ActiveSong> GetOrCreateActiveSong(Song song)
@@ -67,8 +72,9 @@ public class PlaybackService(IJSRuntime jsRuntime)
 	public async Task PauseSong(Song song, bool reset)
 	{
 		var activeSong = activeSongs[song.Path];
-		await activeSong.CancellationTokenSource!.CancelAsync();
-		await Fadeout(activeSong.GainNode);
+		await activeSong.SongEndMonitoringCts!.CancelAsync();
+		activeSong.FadeOutCts = new CancellationTokenSource();
+		await Fadeout(activeSong.GainNode, activeSong.FadeOutCts!.Token);;
 		activeSong.AlreadyPlayed += DateTime.Now - activeSong.LastStarted!.Value;
 		await Pause(activeSong.SongNode);
 		if (reset)
@@ -98,7 +104,7 @@ public class PlaybackService(IJSRuntime jsRuntime)
 		await Task.Delay(fadeDuration, ct);
 	}
 
-	private async Task Fadeout(GainNode gainNode)
+	private async Task Fadeout(GainNode gainNode, CancellationToken ct)
 	{
 		var currentTime = await context.GetCurrentTimeAsync();
 		var gain = await gainNode.GetGainAsync();
@@ -106,7 +112,7 @@ public class PlaybackService(IJSRuntime jsRuntime)
 		var gainValue = await gain.GetValueAsync();
 		await gain.SetValueAtTimeAsync(gainValue, currentTime);
 		await gain.LinearRampToValueAtTimeAsync(0, currentTime + fadeDuration.TotalSeconds);
-		await Task.Delay(fadeDuration);
+		await Task.Delay(fadeDuration, ct);
 	}
 
 	public async Task SetGain(Song song, float value)
@@ -126,6 +132,7 @@ public class PlaybackService(IJSRuntime jsRuntime)
 	{
 		public TimeSpan AlreadyPlayed { get; set; } = TimeSpan.Zero;
 		public DateTime? LastStarted { get; set; }
-		public CancellationTokenSource? CancellationTokenSource { get; set; }
+		public CancellationTokenSource? SongEndMonitoringCts { get; set; }
+		public CancellationTokenSource? FadeOutCts { get; set; }
 	}
 }
