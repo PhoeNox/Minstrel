@@ -1,72 +1,21 @@
 ﻿@page "/"
-@using Core
-@using Features.GamePhases
-@using Features.Playback
-@using Features.Playlists
-@using global::App.Playback
+
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
-@inject PlaybackService PlaybackService
-@inject IState<Features.Playback.State> PlaybackState
-@inject IDispatcher Dispatcher
+@inject IState<Features.GamePhases.State> GamePhaseState
 
 <PageTitle>Blood on the Clocktower - Player</PageTitle>
+
+<AudioPlayer/>
 
 <div class="full-page-container">
 	<img
 		src="Images/BloodOnTheClocktower.jpg"
 		alt="Blood on the Clocktower"
-		class="full-page-image @backgroundClasses"/>
+		class="full-page-image @BackgroundClasses"/>
 </div>
 
 @code {
-	private string backgroundClasses = string.Empty;
-
-	protected override async Task OnInitializedAsync()
-	{
-		await base.OnInitializedAsync();
-		await PlaybackService.Initialize();
-
-		SubscribeToAction<SetPlaylistsAction>(a => _ = LoadSong(a.DayPlaylist.CurrentSong));
-		SubscribeToAction<SongOnOtherPlaylistChangedAction>(a => _ = LoadSong(a.Song));
-		
-		SubscribeToAction<CurrentSongChangedAction>(a => _ = PlayCurrentSong(a));
-		SubscribeToAction<SetGamePhaseAction>(UpdateImage);
-		
-		SubscribeToAction<GainChangedAction>(a => _ = PlaybackService.SetGain(a.Gain));
-
-		PlaybackService.SongEnded += PlayNextSong;
-
-		if (PlaybackState.Value.CurrentSong is not null)
-		{
-			await PlaybackService.PlaySong(
-				PlaybackState.Value.CurrentSong,
-				PlaybackState.Value.Gain);
-		}
-	}
-
-	void PlayNextSong()
-		=> Dispatcher.Dispatch(new PlayNextSongAction());
-
-	void UpdateImage(SetGamePhaseAction action)
-		=> backgroundClasses = action.GamePhase == GamePhase.Night ? "night-mode" : string.Empty;
-
-	async Task PlayCurrentSong(CurrentSongChangedAction action)
-	{
-		var fadeInTask = PlaybackService.PlaySong(action.CurrentSong, action.Gain);
-
-		var loadNextSongTask = LoadSong(action.NextSong);
-		var loadSongOnOtherPlaylistTask = LoadSong(action.SongOnOtherPlaylist);
-
-		await Task.WhenAll(fadeInTask, loadNextSongTask, loadSongOnOtherPlaylistTask);
-	}
-	
-	async Task LoadSong(Song? song)
-	{
-		if (song is not null)
-		{
-			await PlaybackService.SongRepository.Load(song);
-			Dispatcher.Dispatch(new SongLoadedAction(song));
-		}
-	}
+	string BackgroundClasses
+		=> GamePhaseState.Value.Phase == GamePhase.Night ? "night-mode" : string.Empty;
 }

@@ -11,5 +11,6 @@ public class Effects(IPlaylistLoader playlistLoader)
 		var dayPlaylist = new Playlist(daySongs);
 		var nightPlaylist = new Playlist(nightSongs);
 		dispatcher.Dispatch(new SetPlaylistsAction(dayPlaylist, nightPlaylist));
+		dispatcher.Dispatch(new PlaylistsLoadedAction());
 	}
 }

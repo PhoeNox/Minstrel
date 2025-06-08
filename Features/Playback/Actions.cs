@@ -1,9 +1,6 @@
 namespace Features.Playback;
 
-public record PlayAction;
-public record PauseAction;
-
-public record PlayNextSongAction;
+public record SwitchPlaylist(GamePhase OldGamePhase, GamePhase NewGamePhase);
 
 public record CurrentSongChangedAction(
 	Song CurrentSong,
@@ -11,6 +8,4 @@ public record CurrentSongChangedAction(
 	Song SongOnOtherPlaylist,
 	float Gain);
 
-public record SongOnOtherPlaylistChangedAction(Song Song);
 public record GainChangedAction(float Gain);
-public record SongLoadedAction(Song Song);

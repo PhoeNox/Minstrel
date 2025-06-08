@@ -14,7 +14,7 @@ public class AppContext
 	{
 		var serviceCollection = new ServiceCollection();
 
-		var coreAssembly = typeof(Playback.State).Assembly;
+		var coreAssembly = typeof(Features.Playback.State).Assembly;
 		serviceCollection.AddFluxor(o =>
 		{
 			o.ScanAssemblies(coreAssembly);

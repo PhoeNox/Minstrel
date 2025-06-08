@@ -1,0 +1,27 @@
+@using Features.Playback
+@using global::App.Playback
+
+@inherits Fluxor.Blazor.Web.Components.FluxorComponent
+
+@inject PlaybackService PlaybackService
+@inject IDispatcher Dispatcher
+
+@code {
+	
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		await PlaybackService.Initialize();
+
+		SubscribeToAction<LoadSongSignal>(s => _ = PlaybackService.SongRepository.Load(s.Song));
+		
+		SubscribeToAction<PlaySignal>(s => _ = PlaybackService.PlaySong(s.Song, s.Gain));
+		SubscribeToAction<PauseSignal>(s => _ = PlaybackService.PauseSong(s.Song));
+		
+		SubscribeToAction<SetGainSignal>(s => _ = PlaybackService.SetGain(s.Song, s.Gain));
+		
+		PlaybackService.SongEnded += s => Dispatcher.Dispatch(new SongEndedSignal(s));
+		PlaybackService.SongRepository.SongLoaded += s => Dispatcher.Dispatch(new SongLoadedSignal(s));
+	}
+	
+}
