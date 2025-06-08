@@ -7,14 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="KristofferStrube.Blazor.WebAudio" Version="0.1.0-alpha.13" />
         <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.11.0"/>
         <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.11.0"/>
-        <PackageReference Include="TagLibSharp" Version="2.3.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Features\Features.csproj" />
+      <ProjectReference Include="..\Infrastructure.Playback\Infrastructure.Playback.csproj" />
     </ItemGroup>
 
     <ItemGroup>

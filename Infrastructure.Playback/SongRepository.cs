@@ -1,6 +1,4 @@
-namespace App.Playback;
-
-using KristofferStrube.Blazor.WebAudio;
+namespace Infrastructure.Playback;
 
 public class SongRepository(AudioContext audioContext)
 {

@@ -1,6 +1,5 @@
-namespace App.Playback;
+namespace Infrastructure.Playback;
 
-using KristofferStrube.Blazor.WebAudio;
 using Microsoft.JSInterop;
 
 public class PlaybackService(IJSRuntime jsRuntime)
