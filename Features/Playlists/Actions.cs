@@ -2,7 +2,7 @@ namespace Features.Playlists;
 
 public record LoadPlaylistsAction;
 public record PlaylistsLoadedAction;
-public record SetPlaylistsAction(Playlist DayPlaylist, Playlist NightPlaylist);
+public record SetPlaylistsAction(Song[] daySongs, Song[] nightSongs);
 
 public record SetCurrentSongForDayAction(Song Song);
 public record SetCurrentSongForNightAction(Song Song);

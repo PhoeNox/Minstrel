@@ -15,9 +15,7 @@ public class SwitchingGamePhase(AppContext appContext, IDispatcher dispatcher)
 	public async Task SwitchesToOtherPhase(GamePhase currentPhase, GamePhase nextPhase)
 	{
 		dispatcher.Dispatch(new SetGamePhaseAction(currentPhase));
-		dispatcher.Dispatch(new SetPlaylistsAction(
-			new Playlist([Dummies.Song]),
-			new Playlist([Dummies.Song])));
+		dispatcher.Dispatch(new SetPlaylistsAction([Dummies.Song], [Dummies.Song]));
 		
 		dispatcher.Dispatch(new SwitchGamePhaseAction());
 

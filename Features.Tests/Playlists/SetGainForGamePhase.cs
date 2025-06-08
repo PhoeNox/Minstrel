@@ -34,12 +34,11 @@ public class SetGainForGamePhase(AppContext appContext, IDispatcher dispatcher)
 		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
 		actionSubscriber.SubscribeToAction<SetGainSignal>(this, action => requestedSongGain = (action.Song, action.Gain));
 		
-		var dayPlaylist = new Playlist([Dummies.Song]);
-		dispatcher.Dispatch(new SetPlaylistsAction(dayPlaylist, Dummies.Playlist));
+		dispatcher.Dispatch(new SetPlaylistsAction([Dummies.Song], []));
 		dispatcher.Dispatch(new PlayAction());
 		
 		dispatcher.Dispatch(new SetDayGainAction(0.5f));
 		
-		await Assert.That(requestedSongGain)!.IsEqualTo((dayPlaylist.CurrentSong, 0.5f));
+		await Assert.That(requestedSongGain).IsEqualTo((Dummies.Song, 0.5f));
 	}
 }

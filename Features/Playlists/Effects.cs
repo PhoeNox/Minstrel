@@ -8,9 +8,7 @@ public class Effects(IPlaylistLoader playlistLoader)
 	public async Task LoadPlaylists(IDispatcher dispatcher)
 	{
 		var (daySongs, nightSongs) = await playlistLoader.LoadPlaylists();
-		var dayPlaylist = new Playlist(daySongs);
-		var nightPlaylist = new Playlist(nightSongs);
-		dispatcher.Dispatch(new SetPlaylistsAction(dayPlaylist, nightPlaylist));
+		dispatcher.Dispatch(new SetPlaylistsAction(daySongs, nightSongs));
 		dispatcher.Dispatch(new PlaylistsLoadedAction());
 	}
 }

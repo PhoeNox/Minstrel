@@ -8,25 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 using State = Features.Playback.State;
 
 [UseAppContext]
-public class SwitchGamePhase
+public class SwitchGamePhase(AppContext appContext, IDispatcher dispatcher)
 {
-	private readonly AppContext appContext;
-	private readonly IDispatcher dispatcher;
-	
 	private readonly Song daySong = Dummies.Song with {Title = "Song Of The Day"};
 	private readonly Song nightSong = Dummies.Song with {Title = "Song Of The Night"};
-	private readonly Playlist dayPlaylist;
-	private readonly Playlist nightPlaylist;
-	
-	public SwitchGamePhase(AppContext appContext, IDispatcher dispatcher)
-	{
-		this.appContext = appContext;
-		this.dispatcher = dispatcher;
-		
-		dayPlaylist = new Playlist([daySong]);
-		nightPlaylist = new Playlist([nightSong]);
-	}
-	
+
 	[Test]
 	[Arguments(GamePhase.Day)]
 	[Arguments(GamePhase.Night)]
@@ -38,7 +24,7 @@ public class SwitchGamePhase
 		var requestedSongToBePaused = Dummies.Song;
 		actionSubscriber.SubscribeToAction<PauseSignal>(this, action => requestedSongToBePaused = action.Song);
 		
-		dispatcher.Dispatch(new SetPlaylistsAction(dayPlaylist, nightPlaylist));
+		dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
 		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		dispatcher.Dispatch(new PlayAction());
 		

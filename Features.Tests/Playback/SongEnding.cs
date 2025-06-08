@@ -6,22 +6,10 @@ using Fluxor;
 using Microsoft.Extensions.DependencyInjection;
 
 [UseAppContext]
-public class SongEnding
+public class SongEnding(AppContext appContext, IDispatcher dispatcher)
 {
-	private readonly AppContext appContext;
-	private readonly IDispatcher dispatcher;
-	
 	private readonly Song song1 = Dummies.Song with {Title = "Song1"};
 	private readonly Song song2 = Dummies.Song with {Title = "Song2"};
-	private readonly Playlist dayPlaylist;
-	
-	public SongEnding(AppContext appContext, IDispatcher dispatcher)
-	{
-		this.appContext = appContext;
-		this.dispatcher = dispatcher;
-		
-		dayPlaylist = new Playlist([song1, song2]);
-	}
 
 	[Test]
 	public async Task ResetsCurrentSong()
@@ -34,7 +22,7 @@ public class SongEnding
 				requestedSongToBeReset = action.Song;
 		});
 
-		dispatcher.Dispatch(new SetPlaylistsAction(dayPlaylist, Dummies.Playlist));
+		dispatcher.Dispatch(new SetPlaylistsAction([song1, song2], []));
 		dispatcher.Dispatch(new PlayAction());
 		
 		dispatcher.Dispatch(new SongEndedSignal(song1));
@@ -45,7 +33,7 @@ public class SongEnding
 	[Test]
 	public async Task PlaysNextSong()
 	{
-		dispatcher.Dispatch(new SetPlaylistsAction(dayPlaylist, Dummies.Playlist));
+		dispatcher.Dispatch(new SetPlaylistsAction([song1, song2], []));
 		dispatcher.Dispatch(new PlayAction());
 		
 		dispatcher.Dispatch(new SongEndedSignal(song1));

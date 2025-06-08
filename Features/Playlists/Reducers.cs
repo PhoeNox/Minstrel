@@ -4,12 +4,20 @@ public static class Reducers
 {
 	[ReducerMethod]
 	public static State SetPlaylists(State state, SetPlaylistsAction action)
-		=> state with
-		{
-			DayPlaylist = action.DayPlaylist,
-			NightPlaylist = action.NightPlaylist,
-		};
-	
+	{
+		var (daySongs, nightSongs) = action;
+		
+		var dayPlaylist = state.DayPlaylist with { Songs = daySongs };
+		if (!dayPlaylist.Songs.Contains(dayPlaylist.CurrentSong))
+			dayPlaylist = dayPlaylist with {CurrentSong = dayPlaylist.Songs.FirstOrDefault()};
+		
+		var nightPlaylist = state.NightPlaylist with { Songs = nightSongs };
+		if (!nightPlaylist.Songs.Contains(nightPlaylist.CurrentSong))
+			nightPlaylist = nightPlaylist with {CurrentSong = nightPlaylist.Songs.FirstOrDefault()};
+		
+		return state with { DayPlaylist = dayPlaylist, NightPlaylist = nightPlaylist };
+	}
+
 	[ReducerMethod]
 	public static State SetDayGain(State state, SetDayGainAction action)
 		=> state with { DayPlaylist = state.DayPlaylist with { Gain = action.Volume } };
