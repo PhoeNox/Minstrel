@@ -123,6 +123,23 @@ public class PlaybackService(IJSRuntime jsRuntime)
 		await gain.CancelScheduledValuesAsync(currentTime);
 		await gain.SetValueAsync(value);
 	}
+
+	public async Task PlaySound(Song song, float gainValue)
+	{
+		var songBuffer = await SongRepository.Load(song);
+
+		var songNode = await context.CreateBufferSourceAsync();
+		await songNode.SetBufferAsync(songBuffer);
+
+		var gainNode = await context.CreateGainAsync();
+		var gain = await gainNode.GetGainAsync();
+		await gain.SetValueAsync(gainValue);
+
+		await songNode.ConnectAsync(gainNode);
+		await gainNode.ConnectAsync(destination);
+		
+		await songNode.StartAsync();
+	}
 	
 	private record ActiveSong(
 		Song Song,

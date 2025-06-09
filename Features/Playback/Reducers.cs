@@ -18,21 +18,21 @@ public static class Reducers
 		=> state with { IsPlaying = false };
 
 	[ReducerMethod]
-	public static State OnPlaySignal(State state, PlaySignal signal)
+	public static State OnPlaySignal(State state, PlaySongSignal songSignal)
 	{
 		var playingSongs = state.PlayingSongs;
-		playingSongs.Add(new PlayingSong(signal.Song, signal.Gain));
+		playingSongs.Add(new PlayingSong(songSignal.Song, songSignal.Gain));
 		return state with { PlayingSongs = playingSongs };
 	}
 
 	[ReducerMethod]
-	public static State OnResetSignal(State state, PauseSignal signal)
+	public static State OnResetSignal(State state, PauseSongSignal songSignal)
 	{
-		if (signal.Reset is false)
+		if (songSignal.Reset is false)
 			return state;
 		
 		var playingSongs = state.PlayingSongs;
-		playingSongs.RemoveWhere(x => x.Song == signal.Song);
+		playingSongs.RemoveWhere(x => x.Song == songSignal.Song);
 		return state with { PlayingSongs = playingSongs };
 	}
 }

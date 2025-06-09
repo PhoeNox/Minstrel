@@ -24,7 +24,7 @@ public class Effects(
 	public Task Play(PlayAction action, IDispatcher dispatcher)
 	{
 		var (_, currentSong, gain, nextSong) = GetSongsAndGainForCurrentGamePhase();
-		dispatcher.Dispatch(new PlaySignal(currentSong, gain));
+		dispatcher.Dispatch(new PlaySongSignal(currentSong, gain));
 		dispatcher.Dispatch(new LoadSongSignal(nextSong));
 		return Task.CompletedTask;
 	}
@@ -33,8 +33,8 @@ public class Effects(
 	public Task OnPlaylistSwitched(SwitchPlaylist action, IDispatcher dispatcher)
 	{
 		var (oldSong, currentSong, gain, nextSong) = GetSongsAndGainForCurrentGamePhase();
-		dispatcher.Dispatch(new PauseSignal(oldSong));
-		dispatcher.Dispatch(new PlaySignal(currentSong, gain));
+		dispatcher.Dispatch(new PauseSongSignal(oldSong));
+		dispatcher.Dispatch(new PlaySongSignal(currentSong, gain));
 		dispatcher.Dispatch(new LoadSongSignal(nextSong));
 		return Task.CompletedTask;
 	}
@@ -69,13 +69,13 @@ public class Effects(
 	public Task OnSongEnded(SongEndedSignal signal, IDispatcher dispatcher)
 	{
 		var endedSong = signal.Song;
-		dispatcher.Dispatch(new PauseSignal(endedSong, Reset: true));
+		dispatcher.Dispatch(new PauseSongSignal(endedSong, Reset: true));
 
 		if (gamePhaseState.Value.Phase == GamePhase.Day)
 		{
 			var nextSong = GetNextSong(endedSong, playlistState.Value.DayPlaylist);
 			dispatcher.Dispatch(new SetCurrentSongForDayAction(nextSong));
-			dispatcher.Dispatch(new PlaySignal(nextSong, playlistState.Value.DayPlaylist.Gain));
+			dispatcher.Dispatch(new PlaySongSignal(nextSong, playlistState.Value.DayPlaylist.Gain));
 			var songAfterNextSong = GetNextSong(nextSong, playlistState.Value.DayPlaylist);
 			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
 		}
@@ -83,7 +83,7 @@ public class Effects(
 		{
 			var nextSong = GetNextSong(endedSong, playlistState.Value.NightPlaylist);
 			dispatcher.Dispatch(new SetCurrentSongForNightAction(nextSong));
-			dispatcher.Dispatch(new PlaySignal(nextSong, playlistState.Value.NightPlaylist.Gain));
+			dispatcher.Dispatch(new PlaySongSignal(nextSong, playlistState.Value.NightPlaylist.Gain));
 			var songAfterNextSong = GetNextSong(nextSong, playlistState.Value.NightPlaylist);
 			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
 		}

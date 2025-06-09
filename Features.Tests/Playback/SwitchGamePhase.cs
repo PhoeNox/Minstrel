@@ -20,9 +20,9 @@ public class SwitchGamePhase(AppContext appContext, IDispatcher dispatcher)
 	{
 		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
 		var requestedSongToBePlayed = Dummies.Song; 
-		actionSubscriber.SubscribeToAction<PlaySignal>(this, action => requestedSongToBePlayed = action.Song);
+		actionSubscriber.SubscribeToAction<PlaySongSignal>(this, action => requestedSongToBePlayed = action.Song);
 		var requestedSongToBePaused = Dummies.Song;
-		actionSubscriber.SubscribeToAction<PauseSignal>(this, action => requestedSongToBePaused = action.Song);
+		actionSubscriber.SubscribeToAction<PauseSongSignal>(this, action => requestedSongToBePaused = action.Song);
 		
 		dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
 		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));

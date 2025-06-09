@@ -15,8 +15,9 @@
 
 		SubscribeToAction<LoadSongSignal>(s => _ = PlaybackService.SongRepository.Load(s.Song));
 		
-		SubscribeToAction<PlaySignal>(s => _ = PlaybackService.PlaySong(s.Song, s.Gain));
-		SubscribeToAction<PauseSignal>(s => _ = PlaybackService.PauseSong(s.Song, s.Reset));
+		SubscribeToAction<PlaySongSignal>(s => _ = PlaybackService.PlaySong(s.Song, s.Gain));
+		SubscribeToAction<PauseSongSignal>(s => _ = PlaybackService.PauseSong(s.Song, s.Reset));
+		SubscribeToAction<PlaySoundSignal>(s => _ = PlaybackService.PlaySound(s.Song, s.Gain));
 		
 		SubscribeToAction<SetGainSignal>(s => _ = PlaybackService.SetGain(s.Song, s.Gain));
 		

@@ -20,7 +20,7 @@ public class Play(AppContext appContext, IDispatcher dispatcher)
 	{
 		var requestedSong = Dummies.Song; 
 		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
-		actionSubscriber.SubscribeToAction<PlaySignal>(this, action => requestedSong = action.Song);
+		actionSubscriber.SubscribeToAction<PlaySongSignal>(this, action => requestedSong = action.Song);
 
 		dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
 		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));

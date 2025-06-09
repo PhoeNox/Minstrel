@@ -16,7 +16,7 @@ public class SongEnding(AppContext appContext, IDispatcher dispatcher)
 	{
 		var requestedSongToBeReset = Dummies.Song; 
 		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
-		actionSubscriber.SubscribeToAction<PauseSignal>(this, action =>
+		actionSubscriber.SubscribeToAction<PauseSongSignal>(this, action =>
 		{
 			if (action.Reset)
 				requestedSongToBeReset = action.Song;
