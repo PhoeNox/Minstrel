@@ -20,8 +20,7 @@ public static class Reducers
 	[ReducerMethod]
 	public static State OnPlaySignal(State state, PlaySongSignal songSignal)
 	{
-		var playingSongs = state.PlayingSongs;
-		playingSongs.Add(new PlayingSong(songSignal.Song, songSignal.Gain));
+		HashSet<PlayingSong> playingSongs = [..state.PlayingSongs, new(songSignal.Song, songSignal.Gain)];
 		return state with { PlayingSongs = playingSongs };
 	}
 
@@ -31,7 +30,7 @@ public static class Reducers
 		if (songSignal.Reset is false)
 			return state;
 		
-		var playingSongs = state.PlayingSongs;
+		var playingSongs = new HashSet<PlayingSong>(state.PlayingSongs);
 		playingSongs.RemoveWhere(x => x.Song == songSignal.Song);
 		return state with { PlayingSongs = playingSongs };
 	}
