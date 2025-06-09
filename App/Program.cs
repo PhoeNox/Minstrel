@@ -1,5 +1,6 @@
 using Fluxor;
 using Infrastructure.FileSystem;
+using Infrastructure.Network;
 using Infrastructure.Playback;
 using Microsoft.FluentUI.AspNetCore.Components;
 
@@ -16,6 +17,7 @@ builder.Services.AddFluentUIComponents();
 
 builder.Services.AddScoped<PlaybackService>();
 builder.Services.AddSingleton<IPlaylistLoader, PlaylistLoader>();
+builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
 builder.Services.AddSingleton(TimeProvider.System);
 
 var coreAssembly = typeof(Features.Playback.State).Assembly;

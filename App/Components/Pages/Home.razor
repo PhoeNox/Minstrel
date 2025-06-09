@@ -1,9 +1,12 @@
 ﻿@page "/"
 
+@using Features.QrCodeConnection
+@using PinguApps.Blazor.QRCode
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @inject IState<Features.GamePhases.State> GamePhaseState
 @inject IState<Features.Timer.State> TimerState
+@inject IState<State> QrCodeConnectionState
 
 <PageTitle>Blood on the Clocktower - Player</PageTitle>
 
@@ -23,6 +26,11 @@
 			<span class="timer-label">@TimerState.Value.TimeLeft.ToString(@"mm\:ss")</span>
 		</div>
 	</div>
+}
+
+@if (QrCodeConnectionState.Value.QrCodeVisibility == QrCodeVisibility.Visible)
+{
+	<QRCode Data="@QrCodeConnectionState.Value.ConnectionString" Size="20rem" />
 }
 
 @code {
