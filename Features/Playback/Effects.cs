@@ -30,6 +30,16 @@ public class Effects(
 	}
 
 	[EffectMethod]
+	public Task Pause(PauseAction action, IDispatcher dispatcher)
+	{
+		var song = gamePhaseState.Value.Phase == GamePhase.Day
+			? playlistState.Value.DayPlaylist.CurrentSong
+			: playlistState.Value.NightPlaylist.CurrentSong;
+		dispatcher.Dispatch(new PauseSongSignal(song!));
+		return Task.CompletedTask;
+	}
+
+	[EffectMethod]
 	public Task OnPlaylistSwitched(SwitchPlaylist action, IDispatcher dispatcher)
 	{
 		var (oldSong, currentSong, gain, nextSong) = GetSongsAndGainForCurrentGamePhase();

@@ -21,13 +21,14 @@ public class Play(AppContext appContext, IDispatcher dispatcher)
 		var requestedSong = Dummies.Song; 
 		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
 		actionSubscriber.SubscribeToAction<PlaySongSignal>(this, action => requestedSong = action.Song);
+		var state = appContext.Services.GetRequiredService<IState<State>>();
+		state.Value.PlayingSongs.Clear();
 
 		dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
 		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		
 		dispatcher.Dispatch(new PlayAction());
 
-		var state = appContext.Services.GetRequiredService<IState<State>>();
 		await Assert.That(state.Value.IsPlaying).IsTrue();
 		if (gamePhase == GamePhase.Day)
 		{
