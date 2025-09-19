@@ -15,7 +15,7 @@ public class Effects(TimeProvider timeProvider, IState<State> state)
 
 		var endTime = timeProvider.GetUtcNow() + action.Duration;
 		
-		using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1), timeProvider);
+		using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100), timeProvider);
 		
 		try
 		{
