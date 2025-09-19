@@ -2,13 +2,17 @@ namespace Features.Tests;
 
 using Fluxor;
 using Infrastructure.FileSystem;
+using Infrastructure.Network;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 
 public class AppContext
 {
 	public ServiceProvider Services { get; }
 
 	public Mock<IPlaylistLoader> PlaylistLoader { get; } = new();
+	
+	public Mock<INetworkProvider> NetworkProvider { get; } = new();
 
 	public AppContext()
 	{
@@ -22,6 +26,8 @@ public class AppContext
 		});
 
 		serviceCollection.AddSingleton(PlaylistLoader.Object);
+		serviceCollection.AddSingleton(NetworkProvider.Object);
+		serviceCollection.AddSingleton<TimeProvider, FakeTimeProvider>();
 
 		Services = serviceCollection.BuildServiceProvider();
 
