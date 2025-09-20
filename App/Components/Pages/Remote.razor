@@ -148,7 +148,10 @@ else
 		{
 			var currentDaySong = value.FirstOrDefault();
 			if (currentDaySong is not null)
-				Dispatcher.Dispatch(new Features.Playlists.SetCurrentSongForDayAction(currentDaySong));
+				Dispatcher.Dispatch(
+					new Features.Playlists.SetCurrentSongForDayAction(
+						currentDaySong,
+						PlaylistState.Value.DayPlaylist.CurrentSong));
 		}
 	}
 
@@ -165,7 +168,10 @@ else
 		{
 			var currentNightSong = value.FirstOrDefault();
 			if (currentNightSong is not null)
-				Dispatcher.Dispatch(new Features.Playlists.SetCurrentSongForNightAction(currentNightSong));
+				Dispatcher.Dispatch(
+					new Features.Playlists.SetCurrentSongForNightAction(
+						currentNightSong,
+						PlaylistState.Value.NightPlaylist.CurrentSong));
 		}
 	}
 

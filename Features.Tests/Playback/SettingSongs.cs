@@ -1,3 +1,4 @@
+using Features.GamePhases;
 using Features.Playback;
 using Features.Playlists;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,35 +8,67 @@ namespace Features.Tests.Playback;
 [UseAppContext]
 public class SettingSongs(AppContext appContext, IDispatcher dispatcher)
 {
+    private readonly Song song1 = Dummies.Song with {Title = "Song1"};
+    private readonly Song song2 = Dummies.Song with {Title = "Song2"};
+    private readonly Song song3 = Dummies.Song with {Title = "Song3"};
+
     [Test]
-    public async Task SettingSongForDay()
+    [Arguments(GamePhase.Day)]
+    [Arguments(GamePhase.Night)]
+    public async Task SettingSongForDay(GamePhase gamePhase)
     {
-        var requestedSong = Dummies.Song;
+        var playedSong = Dummies.Song;
+        var pausedSong = Dummies.Song;
+        var loadedSongs = new List<Song>();
         var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
-        actionSubscriber.SubscribeToAction<LoadSongSignal>(this, action => requestedSong = action.Song);
+        actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
+            action => loadedSongs.Add(action.Song));
+        actionSubscriber.SubscribeToAction<PlaySongSignal>(this,
+            action => playedSong = action.Song);
+        actionSubscriber.SubscribeToAction<PauseSongSignal>(this,
+            action => pausedSong = action.Song);
         
-        var song1 = Dummies.Song with {Title = "Song1"};
-        var song2 = Dummies.Song with {Title = "Song2"};
-        dispatcher.Dispatch(new SetPlaylistsAction([song1, song2], []));
+        dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3], []));
+        dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
         
-        dispatcher.Dispatch(new SetCurrentSongForDayAction(song2));
+        dispatcher.Dispatch(new SetCurrentSongForDayAction(song2, song1));
         
-        await Assert.That(requestedSong).IsEqualTo(song2);
+        await Assert.That(loadedSongs).Contains(song2);
+        if (gamePhase == GamePhase.Day)
+        {
+            await Assert.That(playedSong).IsEqualTo(song2);
+            await Assert.That(pausedSong).IsEqualTo(song1);
+            await Assert.That(loadedSongs).Contains(song3);
+        }
     }
     
     [Test]
-    public async Task SettingSongForNight()
+    [Arguments(GamePhase.Day)]
+    [Arguments(GamePhase.Night)]
+    public async Task SettingSongForNight(GamePhase gamePhase)
     {
-        var requestedSong = Dummies.Song;
+        var playedSong = Dummies.Song;
+        var pausedSong = Dummies.Song;
+        var loadedSongs = new List<Song>();
         var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
-        actionSubscriber.SubscribeToAction<LoadSongSignal>(this, action => requestedSong = action.Song);
+        actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
+            action => loadedSongs.Add(action.Song));
+        actionSubscriber.SubscribeToAction<PlaySongSignal>(this,
+            action => playedSong = action.Song);
+        actionSubscriber.SubscribeToAction<PauseSongSignal>(this,
+            action => pausedSong = action.Song);
         
-        var song1 = Dummies.Song with {Title = "Song1"};
-        var song2 = Dummies.Song with {Title = "Song2"};
-        dispatcher.Dispatch(new SetPlaylistsAction([], [song1, song2]));
+        dispatcher.Dispatch(new SetPlaylistsAction([], [song1, song2, song3]));
+        dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
         
-        dispatcher.Dispatch(new SetCurrentSongForNightAction(song2));
+        dispatcher.Dispatch(new SetCurrentSongForNightAction(song2, song1));
         
-        await Assert.That(requestedSong).IsEqualTo(song2);
+        await Assert.That(loadedSongs).Contains(song2);
+        if (gamePhase == GamePhase.Night)
+        {
+            await Assert.That(playedSong).IsEqualTo(song2);
+            await Assert.That(pausedSong).IsEqualTo(song1);
+            await Assert.That(loadedSongs).Contains(song3);
+        }
     }
 }

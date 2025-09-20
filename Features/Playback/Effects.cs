@@ -78,24 +78,15 @@ public class Effects(
 	[EffectMethod]
 	public Task OnSongEnded(SongEndedSignal signal, IDispatcher dispatcher)
 	{
-		var endedSong = signal.Song;
-		dispatcher.Dispatch(new PauseSongSignal(endedSong, Reset: true));
-
 		if (gamePhaseState.Value.Phase == GamePhase.Day)
 		{
-			var nextSong = GetNextSong(endedSong, playlistState.Value.DayPlaylist);
-			dispatcher.Dispatch(new SetCurrentSongForDayAction(nextSong));
-			dispatcher.Dispatch(new PlaySongSignal(nextSong, playlistState.Value.DayPlaylist.Gain));
-			var songAfterNextSong = GetNextSong(nextSong, playlistState.Value.DayPlaylist);
-			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
+			var nextSong = GetNextSong(signal.Song, playlistState.Value.DayPlaylist);
+			dispatcher.Dispatch(new SetCurrentSongForDayAction(nextSong, signal.Song));
 		}
 		else
 		{
-			var nextSong = GetNextSong(endedSong, playlistState.Value.NightPlaylist);
-			dispatcher.Dispatch(new SetCurrentSongForNightAction(nextSong));
-			dispatcher.Dispatch(new PlaySongSignal(nextSong, playlistState.Value.NightPlaylist.Gain));
-			var songAfterNextSong = GetNextSong(nextSong, playlistState.Value.NightPlaylist);
-			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
+			var nextSong = GetNextSong(signal.Song, playlistState.Value.NightPlaylist);
+			dispatcher.Dispatch(new SetCurrentSongForNightAction(nextSong, signal.Song));
 		}
 		return Task.CompletedTask;	
 	}
@@ -104,6 +95,17 @@ public class Effects(
 	public Task OnSetCurrentSongForDay(SetCurrentSongForDayAction action, IDispatcher dispatcher)
 	{
 		dispatcher.Dispatch(new LoadSongSignal(action.Song));
+
+		if (gamePhaseState.Value.Phase == GamePhase.Day)
+		{
+			if (action.PreviousSong is not null)
+				dispatcher.Dispatch(new PauseSongSignal(action.PreviousSong, Reset: true));
+			
+			dispatcher.Dispatch(new PlaySongSignal(action.Song, playlistState.Value.DayPlaylist.Gain));
+			var songAfterNextSong = GetNextSong(action.Song, playlistState.Value.DayPlaylist);
+			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
+		}
+
 		return Task.CompletedTask;
 	}
 
@@ -111,6 +113,17 @@ public class Effects(
 	public Task OnSetCurrentSongForNight(SetCurrentSongForNightAction action, IDispatcher dispatcher)
 	{
 		dispatcher.Dispatch(new LoadSongSignal(action.Song));
+
+		if (gamePhaseState.Value.Phase == GamePhase.Night)
+		{
+			if (action.PreviousSong is not null)
+				dispatcher.Dispatch(new PauseSongSignal(action.PreviousSong, Reset: true));
+			
+			dispatcher.Dispatch(new PlaySongSignal(action.Song, playlistState.Value.NightPlaylist.Gain));
+			var songAfterNextSong = GetNextSong(action.Song, playlistState.Value.NightPlaylist);
+			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
+		}
+		
 		return Task.CompletedTask;
 	}
 	
