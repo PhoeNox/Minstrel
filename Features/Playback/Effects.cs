@@ -99,6 +99,20 @@ public class Effects(
 		}
 		return Task.CompletedTask;	
 	}
+
+	[EffectMethod]
+	public Task OnSetCurrentSongForDay(SetCurrentSongForDayAction action, IDispatcher dispatcher)
+	{
+		dispatcher.Dispatch(new LoadSongSignal(action.Song));
+		return Task.CompletedTask;
+	}
+
+	[EffectMethod]
+	public Task OnSetCurrentSongForNight(SetCurrentSongForNightAction action, IDispatcher dispatcher)
+	{
+		dispatcher.Dispatch(new LoadSongSignal(action.Song));
+		return Task.CompletedTask;
+	}
 	
 	[EffectMethod]
 	public Task OnDayGainChanged(SetDayGainAction action, IDispatcher dispatcher)
