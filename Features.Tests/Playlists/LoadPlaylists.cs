@@ -1,7 +1,6 @@
 namespace Features.Tests.Playlists;
 
 using Features.Playlists;
-using Fluxor;
 using Microsoft.Testing.Platform.Services;
 
 [UseAppContext]

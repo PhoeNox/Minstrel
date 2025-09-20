@@ -2,7 +2,6 @@ namespace Features.Tests.Playlists;
 
 using Features.Playback;
 using Features.Playlists;
-using Fluxor;
 using Microsoft.Extensions.DependencyInjection;
 using State = Features.Playlists.State;
 
