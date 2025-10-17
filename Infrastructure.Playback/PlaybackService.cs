@@ -64,7 +64,8 @@ public class PlaybackService(IJSRuntime jsRuntime)
 	private async Task MonitorSongEnd(ActiveSong activeSong, CancellationToken ct)
 	{
 		var songLeft = activeSong.Song.Length - activeSong.AlreadyPlayed - fadeDuration;
-		await Task.Delay(songLeft, ct);
+		if (songLeft > TimeSpan.Zero)
+			await Task.Delay(songLeft, ct);
 		SongEnded(activeSong.Song);
 	}
 
