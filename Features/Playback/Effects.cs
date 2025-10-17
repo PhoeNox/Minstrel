@@ -3,6 +3,7 @@ namespace Features.Playback;
 using Playlists;
 
 public class Effects(
+	IState<State> playbackState,
 	IState<Playlists.State> playlistState,
 	IState<GamePhases.State> gamePhaseState)
 {
@@ -95,12 +96,12 @@ public class Effects(
 	public Task OnSetCurrentSongForDay(SetCurrentSongForDayAction action, IDispatcher dispatcher)
 	{
 		dispatcher.Dispatch(new LoadSongSignal(action.Song));
+		
+		if (action.PreviousSong is not null)
+			dispatcher.Dispatch(new PauseSongSignal(action.PreviousSong, Reset: true));
 
-		if (gamePhaseState.Value.Phase == GamePhase.Day)
+		if (playbackState.Value.IsPlaying && gamePhaseState.Value.Phase == GamePhase.Day)
 		{
-			if (action.PreviousSong is not null)
-				dispatcher.Dispatch(new PauseSongSignal(action.PreviousSong, Reset: true));
-			
 			dispatcher.Dispatch(new PlaySongSignal(action.Song, playlistState.Value.DayPlaylist.Gain));
 			var songAfterNextSong = GetNextSong(action.Song, playlistState.Value.DayPlaylist);
 			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
@@ -113,12 +114,12 @@ public class Effects(
 	public Task OnSetCurrentSongForNight(SetCurrentSongForNightAction action, IDispatcher dispatcher)
 	{
 		dispatcher.Dispatch(new LoadSongSignal(action.Song));
+		
+		if (action.PreviousSong is not null)
+			dispatcher.Dispatch(new PauseSongSignal(action.PreviousSong, Reset: true));
 
-		if (gamePhaseState.Value.Phase == GamePhase.Night)
+		if (playbackState.Value.IsPlaying && gamePhaseState.Value.Phase == GamePhase.Night)
 		{
-			if (action.PreviousSong is not null)
-				dispatcher.Dispatch(new PauseSongSignal(action.PreviousSong, Reset: true));
-			
 			dispatcher.Dispatch(new PlaySongSignal(action.Song, playlistState.Value.NightPlaylist.Gain));
 			var songAfterNextSong = GetNextSong(action.Song, playlistState.Value.NightPlaylist);
 			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));

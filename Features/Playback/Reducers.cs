@@ -11,7 +11,7 @@ public static class Reducers
 	
 	[ReducerMethod]
 	public static State Play(State state, PlayAction action)
-	=> state with { IsPlaying = true };
+		=> state with { IsPlaying = true };
 	
 	[ReducerMethod]
 	public static State Pause(State state, PauseAction action)
