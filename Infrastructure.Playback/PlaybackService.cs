@@ -72,12 +72,14 @@ public class PlaybackService(IJSRuntime jsRuntime)
 	{
 		var activeSong = activeSongs[song.Path];
 		await activeSong.SongEndMonitoringCts!.CancelAsync();
-		activeSong.FadeOutCts = new CancellationTokenSource();
-		await Fadeout(activeSong.GainNode, activeSong.FadeOutCts!.Token);;
-		activeSong.AlreadyPlayed += DateTime.Now - activeSong.LastStarted!.Value;
-		await Pause(activeSong.SongNode);
+		
 		if (reset)
 			activeSongs.Remove(song.Path);
+		
+		activeSong.FadeOutCts = new CancellationTokenSource();
+		await Fadeout(activeSong.GainNode, activeSong.FadeOutCts!.Token);
+		activeSong.AlreadyPlayed += DateTime.Now - activeSong.LastStarted!.Value;
+		await Pause(activeSong.SongNode);
 	}
 	
 	private static async Task Play(AudioBufferSourceNode songNode)
