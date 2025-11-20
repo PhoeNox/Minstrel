@@ -14,100 +14,118 @@
 @inject IState<Features.QrCodeConnection.State> QrCodeConnectionState
 @inject IJSRuntime JsRuntime
 
-<input type="range" min="0" max="2" step="0.1" @bind="DayGain" @bind:event="oninput"/>
+<button class="burger-button" @onclick="ToggleMenu">☰</button>
 
-<div>
-	<h4>Day</h4>
-	<table>
-		<thead>
-			<tr>
-				<th>Select</th>
-				<th>Title</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach (var song in PlaylistState.Value.DayPlaylist.Songs)
-			{
-				<tr>
-					<td>
-						<input type="radio"
-							name="daySong"
-							checked="@(PlaylistState.Value.DayPlaylist.CurrentSong == song)"
-							@onchange="@(() => SelectDaySong(song))"/>
-					</td>
-					<td>@song.Title</td>
-				</tr>
-			}
-		</tbody>
-	</table>
-</div>
+<div class="menu-overlay @(isMenuOpen ? "open" : "")" @onclick="CloseMenu"></div>
 
-@if (PlaybackState.Value.IsPlaying is false
-     && PlaylistState.Value.DayPlaylist.CurrentSong is not null
-     && PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))
-{
-	<button @onclick="Play">▶ Play</button>
-}
-
-@if (PlaybackState.Value.IsPlaying)
-{
-	<button @onclick="Pause">⏸ Pause</button>
-}
-
-@if (PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable)
-{
-	<button @onclick="SwitchGamePhase">🔄 Switch</button>
-}
-
-<div>
-	<h4>Night</h4>
-	<table>
-		<thead>
-			<tr>
-				<th>Select</th>
-				<th>Title</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach (var song in PlaylistState.Value.NightPlaylist.Songs)
-			{
-				<tr>
-					<td>
-						<input type="radio"
-							name="nightSong"
-							checked="@(PlaylistState.Value.NightPlaylist.CurrentSong == song)"
-							@onchange="@(() => SelectNightSong(song))"/>
-					</td>
-					<td>@song.Title</td>
-				</tr>
-			}
-		</tbody>
-	</table>
-</div>
-
-<input type="range" min="0" max="2" step="0.1" @bind="NightGain" @bind:event="oninput"/>
-
-@if (GamePhaseState.Value.Phase == GamePhase.Day)
-{
-	@if (TimerState.Value.IsRunning is false)
+<div class="side-menu @(isMenuOpen ? "open" : "")">
+	@if (GamePhaseState.Value.Phase == GamePhase.Day)
 	{
-		<button @onclick="OpenTimerDialog">⏱ Start Timer</button>
+		@if (TimerState.Value.IsRunning is false)
+		{
+			<button @onclick="() => { OpenTimerDialog(); CloseMenu(); }">⏱ Start Timer</button>
+		}
+		else
+		{
+			<label>Timer: @TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
+			<button @onclick="() => { StopTimer(); CloseMenu(); }">⏹ Stop Timer</button>
+		}
+	}
+
+	@if (QrCodeConnectionState.Value.QrCodeVisibility != QrCodeVisibility.Hidden)
+	{
+		<button @onclick="() => { HideQrCode(); CloseMenu(); }">⧉ Hide QR Code</button>
 	}
 	else
 	{
-		<label>Timer: @TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
-		<button @onclick="StopTimer">⏹ Stop Timer</button>
+		<button @onclick="() => { ShowQrCode(); CloseMenu(); }">⧉ Show QR Code</button>
 	}
-}
+</div>
 
-@if (QrCodeConnectionState.Value.QrCodeVisibility != QrCodeVisibility.Hidden)
-{
-	<button @onclick="HideQrCode">⧉ Hide QR Code</button>
-}
-else
-{
-	<button @onclick="ShowQrCode">⧉ Show QR Code</button>
-}
+<div class="remote-container">
+	<div class="main-content">
+		<div class="volume-control">
+			<label>Day Volume</label>
+			<input type="range" min="0" max="2" step="0.1" @bind="DayGain" @bind:event="oninput"/>
+		</div>
+
+		<div class="playlist" style="flex: 0 0 auto; max-height: 30%;">
+			<h4>Day</h4>
+			<table>
+				<thead>
+					<tr>
+						<th>Select</th>
+						<th>Title</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var song in PlaylistState.Value.DayPlaylist.Songs)
+					{
+						<tr>
+							<td>
+								<input type="radio"
+									name="daySong"
+									checked="@(PlaylistState.Value.DayPlaylist.CurrentSong == song)"
+									@onchange="@(() => SelectDaySong(song))"/>
+							</td>
+							<td>@song.Title</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="control-buttons">
+			@if (PlaybackState.Value.IsPlaying is false
+			     && PlaylistState.Value.DayPlaylist.CurrentSong is not null
+			     && PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))
+			{
+				<button @onclick="Play">▶ Play</button>
+			}
+
+			@if (PlaybackState.Value.IsPlaying)
+			{
+				<button @onclick="Pause">⏸ Pause</button>
+			}
+
+			@if (PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable)
+			{
+				<button @onclick="SwitchGamePhase">🔄 Switch</button>
+			}
+		</div>
+
+		<div class="playlist">
+			<h4>Night</h4>
+			<table>
+				<thead>
+					<tr>
+						<th>Select</th>
+						<th>Title</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var song in PlaylistState.Value.NightPlaylist.Songs)
+					{
+						<tr>
+							<td>
+								<input type="radio"
+									name="nightSong"
+									checked="@(PlaylistState.Value.NightPlaylist.CurrentSong == song)"
+									@onchange="@(() => SelectNightSong(song))"/>
+							</td>
+							<td>@song.Title</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="volume-control">
+			<label>Night Volume</label>
+			<input type="range" min="0" max="2" step="0.1" @bind="NightGain" @bind:event="oninput"/>
+		</div>
+	</div>
+</div>
 
 <dialog id="timerDialog">
 	<h3>Start Timer</h3>
@@ -123,6 +141,10 @@ else
 
 @code {
 	private int timerMinutes = 8;
+	private bool isMenuOpen = false;
+
+	void ToggleMenu() => isMenuOpen = !isMenuOpen;
+	void CloseMenu() => isMenuOpen = false;
 
 	bool IsSongOnOtherPlaylistAvailable
 	{
