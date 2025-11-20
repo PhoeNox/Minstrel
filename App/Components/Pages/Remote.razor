@@ -4,7 +4,6 @@
 @using Features.GamePhases
 @using Features.QrCodeConnection
 @using Features.Timer
-@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using State = Features.GamePhases.State
 
 @inject IDispatcher Dispatcher
@@ -13,103 +12,117 @@
 @inject IState<Features.Playback.State> PlaybackState
 @inject IState<Features.Timer.State> TimerState
 @inject IState<Features.QrCodeConnection.State> QrCodeConnectionState
-@inject IDialogService DialogService
+@inject IJSRuntime JsRuntime
 
-<FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="DayGain"/>
+<input type="range" min="0" max="2" step="0.1" @bind="DayGain" @bind:event="oninput"/>
 
 <div>
 	<h4>Day</h4>
-	<FluentDataGrid Items="DaySongs">
-		<SelectColumn SelectMode="DataGridSelectMode.Single" @bind-SelectedItems="CurrentDaySongs"/>
-		<PropertyColumn Property="@(s => s.Title)"/>
-	</FluentDataGrid>
+	<table>
+		<thead>
+			<tr>
+				<th>Select</th>
+				<th>Title</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var song in PlaylistState.Value.DayPlaylist.Songs)
+			{
+				<tr>
+					<td>
+						<input type="radio"
+							name="daySong"
+							checked="@(PlaylistState.Value.DayPlaylist.CurrentSong == song)"
+							@onchange="@(() => SelectDaySong(song))"/>
+					</td>
+					<td>@song.Title</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 </div>
 
 @if (PlaybackState.Value.IsPlaying is false
      && PlaylistState.Value.DayPlaylist.CurrentSong is not null
      && PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))
 {
-	<FluentButton
-		Appearance="Appearance.Accent"
-		IconStart="new Size24.Play()"
-		OnClick="Play">
-		Play
-	</FluentButton>
+	<button @onclick="Play">▶ Play</button>
 }
 
 @if (PlaybackState.Value.IsPlaying)
 {
-	<FluentButton
-		Appearance="Appearance.Accent"
-		IconStart="new Size24.Pause()"
-		OnClick="Pause">
-		Pause
-	</FluentButton>
+	<button @onclick="Pause">⏸ Pause</button>
 }
 
 @if (PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable)
 {
-	<FluentButton
-		Appearance="Appearance.Accent"
-		IconStart="new Size24.ArrowRepeatAll()"
-		OnClick="SwitchGamePhase">
-		Switch
-	</FluentButton>
+	<button @onclick="SwitchGamePhase">🔄 Switch</button>
 }
 
 <div>
 	<h4>Night</h4>
-	<FluentDataGrid Items="NightSongs">
-		<SelectColumn SelectMode="DataGridSelectMode.Single" @bind-SelectedItems="CurrentNightSongs"/>
-		<PropertyColumn Property="@(s => s.Title)"/>
-	</FluentDataGrid>
+	<table>
+		<thead>
+			<tr>
+				<th>Select</th>
+				<th>Title</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var song in PlaylistState.Value.NightPlaylist.Songs)
+			{
+				<tr>
+					<td>
+						<input type="radio"
+							name="nightSong"
+							checked="@(PlaylistState.Value.NightPlaylist.CurrentSong == song)"
+							@onchange="@(() => SelectNightSong(song))"/>
+					</td>
+					<td>@song.Title</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 </div>
 
-<FluentSlider Min="0" Max="2" Step="0.1" @bind-Value="NightGain"/>
+<input type="range" min="0" max="2" step="0.1" @bind="NightGain" @bind:event="oninput"/>
 
 @if (GamePhaseState.Value.Phase == GamePhase.Day)
 {
 	@if (TimerState.Value.IsRunning is false)
 	{
-		<FluentButton
-			Appearance="Appearance.Accent"
-			IconStart="new Size24.Timer()"
-			OnClick="OpenTimerDialog">
-			Start Timer
-		</FluentButton>
+		<button @onclick="OpenTimerDialog">⏱ Start Timer</button>
 	}
 	else
 	{
-		<FluentLabel>Timer: @TimerState.Value.TimeLeft.ToString(@"mm\:ss")</FluentLabel>
-		<FluentButton
-			Appearance="Appearance.Accent"
-			IconStart="new Size24.Stop()"
-			OnClick="StopTimer">
-			Stop Timer
-		</FluentButton>
+		<label>Timer: @TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
+		<button @onclick="StopTimer">⏹ Stop Timer</button>
 	}
 }
 
 @if (QrCodeConnectionState.Value.QrCodeVisibility != QrCodeVisibility.Hidden)
 {
-	<FluentButton
-		Appearance="Appearance.Accent"
-		IconStart="new Size24.QrCode()"
-		OnClick="HideQrCode">
-		Hide QR Code
-	</FluentButton>
+	<button @onclick="HideQrCode">⧉ Hide QR Code</button>
 }
 else
 {
-	<FluentButton
-		Appearance="Appearance.Accent"
-		IconStart="new Size24.QrCode()"
-		OnClick="ShowQrCode">
-		Show QR Code
-	</FluentButton>
+	<button @onclick="ShowQrCode">⧉ Show QR Code</button>
 }
 
+<dialog id="timerDialog">
+	<h3>Start Timer</h3>
+	<div>
+		<label for="timerMinutes">Minutes</label>
+		<input type="number" id="timerMinutes" min="1" @bind="timerMinutes" style="width: 150px"/>
+	</div>
+	<div>
+		<button @onclick="StartTimerFromDialog">Start Timer</button>
+		<button @onclick="CloseTimerDialog">Cancel</button>
+	</div>
+</dialog>
+
 @code {
+	private int timerMinutes = 8;
 
 	bool IsSongOnOtherPlaylistAvailable
 	{
@@ -135,44 +148,20 @@ else
 		set => Dispatcher.Dispatch(new Features.Playlists.SetNightGainAction((float) value));
 	}
 
-	public IQueryable<Song> DaySongs => PlaylistState.Value.DayPlaylist.Songs.AsQueryable();
-
-	public IEnumerable<Song> CurrentDaySongs
+	void SelectDaySong(Song song)
 	{
-		get
-		{
-			var currentDaySong = PlaylistState.Value.DayPlaylist.CurrentSong;
-			return currentDaySong is null ? [] : [currentDaySong];
-		}
-		set
-		{
-			var currentDaySong = value.FirstOrDefault();
-			if (currentDaySong is not null)
-				Dispatcher.Dispatch(
-					new Features.Playlists.SetCurrentSongForDayAction(
-						currentDaySong,
-						PlaylistState.Value.DayPlaylist.CurrentSong));
-		}
+		Dispatcher.Dispatch(
+			new Features.Playlists.SetCurrentSongForDayAction(
+				song,
+				PlaylistState.Value.DayPlaylist.CurrentSong));
 	}
 
-	public IQueryable<Song> NightSongs => PlaylistState.Value.NightPlaylist.Songs.AsQueryable();
-
-	public IEnumerable<Song> CurrentNightSongs
+	void SelectNightSong(Song song)
 	{
-		get
-		{
-			var currentNightSong = PlaylistState.Value.NightPlaylist.CurrentSong;
-			return currentNightSong is null ? [] : [currentNightSong];
-		}
-		set
-		{
-			var currentNightSong = value.FirstOrDefault();
-			if (currentNightSong is not null)
-				Dispatcher.Dispatch(
-					new Features.Playlists.SetCurrentSongForNightAction(
-						currentNightSong,
-						PlaylistState.Value.NightPlaylist.CurrentSong));
-		}
+		Dispatcher.Dispatch(
+			new Features.Playlists.SetCurrentSongForNightAction(
+				song,
+				PlaylistState.Value.NightPlaylist.CurrentSong));
 	}
 
 	protected override void OnInitialized()
@@ -193,21 +182,20 @@ else
 
 	async Task OpenTimerDialog()
 	{
-		var dialogOptions = new DialogParameters
-		{
-			Title = "Start Timer",
-			PrimaryAction = "Start Timer",
-		};
+		await JsRuntime.InvokeVoidAsync("eval", "document.getElementById('timerDialog').showModal()");
+	}
 
-		var dialog = await DialogService.ShowDialogAsync<TimerDialog>(
-			new TimerDialog.Result {Minutes = 8}, dialogOptions);
-		var result = await dialog.Result;
-		if (result is {Cancelled: false, Data: TimerDialog.Result dialogResult})
-		{
-			var timerDuration = TimeSpan.FromMinutes(dialogResult.Minutes);
-			if (timerDuration > TimeSpan.Zero)
-				Dispatcher.Dispatch(new StartTimerAction(timerDuration));
-		}
+	async Task CloseTimerDialog()
+	{
+		await JsRuntime.InvokeVoidAsync("eval", "document.getElementById('timerDialog').close()");
+	}
+
+	async Task StartTimerFromDialog()
+	{
+		var timerDuration = TimeSpan.FromMinutes(timerMinutes);
+		if (timerDuration > TimeSpan.Zero)
+			Dispatcher.Dispatch(new StartTimerAction(timerDuration));
+		await CloseTimerDialog();
 	}
 
 	void StopTimer()
@@ -218,5 +206,4 @@ else
 
 	void HideQrCode()
 		=> Dispatcher.Dispatch(new HideQrCodeAction());
-
 }

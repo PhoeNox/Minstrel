@@ -2,7 +2,6 @@ using Fluxor;
 using Infrastructure.FileSystem;
 using Infrastructure.Network;
 using Infrastructure.Playback;
-using Microsoft.FluentUI.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +12,6 @@ if (!string.IsNullOrEmpty(urls))
 // Add services to the container.
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
-builder.Services.AddFluentUIComponents();
 
 builder.Services.AddScoped<PlaybackService>();
 builder.Services.AddSingleton<IPlaylistLoader, PlaylistLoader>();
