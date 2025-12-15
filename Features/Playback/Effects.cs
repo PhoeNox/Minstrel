@@ -127,6 +127,42 @@ public class Effects(
 		
 		return Task.CompletedTask;
 	}
+
+	[EffectMethod]
+	public Task OnDaySongMoved(MoveDaySongAction action, IDispatcher dispatcher)
+	{
+		if (!playbackState.Value.IsPlaying || gamePhaseState.Value.Phase is not GamePhase.Day)
+			return Task.CompletedTask;
+		
+		var playlist = playlistState.Value.DayPlaylist;
+		var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
+		var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
+		if (nextSongIndex == action.NewIndex || nextSongIndex == action.OldIndex)
+		{
+			var nextSong = playlist.Songs[nextSongIndex];
+			dispatcher.Dispatch(new LoadSongSignal(nextSong));
+		}
+		
+		return Task.CompletedTask;
+	}
+
+	[EffectMethod]
+	public Task OnNightSongMoved(MoveNightSongAction action, IDispatcher dispatcher)
+	{
+		if (!playbackState.Value.IsPlaying || gamePhaseState.Value.Phase is not GamePhase.Night)
+			return Task.CompletedTask;
+		
+		var playlist = playlistState.Value.NightPlaylist;
+		var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
+		var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
+		if (nextSongIndex == action.NewIndex || nextSongIndex == action.OldIndex)
+		{
+			var nextSong = playlist.Songs[nextSongIndex];
+			dispatcher.Dispatch(new LoadSongSignal(nextSong));
+		}
+		
+		return Task.CompletedTask;
+	}
 	
 	[EffectMethod]
 	public Task OnDayGainChanged(SetDayGainAction action, IDispatcher dispatcher)

@@ -1,37 +1,31 @@
 <div class="playlist-control">
-	<table>
-		<thead>
-		<tr>
-			<th></th>
-			<th>Title</th>
-			<th>Artist</th>
-			<th>Length</th>
-		</tr>
-		</thead>
-		<tbody>
-		@foreach (var song in Playlist.Songs)
-		{
-			<tr>
-				<td>
-					<input type="radio"
-					       checked="@(Playlist.CurrentSong == song)"
-					       @onchange="@(() => SongSelected.InvokeAsync(song))"/>
-				</td>
-				<td>@song.Title</td>
-				<td>@song.Artist</td>
-				<td>@ToSongLength(song.Length)</td>
-			</tr>
-		}
-		</tbody>
-	</table>
+	<SortableList Class="playlist-control" Data="Songs" OnUpdate="@OnSongMoved">
+		<ItemTemplate>
+			@context.Title
+		</ItemTemplate>
+	</SortableList>
 </div>
 
 @code {
-	[Parameter] public required Playlist Playlist { get; set; }
+	[Parameter] 
+	public required Playlist Playlist { get; set; }
 
-	[Parameter] public EventCallback<Song> SongSelected { get; set; }
+	[Parameter]
+	public EventCallback<Song> SongSelected { get; set; }
+	
+	[Parameter]
+	public EventCallback<SongMovedEvent> SongMoved { get; set; }
+
+	List<Song> Songs => Playlist.Songs.ToList();
 
 	static string ToSongLength(TimeSpan timeSpan)
 		=> $"{(int) timeSpan.TotalMinutes}:{timeSpan.Seconds:D2}";
 
+	private async Task OnSongMoved(SortableListEventArgs args)
+	{
+		var @event = new SongMovedEvent(args.OldIndex, args.NewIndex);
+		await SongMoved.InvokeAsync(@event);
+	}
+	
+	public record SongMovedEvent(int OldIndex, int NewIndex);
 }

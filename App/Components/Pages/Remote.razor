@@ -44,7 +44,8 @@
 
 		<PlaylistControl
 			Playlist="PlaylistState.Value.DayPlaylist"
-			SongSelected="song => SelectDaySong(song)"/>
+			SongSelected="song => SelectDaySong(song)"
+			SongMoved="e => MoveDaySong(e.OldIndex, e.NewIndex)"/>
 	</div>
 
 	<div class="control-buttons">
@@ -71,7 +72,8 @@
 	<div id="night-phase" class="game-phase-section">
 		<PlaylistControl
 			Playlist="PlaylistState.Value.NightPlaylist"
-			SongSelected="song => SelectNightSong(song)"/>
+			SongSelected="song => SelectNightSong(song)"
+			SongMoved="e => MoveNightSong(e.OldIndex, e.NewIndex)"/>
 
 		<VolumeControl Class="volume-control" @bind-Gain="NightGain"/>
 	</div>
@@ -169,6 +171,12 @@
 			Dispatcher.Dispatch(new StartTimerAction(timerDuration));
 		await CloseTimerDialog();
 	}
+
+	void MoveDaySong(int oldIndex, int newIndex)
+		=> Dispatcher.Dispatch(new Features.Playlists.MoveDaySongAction(oldIndex, newIndex));
+	
+	void MoveNightSong(int oldIndex, int newIndex)
+		=> Dispatcher.Dispatch(new Features.Playlists.MoveNightSongAction(oldIndex, newIndex));
 
 	void StopTimer()
 		=> Dispatcher.Dispatch(new SetIsTimeRunningAction(false));
