@@ -1,33 +1,18 @@
-@import '/_content/Microsoft.FluentUI.AspNetCore.Components/css/reboot.css';
+:root {
+    --content-margin: 1.5rem;
+}
 
 body {
     --body-font: "Segoe UI Variable", "Segoe UI", sans-serif;
     font-family: var(--body-font);
     font-size: var(--type-ramp-base-font-size);
     line-height: var(--type-ramp-base-line-height);
+    height: 100dvh;
     margin: 0;
 }
 
-.main {
-    min-height: calc(100dvh - 86px);
-    color: var(--neutral-foreground-rest);
-    align-items: stretch !important;
-}
-
-.body-content {
-    align-self: stretch;
-    height: calc(100dvh - 86px) !important;
-    display: flex;
-}
-
 .content {
-    padding: 1.5rem 1.5rem;
-    align-self: stretch !important;
-    width: 100%;
-}
-
-.manage {
-    width: 100dvw;
+    padding: var(--content-margin);
 }
 
 .alert {
@@ -100,19 +85,4 @@ body {
 
 code {
     color: #c02d76;
-}
-
-@media (max-width: 600px) {
-    .header-gutters {
-        margin: 0.5rem 3rem 0.5rem 1.5rem !important;
-    }
-
-    [dir="rtl"] .header-gutters {
-        margin: 0.5rem 1.5rem 0.5rem 3rem !important;
-    }
-
-    .main {
-        flex-direction: column !important;
-        row-gap: 0 !important;
-    }
 }
