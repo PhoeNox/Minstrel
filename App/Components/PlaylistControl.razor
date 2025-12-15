@@ -1,7 +1,12 @@
 <div class="playlist-control">
-	<SortableList Class="playlist-control" Data="Songs" OnUpdate="@OnSongMoved">
+	<SortableList Data="Songs" OnUpdate="@OnSongMoved" Handle=".bb-sortable-list-handle">
 		<ItemTemplate>
-			@context.Title
+			<div class="d-flex justify-content-start">
+				<div class="bb-sortable-list-handle">
+					<Icon Name="IconName.GripVertical"/>
+				</div>
+				<div>@context.Title</div>
+			</div>
 		</ItemTemplate>
 	</SortableList>
 </div>
