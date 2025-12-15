@@ -18,10 +18,6 @@ public class PlaylistLoader : IPlaylistLoader
 
 	private static async Task<Song[]> LoadPlaylist(string playlistName)
 	{
-		return Enumerable.Range(0, 50)
-				.Select(i => new Song($"{i}", $"{i}", $"{i}", $"{i}", TimeSpan.Zero))
-				.ToArray();
-		
 		var musicDirectory = Path.Combine("wwwroot", "Music");
 		var playlistPath = Path.Combine(musicDirectory, playlistName, "playlist.txt");
 		var songFiles = await File.ReadAllLinesAsync(playlistPath);
