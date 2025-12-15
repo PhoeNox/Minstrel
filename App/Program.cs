@@ -13,6 +13,8 @@ if (!string.IsNullOrEmpty(urls))
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
+builder.Services.AddBlazorBootstrap();
+
 builder.Services.AddScoped<PlaybackService>();
 builder.Services.AddSingleton<IPlaylistLoader, PlaylistLoader>();
 builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
