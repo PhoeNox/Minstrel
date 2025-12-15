@@ -38,7 +38,7 @@ public class SongEnding(AppContext appContext, IDispatcher dispatcher)
 		dispatcher.Dispatch(new SongEndedSignal(song1));
 
 		var playbackState = appContext.Services.GetRequiredService<IState<Features.Playback.State>>();
-		await Assert.That(playbackState.Value.PlayingSongs).HasCount(1)
+		await Assert.That(playbackState.Value.PlayingSongs).Count().IsEqualTo(1)
 			.And.Contains(new PlayingSong(song2, 1));
 		var playlistState = appContext.Services.GetRequiredService<IState<Features.Playlists.State>>();
 		await Assert.That(playlistState.Value.DayPlaylist.CurrentSong).IsEqualTo(song2);

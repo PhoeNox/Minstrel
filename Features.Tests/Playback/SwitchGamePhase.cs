@@ -31,7 +31,7 @@ public class SwitchGamePhase(AppContext appContext, IDispatcher dispatcher)
 
 		var state = appContext.Services.GetRequiredService<IState<State>>();
 		await Assert.That(state.Value.PlayingSongs)
-			.HasCount(2)
+			.Count().IsEqualTo(2)
 			.And.Contains(new PlayingSong(daySong, 1))
 			.And.Contains(new PlayingSong(nightSong, 1));
 		if (gamePhase == GamePhase.Day)
