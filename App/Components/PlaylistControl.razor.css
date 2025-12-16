@@ -4,3 +4,41 @@
     min-height: 0;
     overflow-y: auto;
 }
+
+.song-entry {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+}
+
+.bb-sortable-list-handle {
+    align-self: stretch;
+    width: 2rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.song-info {
+    display: flex;
+    justify-content: space-between;
+    flex-grow: 1;
+}
+
+.play-button {
+    width: 2rem;
+    height: 2rem;
+    padding-left: 0.5rem;
+    line-height: 1;
+    border: none;
+    border-radius: 9999px;
+    color: white;
+    background: #7c3aed;
+    flex-shrink: 0;
+}
+
+.play-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}

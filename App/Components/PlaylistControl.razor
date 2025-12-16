@@ -1,11 +1,26 @@
 <div class="playlist-control">
 	<SortableList Data="Songs" OnUpdate="@OnSongMoved" Handle=".bb-sortable-list-handle">
 		<ItemTemplate>
-			<div class="d-flex justify-content-start">
+			<div class="song-entry">
 				<div class="bb-sortable-list-handle">
 					<Icon Name="IconName.GripVertical"/>
 				</div>
-				<div>@context.Title</div>
+				<button
+					class="play-button"
+					onclick="@(() => SongSelected.InvokeAsync(context))"
+					disabled="@(context == Playlist.CurrentSong)">
+					▶
+				</button>
+				<div class="song-info">
+					<div>
+						@context.Title
+						@if (!string.IsNullOrEmpty(context.Artist))
+						{
+							<span> - @context.Artist</span>
+						}
+					</div>
+					<div class="song-length">@ToSongLength(context.Length)</div>
+				</div>
 			</div>
 		</ItemTemplate>
 	</SortableList>
