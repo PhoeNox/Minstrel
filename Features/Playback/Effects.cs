@@ -137,7 +137,9 @@ public class Effects(
 		var playlist = playlistState.Value.DayPlaylist;
 		var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
 		var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
-		if (nextSongIndex == action.NewIndex || nextSongIndex == action.OldIndex)
+		if (currentSongIndex == action.NewIndex 
+		    || nextSongIndex == action.NewIndex
+		    || nextSongIndex == action.OldIndex)
 		{
 			var nextSong = playlist.Songs[nextSongIndex];
 			dispatcher.Dispatch(new LoadSongSignal(nextSong));
@@ -155,7 +157,9 @@ public class Effects(
 		var playlist = playlistState.Value.NightPlaylist;
 		var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
 		var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
-		if (nextSongIndex == action.NewIndex || nextSongIndex == action.OldIndex)
+		if (currentSongIndex == action.NewIndex 
+		    || nextSongIndex == action.NewIndex
+		    || nextSongIndex == action.OldIndex)
 		{
 			var nextSong = playlist.Songs[nextSongIndex];
 			dispatcher.Dispatch(new LoadSongSignal(nextSong));

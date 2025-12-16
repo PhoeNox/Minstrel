@@ -50,6 +50,25 @@ public class MovingSongs(AppContext appContext, IDispatcher dispatcher)
 
 		await Assert.That(loadedSongs).Contains(song4);
 	}
+	
+	[Test]
+	public async Task WhenMovingDaySong_AndCurrentSongHasBeenMoved_LoadsNewNextSong()
+	{
+		var loadedSongs = new List<Song>();
+		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
+		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
+				action => loadedSongs.Add(action.Song));
+		
+		dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3, song4], []));
+		dispatcher.Dispatch(new SetGamePhaseAction(GamePhase.Day));
+		dispatcher.Dispatch(new SetCurrentSongForDayAction(song1));
+		dispatcher.Dispatch(new PlayAction());
+		
+		loadedSongs.Clear();
+		dispatcher.Dispatch(new MoveDaySongAction(0, 2));
+		
+		await Assert.That(loadedSongs).Contains(song4);
+	}
 
 	[Test]
 	public async Task WhenMovingNightSong_AndNextSongHasMovedAway_LoadsNewNextSong()
@@ -85,6 +104,25 @@ public class MovingSongs(AppContext appContext, IDispatcher dispatcher)
 		
 		loadedSongs.Clear();
 		dispatcher.Dispatch(new MoveNightSongAction(3, 1));
+		
+		await Assert.That(loadedSongs).Contains(song4);
+	}
+	
+	[Test]
+	public async Task WhenMovingNightSong_AndCurrentSongHasBeenMoved_LoadsNewNextSong()
+	{
+		var loadedSongs = new List<Song>();
+		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
+		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
+				action => loadedSongs.Add(action.Song));
+		
+		dispatcher.Dispatch(new SetPlaylistsAction([], [song1, song2, song3, song4]));
+		dispatcher.Dispatch(new SetGamePhaseAction(GamePhase.Night));
+		dispatcher.Dispatch(new SetCurrentSongForNightAction(song1));
+		dispatcher.Dispatch(new PlayAction());
+		
+		loadedSongs.Clear();
+		dispatcher.Dispatch(new MoveNightSongAction(0, 2));
 		
 		await Assert.That(loadedSongs).Contains(song4);
 	}
