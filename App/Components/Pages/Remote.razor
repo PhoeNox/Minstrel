@@ -141,7 +141,8 @@
 	protected override void OnInitialized()
 	{
 		base.OnInitialized();
-		Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
+		if (!PlaylistState.Value.PlaylistsLoaded)
+			Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
 		Dispatcher.Dispatch(new HideQrCodeAction());
 	}
 

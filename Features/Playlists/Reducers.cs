@@ -15,7 +15,12 @@ public static class Reducers
 		if (!nightPlaylist.Songs.Contains(nightPlaylist.CurrentSong))
 			nightPlaylist = nightPlaylist with {CurrentSong = nightPlaylist.Songs.FirstOrDefault()};
 
-		return state with {DayPlaylist = dayPlaylist, NightPlaylist = nightPlaylist};
+		return state with
+		{
+				DayPlaylist = dayPlaylist,
+				NightPlaylist = nightPlaylist,
+				PlaylistsLoaded = true,
+		};
 	}
 
 	[ReducerMethod]
