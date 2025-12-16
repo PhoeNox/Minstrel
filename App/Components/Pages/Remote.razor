@@ -40,7 +40,7 @@
 
 <div id="remote-container">
 	<div id="day-phase" class="game-phase-section">
-		<VolumeControl Class="volume-control" @bind-Gain="DayGain"/>
+		<VolumeControl @bind-Gain="DayGain"/>
 
 		<PlaylistControl
 			Playlist="PlaylistState.Value.DayPlaylist"
@@ -49,22 +49,28 @@
 	</div>
 
 	<div class="control-buttons">
-		@if (PlaybackState.Value.IsPlaying is false
-				 && PlaylistState.Value.DayPlaylist.CurrentSong is not null
-				 && PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))
-		{
-			<button @onclick="Play">▶ Play</button>
-		}
-
 		@if (PlaybackState.Value.IsPlaying)
 		{
 			<button @onclick="Pause">⏸ Pause</button>
 		}
-
-		@if (PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable)
+		else
 		{
-			<button @onclick="SwitchGamePhase">🔄 Switch</button>
+			<button
+				class="@(!PlaybackState.Value.IsPlaying ? "primary" : "")"
+				disabled="@(PlaylistState.Value.DayPlaylist.CurrentSong is null
+				          || !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
+				@onclick="Play">
+				▶ Play
+			</button>
 		}
+
+		<button
+			class="@(PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable ? "primary" : "")"
+			disabled="@(!PlaybackState.Value.IsPlaying || !IsSongOnOtherPlaylistAvailable)"
+			@onclick="SwitchGamePhase">
+			<Icon Name="IconName.BrightnessAltHighFill"/>
+			Switch
+		</button>
 
 		<button class="burger-button" @onclick="ToggleMenu">⋯</button>
 	</div>
@@ -75,7 +81,7 @@
 			SongSelected="song => SelectNightSong(song)"
 			SongMoved="e => MoveNightSong(e.OldIndex, e.NewIndex)"/>
 
-		<VolumeControl Class="volume-control" @bind-Gain="NightGain"/>
+		<VolumeControl @bind-Gain="NightGain"/>
 	</div>
 </div>
 
@@ -175,7 +181,7 @@
 
 	void MoveDaySong(int oldIndex, int newIndex)
 		=> Dispatcher.Dispatch(new Features.Playlists.MoveDaySongAction(oldIndex, newIndex));
-	
+
 	void MoveNightSong(int oldIndex, int newIndex)
 		=> Dispatcher.Dispatch(new Features.Playlists.MoveNightSongAction(oldIndex, newIndex));
 

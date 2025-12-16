@@ -20,3 +20,26 @@
 .side-menu {
     display: none;
 }
+
+.control-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.control-buttons button {
+    border-radius: 2rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    font-size: large;
+}
+
+.control-buttons button.primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.control-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

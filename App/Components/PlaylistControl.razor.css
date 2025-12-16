@@ -34,7 +34,7 @@
     border: none;
     border-radius: 9999px;
     color: white;
-    background: #7c3aed;
+    background: var(--primary-color);
     flex-shrink: 0;
 }
 
