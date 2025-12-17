@@ -1,4 +1,4 @@
-solution := "Minstrel.sln"
+solution := "Minstrel.slnx"
 configuration := "Release"
 
 ci: build test
