@@ -23,7 +23,7 @@
 			Playlist="PlaylistState.Value.DayPlaylist"
 			SongSelected="song => SelectDaySong(song)"
 			SongMoved="e => MoveDaySong(e.OldIndex, e.NewIndex)"/>
-		
+
 		@if (TimerState.Value.IsRunning)
 		{
 			<label class="timer">@TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
@@ -47,7 +47,7 @@
 				<button
 					class="primary"
 					disabled="@(PlaylistState.Value.DayPlaylist.CurrentSong is null
-										|| !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
+					          || !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
 					@onclick="Play">
 					▶ Play
 				</button>
@@ -134,4 +134,5 @@
 
 	void ToggleMenu()
 		=> sideMenu?.Toggle();
+
 }
