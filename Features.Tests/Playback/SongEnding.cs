@@ -4,9 +4,11 @@ using Features.Playback;
 using Features.Playlists;
 using Microsoft.Extensions.DependencyInjection;
 
-[UseAppContext]
-public class SongEnding(AppContext appContext, IDispatcher dispatcher)
+public class SongEnding
 {
+	[ClassDataSource<AppContext>]
+	public required AppContext AppContext { get; init; }
+	
 	private readonly Song song1 = Dummies.Song with {Title = "Song1"};
 	private readonly Song song2 = Dummies.Song with {Title = "Song2"};
 
@@ -14,17 +16,17 @@ public class SongEnding(AppContext appContext, IDispatcher dispatcher)
 	public async Task ResetsCurrentSong()
 	{
 		var requestedSongToBeReset = Dummies.Song; 
-		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
+		var actionSubscriber = AppContext.Services.GetRequiredService<IActionSubscriber>();
 		actionSubscriber.SubscribeToAction<PauseSongSignal>(this, action =>
 		{
 			if (action.Reset)
 				requestedSongToBeReset = action.Song;
 		});
 
-		dispatcher.Dispatch(new SetPlaylistsAction([song1, song2], []));
-		dispatcher.Dispatch(new PlayAction());
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2], []));
+		AppContext.Dispatcher.Dispatch(new PlayAction());
 		
-		dispatcher.Dispatch(new SongEndedSignal(song1));
+		AppContext.Dispatcher.Dispatch(new SongEndedSignal(song1));
 
 		await Assert.That(requestedSongToBeReset).IsEqualTo(song1);
 	}
@@ -32,15 +34,15 @@ public class SongEnding(AppContext appContext, IDispatcher dispatcher)
 	[Test]
 	public async Task PlaysNextSong()
 	{
-		dispatcher.Dispatch(new SetPlaylistsAction([song1, song2], []));
-		dispatcher.Dispatch(new PlayAction());
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2], []));
+		AppContext.Dispatcher.Dispatch(new PlayAction());
 		
-		dispatcher.Dispatch(new SongEndedSignal(song1));
+		AppContext.Dispatcher.Dispatch(new SongEndedSignal(song1));
 
-		var playbackState = appContext.Services.GetRequiredService<IState<Features.Playback.State>>();
+		var playbackState = AppContext.Services.GetRequiredService<IState<Features.Playback.State>>();
 		await Assert.That(playbackState.Value.PlayingSongs).Count().IsEqualTo(1)
 			.And.Contains(new PlayingSong(song2, 1));
-		var playlistState = appContext.Services.GetRequiredService<IState<Features.Playlists.State>>();
+		var playlistState = AppContext.Services.GetRequiredService<IState<Features.Playlists.State>>();
 		await Assert.That(playlistState.Value.DayPlaylist.CurrentSong).IsEqualTo(song2);
 	}
 }

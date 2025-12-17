@@ -6,9 +6,11 @@ using Features.Playlists;
 using Microsoft.Extensions.DependencyInjection;
 using State = Features.Playback.State;
 
-[UseAppContext]
-public class Pause(AppContext appContext, IDispatcher dispatcher)
+public class Pause
 {
+	[ClassDataSource<AppContext>]
+	public required AppContext AppContext { get; init; }
+	
 	private readonly Song daySong = Dummies.Song with {Title = "Song Of The Day"};
 	private readonly Song nightSong = Dummies.Song with {Title = "Song Of The Night"};
 
@@ -18,16 +20,16 @@ public class Pause(AppContext appContext, IDispatcher dispatcher)
 	public async Task WhenPausing_EmitsPauseSignalForCurrentSong(GamePhase gamePhase)
 	{
 		var pausedSong = Dummies.Song;
-		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
+		var actionSubscriber = AppContext.Services.GetRequiredService<IActionSubscriber>();
 		actionSubscriber.SubscribeToAction<PauseSongSignal>(this, action => pausedSong = action.Song);
-		var state = appContext.Services.GetRequiredService<IState<State>>();
+		var state = AppContext.Services.GetRequiredService<IState<State>>();
 		state.Value.PlayingSongs.Clear();		
 
-		dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
-		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
+		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 
-		dispatcher.Dispatch(new PlayAction());
-		dispatcher.Dispatch(new PauseAction());
+		AppContext.Dispatcher.Dispatch(new PlayAction());
+		AppContext.Dispatcher.Dispatch(new PauseAction());
 
 		await Assert.That(state.Value.IsPlaying).IsFalse();
 		if (gamePhase == GamePhase.Day)
@@ -48,17 +50,17 @@ public class Pause(AppContext appContext, IDispatcher dispatcher)
 	public async Task WhenResuming_EmitsPlaySignalForCurrentSong(GamePhase gamePhase)
 	{
 		var resumedSong = Dummies.Song;
-		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
+		var actionSubscriber = AppContext.Services.GetRequiredService<IActionSubscriber>();
 		actionSubscriber.SubscribeToAction<PlaySongSignal>(this, action => resumedSong = action.Song);
-		var state = appContext.Services.GetRequiredService<IState<State>>();
+		var state = AppContext.Services.GetRequiredService<IState<State>>();
 		state.Value.PlayingSongs.Clear();
 		
-		dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
-		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
+		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		
-		dispatcher.Dispatch(new PlayAction());
-		dispatcher.Dispatch(new PauseAction());
-		dispatcher.Dispatch(new PlayAction());
+		AppContext.Dispatcher.Dispatch(new PlayAction());
+		AppContext.Dispatcher.Dispatch(new PauseAction());
+		AppContext.Dispatcher.Dispatch(new PlayAction());
 		
 		await Assert.That(state.Value.IsPlaying).IsTrue();
 		if (gamePhase == GamePhase.Day)

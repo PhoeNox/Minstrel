@@ -6,9 +6,11 @@ using Features.Playlists;
 using Microsoft.Extensions.DependencyInjection;
 using State = Features.Playback.State;
 
-[UseAppContext]
-public class SwitchGamePhase(AppContext appContext, IDispatcher dispatcher)
+public class SwitchGamePhase
 {
+	[ClassDataSource<AppContext>]
+	public required AppContext AppContext { get; init; }
+	
 	private readonly Song daySong = Dummies.Song with {Title = "Song Of The Day"};
 	private readonly Song nightSong = Dummies.Song with {Title = "Song Of The Night"};
 
@@ -17,19 +19,19 @@ public class SwitchGamePhase(AppContext appContext, IDispatcher dispatcher)
 	[Arguments(GamePhase.Night)]
 	public async Task PlaysSongFromOtherPlaylist(GamePhase gamePhase)
 	{
-		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
+		var actionSubscriber = AppContext.Services.GetRequiredService<IActionSubscriber>();
 		var requestedSongToBePlayed = Dummies.Song; 
 		actionSubscriber.SubscribeToAction<PlaySongSignal>(this, action => requestedSongToBePlayed = action.Song);
 		var requestedSongToBePaused = Dummies.Song;
 		actionSubscriber.SubscribeToAction<PauseSongSignal>(this, action => requestedSongToBePaused = action.Song);
 		
-		dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
-		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
-		dispatcher.Dispatch(new PlayAction());
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
+		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
+		AppContext.Dispatcher.Dispatch(new PlayAction());
 		
-		dispatcher.Dispatch(new SwitchGamePhaseAction());
+		AppContext.Dispatcher.Dispatch(new SwitchGamePhaseAction());
 
-		var state = appContext.Services.GetRequiredService<IState<State>>();
+		var state = AppContext.Services.GetRequiredService<IState<State>>();
 		await Assert.That(state.Value.PlayingSongs)
 			.Count().IsEqualTo(2)
 			.And.Contains(new PlayingSong(daySong, 1))

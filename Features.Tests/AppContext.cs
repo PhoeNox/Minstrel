@@ -5,10 +5,13 @@ using Infrastructure.FileSystem;
 using Infrastructure.Network;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
+using TUnit.Core.Interfaces;
 
-public class AppContext
+public class AppContext : IAsyncInitializer
 {
 	public ServiceProvider Services { get; }
+	
+	public IDispatcher Dispatcher => Services.GetRequiredService<IDispatcher>();
 
 	public Mock<IPlaylistLoader> PlaylistLoader { get; } = new();
 	
@@ -30,8 +33,11 @@ public class AppContext
 		serviceCollection.AddSingleton<TimeProvider, FakeTimeProvider>();
 
 		Services = serviceCollection.BuildServiceProvider();
+	}
 
+	public Task InitializeAsync()
+	{
 		var store = Services.GetRequiredService<IStore>();
-		store.InitializeAsync().Wait();
+		return store.InitializeAsync();
 	}
 }

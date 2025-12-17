@@ -5,20 +5,22 @@ using Features.Playlists;
 using Microsoft.Extensions.DependencyInjection;
 using State = Features.GamePhases.State;
 
-[UseAppContext]
-public class SwitchingGamePhase(AppContext appContext, IDispatcher dispatcher)
+public class SwitchingGamePhase
 {
+	[ClassDataSource<AppContext>]
+	public required AppContext AppContext { get; init; }
+	
 	[Test]
 	[Arguments(GamePhase.Day, GamePhase.Night)]
 	[Arguments(GamePhase.Night, GamePhase.Day)]
 	public async Task SwitchesToOtherPhase(GamePhase currentPhase, GamePhase nextPhase)
 	{
-		dispatcher.Dispatch(new SetGamePhaseAction(currentPhase));
-		dispatcher.Dispatch(new SetPlaylistsAction([Dummies.Song], [Dummies.Song]));
+		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(currentPhase));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([Dummies.Song], [Dummies.Song]));
 		
-		dispatcher.Dispatch(new SwitchGamePhaseAction());
+		AppContext.Dispatcher.Dispatch(new SwitchGamePhaseAction());
 
-		var state = appContext.Services.GetRequiredService<IState<State>>();
+		var state = AppContext.Services.GetRequiredService<IState<State>>();
 		await Assert.That(state.Value.Phase).IsEqualTo(nextPhase);
 	}
 }

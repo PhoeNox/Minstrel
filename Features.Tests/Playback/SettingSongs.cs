@@ -5,9 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Features.Tests.Playback;
 
-[UseAppContext]
-public class SettingSongs(AppContext appContext, IDispatcher dispatcher)
+public class SettingSongs
 {
+	[ClassDataSource<AppContext>]
+	public required AppContext AppContext { get; init; }
+	
 	private readonly Song song1 = Dummies.Song with {Title = "Song1"};
 	private readonly Song song2 = Dummies.Song with {Title = "Song2"};
 	private readonly Song song3 = Dummies.Song with {Title = "Song3"};
@@ -21,7 +23,7 @@ public class SettingSongs(AppContext appContext, IDispatcher dispatcher)
 		var playedSong = Dummies.Song;
 		var pausedSong = Dummies.Song;
 		var loadedSongs = new List<Song>();
-		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
+		var actionSubscriber = AppContext.Services.GetRequiredService<IActionSubscriber>();
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 				action => loadedSongs.Add(action.Song));
 		actionSubscriber.SubscribeToAction<PlaySongSignal>(this,
@@ -29,12 +31,12 @@ public class SettingSongs(AppContext appContext, IDispatcher dispatcher)
 		actionSubscriber.SubscribeToAction<PauseSongSignal>(this,
 				action => pausedSong = action.Song);
 
-		dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3], [Dummies.Song]));
-		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3], [Dummies.Song]));
+		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		if (isPlaying)
-			dispatcher.Dispatch(new PlayAction());
+			AppContext.Dispatcher.Dispatch(new PlayAction());
 
-		dispatcher.Dispatch(new SetCurrentSongForDayAction(song2, song1));
+		AppContext.Dispatcher.Dispatch(new SetCurrentSongForDayAction(song2, song1));
 
 		await Assert.That(loadedSongs).Contains(song2);
 		await Assert.That(pausedSong).IsEqualTo(song1);
@@ -54,7 +56,7 @@ public class SettingSongs(AppContext appContext, IDispatcher dispatcher)
 		var playedSong = Dummies.Song;
 		var pausedSong = Dummies.Song;
 		var loadedSongs = new List<Song>();
-		var actionSubscriber = appContext.Services.GetRequiredService<IActionSubscriber>();
+		var actionSubscriber = AppContext.Services.GetRequiredService<IActionSubscriber>();
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 				action => loadedSongs.Add(action.Song));
 		actionSubscriber.SubscribeToAction<PlaySongSignal>(this,
@@ -62,12 +64,12 @@ public class SettingSongs(AppContext appContext, IDispatcher dispatcher)
 		actionSubscriber.SubscribeToAction<PauseSongSignal>(this,
 				action => pausedSong = action.Song);
 
-		dispatcher.Dispatch(new SetPlaylistsAction([Dummies.Song], [song1, song2, song3]));
-		dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([Dummies.Song], [song1, song2, song3]));
+		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		if (isPlaying)
-			dispatcher.Dispatch(new PlayAction());
+			AppContext.Dispatcher.Dispatch(new PlayAction());
 
-		dispatcher.Dispatch(new SetCurrentSongForNightAction(song2, song1));
+		AppContext.Dispatcher.Dispatch(new SetCurrentSongForNightAction(song2, song1));
 
 		await Assert.That(loadedSongs).Contains(song2);
 		await Assert.That(pausedSong).IsEqualTo(song1);
