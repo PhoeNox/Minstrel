@@ -20,13 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Images\BloodOnTheClocktower.jpg" />
-      <None Include="wwwroot\Music\Day\Clocktower Ambience.mp3" />
       <None Include="wwwroot\Music\Day\playlist.txt" />
       <None Include="wwwroot\Music\Night\playlist.txt" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Resource Include="wwwroot\Images\BloodOnTheClocktower.jpg" />
     </ItemGroup>
 </Project>
