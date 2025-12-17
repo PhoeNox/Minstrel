@@ -3,7 +3,6 @@
 
 @using Features.GamePhases
 @using Features.QrCodeConnection
-@using Features.Timer
 @using State = Features.GamePhases.State
 
 @inject IDispatcher Dispatcher
@@ -11,32 +10,8 @@
 @inject IState<Features.Playlists.State> PlaylistState
 @inject IState<Features.Playback.State> PlaybackState
 @inject IState<Features.Timer.State> TimerState
-@inject IState<Features.QrCodeConnection.State> QrCodeConnectionState
-@inject IJSRuntime JsRuntime
 
-<div class="side-menu @(isMenuOpen ? "open" : "")">
-	@if (GamePhaseState.Value.Phase == GamePhase.Day)
-	{
-		@if (TimerState.Value.IsRunning is false)
-		{
-			<button @onclick="() => { OpenTimerDialog(); CloseMenu(); }">⏱ Start Timer</button>
-		}
-		else
-		{
-			<label>Timer: @TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
-			<button @onclick="() => { StopTimer(); CloseMenu(); }">⏹ Stop Timer</button>
-		}
-	}
-
-	@if (QrCodeConnectionState.Value.QrCodeVisibility != QrCodeVisibility.Hidden)
-	{
-		<button @onclick="() => { HideQrCode(); CloseMenu(); }">⧉ Hide QR Code</button>
-	}
-	else
-	{
-		<button @onclick="() => { ShowQrCode(); CloseMenu(); }">⧉ Show QR Code</button>
-	}
-</div>
+<SideMenu @ref="sideMenu"/>
 
 <div id="remote-container">
 	<div id="day-phase" class="game-phase-section">
@@ -49,7 +24,12 @@
 	</div>
 
 	<div class="button-bar">
-		<div class="placeholder"></div>
+		<div>
+			@if (TimerState.Value.IsRunning)
+			{
+				<label>@TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
+			}
+		</div>
 
 		<div class="control-buttons">
 			@if (PlaybackState.Value.IsPlaying)
@@ -91,24 +71,8 @@
 	</div>
 </div>
 
-<dialog id="timerDialog">
-	<h3>Start Timer</h3>
-	<div>
-		<label for="timerMinutes">Minutes</label>
-		<input type="number" id="timerMinutes" min="1" @bind="timerMinutes" style="width: 150px"/>
-	</div>
-	<div>
-		<button @onclick="StartTimerFromDialog">Start Timer</button>
-		<button @onclick="CloseTimerDialog">Cancel</button>
-	</div>
-</dialog>
-
 @code {
-	private int timerMinutes = 8;
-	private bool isMenuOpen = false;
-
-	void ToggleMenu() => isMenuOpen = !isMenuOpen;
-	void CloseMenu() => isMenuOpen = false;
+	SideMenu? sideMenu;
 
 	bool IsSongOnOtherPlaylistAvailable
 	{
@@ -134,6 +98,14 @@
 		set => Dispatcher.Dispatch(new Features.Playlists.SetNightGainAction((float) value));
 	}
 
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		if (!PlaylistState.Value.PlaylistsLoaded)
+			Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
+		Dispatcher.Dispatch(new HideQrCodeAction());
+	}
+
 	void SelectDaySong(Song song)
 	{
 		Dispatcher.Dispatch(
@@ -150,14 +122,6 @@
 				PlaylistState.Value.NightPlaylist.CurrentSong));
 	}
 
-	protected override void OnInitialized()
-	{
-		base.OnInitialized();
-		if (!PlaylistState.Value.PlaylistsLoaded)
-			Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
-		Dispatcher.Dispatch(new HideQrCodeAction());
-	}
-
 	void Play()
 		=> Dispatcher.Dispatch(new Features.Playback.PlayAction());
 
@@ -167,37 +131,13 @@
 	void SwitchGamePhase()
 		=> Dispatcher.Dispatch(new SwitchGamePhaseAction());
 
-	async Task OpenTimerDialog()
-	{
-		await JsRuntime.InvokeVoidAsync("eval", "document.getElementById('timerDialog').showModal()");
-	}
-
-	async Task CloseTimerDialog()
-	{
-		await JsRuntime.InvokeVoidAsync("eval", "document.getElementById('timerDialog').close()");
-	}
-
-	async Task StartTimerFromDialog()
-	{
-		var timerDuration = TimeSpan.FromMinutes(timerMinutes);
-		if (timerDuration > TimeSpan.Zero)
-			Dispatcher.Dispatch(new StartTimerAction(timerDuration));
-		await CloseTimerDialog();
-	}
-
 	void MoveDaySong(int oldIndex, int newIndex)
 		=> Dispatcher.Dispatch(new Features.Playlists.MoveDaySongAction(oldIndex, newIndex));
 
 	void MoveNightSong(int oldIndex, int newIndex)
 		=> Dispatcher.Dispatch(new Features.Playlists.MoveNightSongAction(oldIndex, newIndex));
 
-	void StopTimer()
-		=> Dispatcher.Dispatch(new SetIsTimeRunningAction(false));
-
-	void ShowQrCode()
-		=> Dispatcher.Dispatch(new ShowQrCodeAction());
-
-	void HideQrCode()
-		=> Dispatcher.Dispatch(new HideQrCodeAction());
+	void ToggleMenu()
+		=> sideMenu?.Toggle();
 
 }
