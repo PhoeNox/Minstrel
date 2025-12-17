@@ -48,31 +48,37 @@
 			SongMoved="e => MoveDaySong(e.OldIndex, e.NewIndex)"/>
 	</div>
 
-	<div class="control-buttons">
-		@if (PlaybackState.Value.IsPlaying)
-		{
-			<button @onclick="Pause">⏸ Pause</button>
-		}
-		else
-		{
+	<div class="button-bar">
+		<div class="placeholder"></div>
+
+		<div class="control-buttons">
+			@if (PlaybackState.Value.IsPlaying)
+			{
+				<button @onclick="Pause">⏸ Pause</button>
+			}
+			else
+			{
+				<button
+					class="@(!PlaybackState.Value.IsPlaying ? "primary" : "")"
+					disabled="@(PlaylistState.Value.DayPlaylist.CurrentSong is null
+					          || !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
+					@onclick="Play">
+					▶ Play
+				</button>
+			}
+
 			<button
-				class="@(!PlaybackState.Value.IsPlaying ? "primary" : "")"
-				disabled="@(PlaylistState.Value.DayPlaylist.CurrentSong is null
-				          || !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
-				@onclick="Play">
-				▶ Play
+				class="@(PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable ? "primary" : "")"
+				disabled="@(!PlaybackState.Value.IsPlaying || !IsSongOnOtherPlaylistAvailable)"
+				@onclick="SwitchGamePhase">
+				<Icon Name="IconName.BrightnessAltHighFill"/>
+				Switch
 			</button>
-		}
+		</div>
 
-		<button
-			class="@(PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable ? "primary" : "")"
-			disabled="@(!PlaybackState.Value.IsPlaying || !IsSongOnOtherPlaylistAvailable)"
-			@onclick="SwitchGamePhase">
-			<Icon Name="IconName.BrightnessAltHighFill"/>
-			Switch
+		<button class="burger-button" @onclick="ToggleMenu">
+			<Icon Name="IconName.List"/>
 		</button>
-
-		<button class="burger-button" @onclick="ToggleMenu">⋯</button>
 	</div>
 
 	<div id="night-phase" class="game-phase-section">

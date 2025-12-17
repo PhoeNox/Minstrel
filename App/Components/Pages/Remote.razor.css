@@ -21,25 +21,25 @@
     display: none;
 }
 
-.control-buttons {
+.button-bar {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     gap: 1rem;
 }
 
-.control-buttons button {
+.button-bar button {
     border-radius: 2rem;
     padding: 0.75rem 1.5rem;
     border: none;
     font-size: large;
 }
 
-.control-buttons button.primary {
+.button-bar button.primary {
     background: var(--primary-color);
     color: white;
 }
 
-.control-buttons button:disabled {
+.button-bar button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
