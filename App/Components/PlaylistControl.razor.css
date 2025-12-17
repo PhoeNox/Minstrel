@@ -14,7 +14,6 @@
 
 .bb-sortable-list-handle {
     align-self: stretch;
-    width: 2rem;
     flex-shrink: 0;
     display: flex;
     align-items: center;

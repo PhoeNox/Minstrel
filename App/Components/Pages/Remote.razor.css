@@ -3,30 +3,28 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    gap: 1rem;
 }
 
 .game-phase-section {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    flex: 1 1 0;
+    flex: 0 1 auto;
     gap: 1rem;
+}
+
+#day-phase {
+    flex: 0 0 auto;
 }
 
 #night-phase {
     justify-content: flex-end;
 }
 
-.button-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-}
-
-.button-bar label {
+.timer {
     font-size: 2rem;
-    font-weight: 600;
+    font-weight: bold;
     font-family: 'Courier New', monospace;
     color: var(--primary-color);
     background: rgba(0, 0, 0, 0.05);
@@ -34,6 +32,13 @@
     border-radius: 0.5rem;
     min-width: 5rem;
     text-align: center;
+}
+
+.button-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
 }
 
 .button-bar button {

@@ -21,39 +21,35 @@
 			Playlist="PlaylistState.Value.DayPlaylist"
 			SongSelected="song => SelectDaySong(song)"
 			SongMoved="e => MoveDaySong(e.OldIndex, e.NewIndex)"/>
+		
+		@if (TimerState.Value.IsRunning)
+		{
+			<label class="timer">@TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
+		}
 	</div>
 
 	<div class="button-bar">
-		<div>
-			@if (TimerState.Value.IsRunning)
-			{
-				<label>@TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
-			}
-		</div>
-
 		<div class="control-buttons">
 			@if (PlaybackState.Value.IsPlaying)
 			{
-				<button @onclick="Pause">⏸ Pause</button>
+				<button
+					class="primary"
+					disabled="@(!IsSongOnOtherPlaylistAvailable)"
+					@onclick="SwitchGamePhase">
+					<Icon Name="IconName.BrightnessAltHighFill"/>
+					Switch
+				</button>
 			}
 			else
 			{
 				<button
-					class="@(!PlaybackState.Value.IsPlaying ? "primary" : "")"
+					class="primary"
 					disabled="@(PlaylistState.Value.DayPlaylist.CurrentSong is null
-					          || !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
+										|| !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
 					@onclick="Play">
 					▶ Play
 				</button>
 			}
-
-			<button
-				class="@(PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable ? "primary" : "")"
-				disabled="@(!PlaybackState.Value.IsPlaying || !IsSongOnOtherPlaylistAvailable)"
-				@onclick="SwitchGamePhase">
-				<Icon Name="IconName.BrightnessAltHighFill"/>
-				Switch
-			</button>
 		</div>
 
 		<button class="burger-button" @onclick="ToggleMenu">
@@ -125,9 +121,6 @@
 	void Play()
 		=> Dispatcher.Dispatch(new Features.Playback.PlayAction());
 
-	void Pause()
-		=> Dispatcher.Dispatch(new Features.Playback.PauseAction());
-
 	void SwitchGamePhase()
 		=> Dispatcher.Dispatch(new SwitchGamePhaseAction());
 
@@ -139,5 +132,4 @@
 
 	void ToggleMenu()
 		=> sideMenu?.Toggle();
-
 }

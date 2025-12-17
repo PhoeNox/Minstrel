@@ -1,10 +1,14 @@
+@using Features.GamePhases
 @using Features.QrCodeConnection
 @using Features.Timer
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @inject IDispatcher Dispatcher
+@inject IState<Features.GamePhases.State> GamePhaseState
 @inject IState<Features.Timer.State> TimerState
 @inject IState<Features.QrCodeConnection.State> QrCodeConnectionState
+@inject IState<Features.Playback.State> PlaybackState
+@inject IState<Features.Playlists.State> PlaylistState
 @inject IJSRuntime JsRuntime
 
 @if (isOpen)
@@ -13,23 +17,53 @@
 }
 
 <div class="side-menu @(isOpen ? "open" : "")">
-	@if (TimerState.Value.IsRunning)
-	{
-		<button @onclick="StopTimer">⏹ Stop Timer</button>
-	}
-	else
-	{
-		<button @onclick="OpenTimerDialog">⏱ Start Timer</button>
-	}
+	<div>
+		@if (PlaybackState.Value.IsPlaying)
+		{
+			<button @onclick="Pause">⏸ Pause</button>
+		}
+		else
+		{
+			<button
+				class="@(!PlaybackState.Value.IsPlaying ? "primary" : "")"
+				disabled="@(PlaylistState.Value.DayPlaylist.CurrentSong is null
+				          || !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
+				@onclick="Play">
+				▶ Play
+			</button>
+		}
 
-	@if (QrCodeConnectionState.Value.QrCodeVisibility != QrCodeVisibility.Hidden)
-	{
-		<button @onclick="HideQrCode">⧉ Hide QR Code</button>
-	}
-	else
-	{
-		<button @onclick="ShowQrCode">⧉ Show QR Code</button>
-	}
+		<button
+			class="@(PlaybackState.Value.IsPlaying && IsSongOnOtherPlaylistAvailable ? "primary" : "")"
+			disabled="@(!PlaybackState.Value.IsPlaying || !IsSongOnOtherPlaylistAvailable)"
+			@onclick="SwitchGamePhase">
+			<Icon Name="IconName.BrightnessAltHighFill"/>
+			Switch
+		</button>
+	</div>
+
+	<div>
+		@if (TimerState.Value.IsRunning)
+		{
+			<label class="timer">@TimerState.Value.TimeLeft.ToString(@"mm\:ss")</label>
+			<button @onclick="StopTimer">⏹ Stop Timer</button>
+		}
+		else
+		{
+			<button @onclick="OpenTimerDialog">⏱ Start Timer</button>
+		}
+	</div>
+
+	<div>
+		@if (QrCodeConnectionState.Value.QrCodeVisibility != QrCodeVisibility.Hidden)
+		{
+			<button @onclick="HideQrCode">⧉ Hide QR Code</button>
+		}
+		else
+		{
+			<button @onclick="ShowQrCode">⧉ Show QR Code</button>
+		}
+	</div>
 </div>
 
 <dialog id="timerDialog">
@@ -46,7 +80,19 @@
 
 @code {
 	bool isOpen;
-	int timerMinutes = 8;
+	int timerMinutes = 5;
+
+	bool IsSongOnOtherPlaylistAvailable
+	{
+		get
+		{
+			var songOnOtherPlaylist = GamePhaseState.Value.Phase == GamePhase.Day
+				? PlaylistState.Value.NightPlaylist.CurrentSong
+				: PlaylistState.Value.DayPlaylist.CurrentSong;
+			return songOnOtherPlaylist is not null
+			       && PlaybackState.Value.LoadedSongs.Contains(songOnOtherPlaylist);
+		}
+	}
 
 	public void Toggle()
 	{
@@ -58,6 +104,24 @@
 	{
 		isOpen = false;
 		StateHasChanged();
+	}
+
+	void Play()
+	{
+		Dispatcher.Dispatch(new Features.Playback.PlayAction());
+		Close();
+	}
+
+	void Pause()
+	{
+		Dispatcher.Dispatch(new Features.Playback.PauseAction());
+		Close();
+	}
+
+	void SwitchGamePhase()
+	{
+		Dispatcher.Dispatch(new SwitchGamePhaseAction());
+		Close();
 	}
 
 	async Task OpenTimerDialog()
@@ -96,4 +160,5 @@
 		Dispatcher.Dispatch(new HideQrCodeAction());
 		Close();
 	}
+
 }
