@@ -1,0 +1,55 @@
+name: Release
+on:
+  release: [ published ]
+
+jobs:
+  release:
+    name: Release (${{ matrix.kind }})
+    strategy:
+      matrix:
+        include:
+          - kind: linux
+            os: ubuntu-latest
+            rid: linux-x64
+          - kind: macos
+            os: macos-latest
+            rid: osx-x64
+          - kind: windows
+            os: windows-latest
+            rid: win-x64
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Publish
+        run: just publish ${{ matrix.rid }} publish/${{ matrix.rid }}
+
+      - name: Archive artifacts (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd publish
+          tar -czf minstrel-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
+
+      - name: Archive artifacts (Windows)
+        if: runner.os == 'Windows'
+          run: |
+            cd publish
+            powershell Compress-Archive -Path ${{ matrix.rid }} -DestinationPath minstrel-${{ matrix.rid }}.zip
+
+      - name: Upload release asset
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.release.tag_name }}
+          file: publish/minstrel-${{ matrix.rid }}.*
+          file_glob: true
