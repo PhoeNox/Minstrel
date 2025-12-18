@@ -12,7 +12,7 @@ test:
 publish RID="linux-x64" OUTPUT_DIRECTORY="publish/linux-x64":
 	dotnet publish App/App.csproj \
 		-c {{configuration}} \
-		--self-contained true /p:PublishSingleFile=true \
+		--self-contained true -p:PublishSingleFile=true \
 		-r {{RID}} \
 		-o {{OUTPUT_DIRECTORY}}
 	cd {{OUTPUT_DIRECTORY}} && rm *.pdb appsettings.Development.json
