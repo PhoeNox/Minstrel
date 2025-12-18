@@ -42,9 +42,9 @@ jobs:
 
       - name: Archive artifacts (Windows)
         if: runner.os == 'Windows'
-          run: |
-            cd publish
-            powershell Compress-Archive -Path ${{ matrix.rid }} -DestinationPath minstrel-${{ matrix.rid }}.zip
+        run: |
+          cd publish
+          powershell Compress-Archive -Path ${{ matrix.rid }} -DestinationPath minstrel-${{ matrix.rid }}.zip
 
       - name: Upload release asset
         uses: svenstaro/upload-release-action@v2
