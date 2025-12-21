@@ -19,7 +19,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="wwwroot\Music\Day\playlist.txt"/>
-		<None Include="wwwroot\Music\Night\playlist.txt"/>
+	  <None Include="DemoMusic\**\*"
+			CopyToOutputDirectory="PreserveNewest"
+			CopyToPublishDirectory="PreserveNewest"
+	  />
 	</ItemGroup>
 </Project>

@@ -15,4 +15,4 @@ publish RID="linux-x64" OUTPUT_DIRECTORY="publish/linux-x64":
 		--self-contained true -p:PublishSingleFile=true \
 		-r {{RID}} \
 		-o {{OUTPUT_DIRECTORY}}
-	cd {{OUTPUT_DIRECTORY}} && rm *.pdb appsettings.Development.json
+	cd {{OUTPUT_DIRECTORY}} && rm *.pdb

@@ -9,22 +9,15 @@ public interface IPlaylistLoader
 
 public class PlaylistLoader : IPlaylistLoader
 {
-	public async Task<(Song[] DayPlaylist, Song[] NightPlaylist)> LoadPlaylists()
+	public Task<(Song[] DayPlaylist, Song[] NightPlaylist)> LoadPlaylists()
 	{
-		var dayPlaylist = await LoadPlaylist("Day");
-		var nightPlaylist = await LoadPlaylist("Night");
-		return (dayPlaylist, nightPlaylist);
-	}
-
-	private static async Task<Song[]> LoadPlaylist(string playlistName)
-	{
-		var musicDirectory = Path.Combine("wwwroot", "Music");
-		var playlistPath = Path.Combine(musicDirectory, playlistName, "playlist.txt");
-		var songFiles = await File.ReadAllLinesAsync(playlistPath);
-		return songFiles
-			.Select(x => Path.Combine(musicDirectory, playlistName, x))
-			.Select(CreateSong)
-			.ToArray();
+		Song[] dayPlaylist = [CreateSong("DemoMusic/Clocktower - Cloud Seed.mp3")];
+		Song[] nightPlaylist = [
+				CreateSong("DemoMusic/Bloodlust - Deflate.mp3"),
+				CreateSong("DemoMusic/Graveyard - The Liquid Kitchen.mp3"),
+				CreateSong("DemoMusic/I'm Growing Fangs - Great White Buffalo.mp3"),
+		];
+		return Task.FromResult((dayPlaylist, nightPlaylist));
 	}
 
 	private static Song CreateSong(string path)
