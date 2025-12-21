@@ -1,3 +1,4 @@
+@using System.Globalization
 <input type="range" min="0" max="2" step="0.1" @bind="Gain" @oninput="OnGainChanged"/>
 
 @code {
@@ -13,7 +14,7 @@
 	private async Task OnGainChanged(ChangeEventArgs obj)
 	{
 		var value = (string) obj.Value!;
-		var valueAsDouble = double.Parse(value);
+		var valueAsDouble = double.Parse(value, CultureInfo.InvariantCulture);
 		await GainChanged.InvokeAsync(valueAsDouble);
 	}
 }
