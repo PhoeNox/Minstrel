@@ -5,9 +5,8 @@ using Infrastructure.Playback;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var urls = builder.Configuration["Urls"];
-if (!string.IsNullOrEmpty(urls))
-	builder.WebHost.UseUrls(urls);
+var url = builder.Configuration["Url"]!;
+builder.WebHost.UseUrls(url);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -43,4 +42,16 @@ app.MapStaticAssets();
 app.MapRazorComponents<App.Components.App>()
 	.AddInteractiveServerRenderMode();
 
-await app.RunAsync();
+var appTask = app.RunAsync();
+OpenPlayerInBrowser(url);
+await appTask;
+
+void OpenPlayerInBrowser(string playerUrl)
+{
+	var openPlayer = new ProcessStartInfo
+	{
+			FileName = playerUrl,
+			UseShellExecute = true,
+	};
+	Process.Start(openPlayer);
+}
