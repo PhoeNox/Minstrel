@@ -19,7 +19,7 @@
 	<div id="day-phase" class="game-phase-section">
 		<VolumeControl @bind-Gain="DayGain"/>
 
-		<PlaylistControl
+		<PlayableList
 			Playlist="PlaylistState.Value.DayPlaylist"
 			SongSelected="song => SelectDaySong(song)"
 			SongMoved="e => MoveDaySong(e.OldIndex, e.NewIndex)"/>
@@ -60,7 +60,7 @@
 	</div>
 
 	<div id="night-phase" class="game-phase-section">
-		<PlaylistControl
+		<PlayableList
 			Playlist="PlaylistState.Value.NightPlaylist"
 			SongSelected="song => SelectNightSong(song)"
 			SongMoved="e => MoveNightSong(e.OldIndex, e.NewIndex)"/>
