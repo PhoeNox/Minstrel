@@ -7,22 +7,24 @@
 @inject IDispatcher Dispatcher
 
 @code {
-	
+
 	protected override async Task OnInitializedAsync()
 	{
 		await base.OnInitializedAsync();
 		await PlaybackService.Initialize();
 
 		SubscribeToAction<LoadSongSignal>(s => _ = PlaybackService.SongRepository.Load(s.Song));
-		
+
 		SubscribeToAction<PlaySongSignal>(s => _ = PlaybackService.PlaySong(s.Song, s.Gain));
 		SubscribeToAction<PauseSongSignal>(s => _ = PlaybackService.PauseSong(s.Song, s.Reset));
 		SubscribeToAction<PlaySoundSignal>(s => _ = PlaybackService.PlaySound(s.Song, s.Gain));
-		
+
 		SubscribeToAction<SetGainSignal>(s => _ = PlaybackService.SetGain(s.Song, s.Gain));
-		
+
 		PlaybackService.SongEnded += s => Dispatcher.Dispatch(new SongEndedSignal(s));
 		PlaybackService.SongRepository.SongLoaded += s => Dispatcher.Dispatch(new SongLoadedSignal(s));
+
+		Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
 	}
-	
+
 }

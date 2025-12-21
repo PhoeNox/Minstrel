@@ -19,7 +19,6 @@ public static class Reducers
 		{
 				DayPlaylist = dayPlaylist,
 				NightPlaylist = nightPlaylist,
-				PlaylistsLoaded = true,
 		};
 	}
 
