@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Fluxor;
 using Infrastructure.FileSystem;
 using Infrastructure.Network;
@@ -8,7 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 var url = builder.Configuration["Url"]!;
 builder.WebHost.UseUrls(url);
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
@@ -33,8 +33,6 @@ if (!app.Environment.IsDevelopment())
 	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
 }
-
-app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
