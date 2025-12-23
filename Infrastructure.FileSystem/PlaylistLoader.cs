@@ -42,18 +42,10 @@ public class PlaylistLoader(IOptionsMonitor<MusicOptions> options) : IPlaylistLo
 					];
 		}
 	}
-
+	
 	private Song CreateSong(string path)
 	{
 		var fullPath = Path.Join(options.CurrentValue.Directory, path);
-		using var tags = TagLib.File.Create(fullPath);
-		return new Song
-		(
-				Path: path,
-				Title: tags.Tag.Title ?? Path.GetFileNameWithoutExtension(path),
-				Artist: string.Join(", ", tags.Tag.Performers),
-				Album: tags.Tag.Album ?? "Unknown Album",
-				Length: tags.Properties.Duration
-		);
+		return SongFactory.Create(fullPath);
 	}
 }

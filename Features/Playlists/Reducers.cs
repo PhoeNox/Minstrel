@@ -3,6 +3,10 @@ namespace Features.Playlists;
 public static class Reducers
 {
 	[ReducerMethod]
+	public static State SetDatabase(State state, SetDatabaseAction action)
+		=> state with {Database = action.Songs};
+
+	[ReducerMethod]
 	public static State SetPlaylists(State state, SetPlaylistsAction action)
 	{
 		var (daySongs, nightSongs) = action;
@@ -49,14 +53,14 @@ public static class Reducers
 	public static State MoveNightSong(State state, MoveNightSongAction action)
 	{
 		var song = state.NightPlaylist.Songs[action.OldIndex];
-		
+
 		var songs = state.NightPlaylist.Songs.ToList();
 		songs.RemoveAt(action.OldIndex);
 		if (action.NewIndex < songs.Count)
 			songs.Insert(action.NewIndex, song);
 		else
 			songs.Add(song);
-		
+
 		return state with {NightPlaylist = state.NightPlaylist with {Songs = songs.ToArray()}};
 	}
 

@@ -3,6 +3,7 @@ namespace Features.Playlists;
 public record LoadPlaylistsAction;
 public record PlaylistsLoadedAction;
 public record SetPlaylistsAction(Song[] DaySongs, Song[] NightSongs);
+public record SetDatabaseAction(Song[] Songs);
 
 public record MoveDaySongAction(int OldIndex, int NewIndex);
 public record MoveNightSongAction(int OldIndex, int NewIndex);

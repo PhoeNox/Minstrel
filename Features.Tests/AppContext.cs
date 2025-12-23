@@ -15,6 +15,8 @@ public class AppContext : IAsyncInitializer
 
 	public Mock<IPlaylistLoader> PlaylistLoader { get; } = new();
 	
+	public Mock<ISongLoader> SongLoader { get; } = new();
+	
 	public Mock<INetworkProvider> NetworkProvider { get; } = new();
 
 	public AppContext()
@@ -29,6 +31,7 @@ public class AppContext : IAsyncInitializer
 		});
 
 		serviceCollection.AddSingleton(PlaylistLoader.Object);
+		serviceCollection.AddSingleton(SongLoader.Object);
 		serviceCollection.AddSingleton(NetworkProvider.Object);
 		serviceCollection.AddSingleton<TimeProvider, FakeTimeProvider>();
 
