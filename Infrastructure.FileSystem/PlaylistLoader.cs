@@ -11,11 +11,11 @@ public class PlaylistLoader : IPlaylistLoader
 {
 	public Task<(Song[] DayPlaylist, Song[] NightPlaylist)> LoadPlaylists()
 	{
-		Song[] dayPlaylist = [CreateSong("DemoMusic/Clocktower - Cloud Seed.mp3")];
+		Song[] dayPlaylist = [CreateSong("Music/Clocktower - Cloud Seed.mp3")];
 		Song[] nightPlaylist = [
-				CreateSong("DemoMusic/Bloodlust - Deflate.mp3"),
-				CreateSong("DemoMusic/Graveyard - The Liquid Kitchen.mp3"),
-				CreateSong("DemoMusic/I'm Growing Fangs - Great White Buffalo.mp3"),
+				CreateSong("Music/Bloodlust - Deflate.mp3"),
+				CreateSong("Music/Graveyard - The Liquid Kitchen.mp3"),
+				CreateSong("Music/I'm Growing Fangs - Great White Buffalo.mp3"),
 		];
 		return Task.FromResult((dayPlaylist, nightPlaylist));
 	}
