@@ -9,10 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 var url = builder.Configuration["Url"]!;
 builder.WebHost.UseUrls(url);
 
+builder.Services.AddOptions<MusicOptions>()
+		.Bind(builder.Configuration.GetSection(MusicOptions.Section))
+		.ValidateOnStart();
+
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
 builder.Services.AddBlazorBootstrap();
+builder.Services.AddLocalStorageServices();
 
 builder.Services.AddScoped<PlaybackService>();
 builder.Services.AddSingleton<IPlaylistLoader, PlaylistLoader>();
