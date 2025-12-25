@@ -21,6 +21,7 @@ builder.Services.AddLocalStorageServices();
 
 builder.Services.AddScoped<PlaybackService>();
 builder.Services.AddSingleton<IPlaylistLoader, PlaylistLoader>();
+builder.Services.AddSingleton<ISongLoader, SongLoader>();
 builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
 builder.Services.AddSingleton(TimeProvider.System);
 

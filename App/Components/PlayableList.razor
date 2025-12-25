@@ -19,7 +19,7 @@
 							<span> - @context.Artist</span>
 						}
 					</div>
-					<div class="song-length">@ToSongLength(context.Length)</div>
+					<div class="song-length">@context.Length.ToSongLength()</div>
 				</div>
 			</div>
 		</ItemTemplate>
@@ -37,9 +37,6 @@
 	public EventCallback<SongMovedEvent> SongMoved { get; set; }
 
 	List<Song> Songs => Playlist.Songs.ToList();
-
-	static string ToSongLength(TimeSpan timeSpan)
-		=> $"{(int) timeSpan.TotalMinutes}:{timeSpan.Seconds:D2}";
 
 	private async Task OnSongMoved(SortableListEventArgs args)
 	{

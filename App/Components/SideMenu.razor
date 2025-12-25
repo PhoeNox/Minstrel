@@ -10,6 +10,7 @@
 @inject IState<Features.Playback.State> PlaybackState
 @inject IState<Features.Playlists.State> PlaylistState
 @inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
 
 @if (isOpen)
 {
@@ -17,6 +18,9 @@
 }
 
 <div class="side-menu @(isOpen ? "open" : "")">
+	
+	<button @onclick="GoToPlaylistManagement" >Manage playlists</button>
+	
 	<div>
 		@if (PlaybackState.Value.IsPlaying)
 		{
@@ -27,7 +31,7 @@
 			<button
 				class="@(!PlaybackState.Value.IsPlaying ? "primary" : "")"
 				disabled="@(PlaylistState.Value.DayPlaylist.CurrentSong is null
-				          || !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
+									|| !PlaybackState.Value.LoadedSongs.Contains(PlaylistState.Value.DayPlaylist.CurrentSong))"
 				@onclick="Play">
 				▶ Play
 			</button>
@@ -161,4 +165,8 @@
 		Close();
 	}
 
+	void GoToPlaylistManagement()
+	{
+		NavigationManager.NavigateTo("/playlists");
+	}
 }
