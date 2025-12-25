@@ -1,0 +1,23 @@
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+table th {
+	text-align: left;
+	padding: 0.5rem 1rem;
+	font-weight: 600;
+}
+
+table tr {
+	border-top: 1px solid #e5e7eb;
+}
+
+table td {
+	padding: 0.5rem 1rem;
+}
+
+table td:last-child {
+	width: 1%;
+	white-space: nowrap;
+}

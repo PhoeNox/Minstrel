@@ -29,9 +29,8 @@
 .play-button {
 	width: 2rem;
 	height: 2rem;
-	padding-left: 0.5rem;
+	padding: 0 0 0 0.2rem;
 	line-height: 1;
-	border: none;
 	border-radius: 9999px;
 	color: white;
 	background: var(--primary-color);

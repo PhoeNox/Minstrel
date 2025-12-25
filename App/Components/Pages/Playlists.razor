@@ -17,28 +17,39 @@
 
 <div id="other-songs">
 	<h2>Other Songs</h2>
-	<table>
-		<thead>
-		<tr>
-			<td>Artist</td>
-			<td>Title</td>
-			<td>Album</td>
-			<td>Length</td>
-		</tr>
-		</thead>
-		<tbody>
-		@foreach (var song in Database)
-		{
+	@if (Database is null)
+	{
+		<p>Loading...</p>
+	}
+	else
+	{
+		<table class="song-table">
+			<thead>
 			<tr>
-				<td>@song.Artist</td>
-				<td>@song.Title</td>
-				<td>@song.Album</td>
-				<td>@song.Length.ToSongLength()</td>
+				<th>Artist</th>
+				<th>Title</th>
+				<th>Album</th>
+				<th>Length</th>
+				<th></th>
 			</tr>
-		}
-		</tbody>
-	</table>
-	
+			</thead>
+			<tbody>
+			@foreach (var song in Database)
+			{
+				<tr>
+					<td>@song.Artist</td>
+					<td>@song.Title</td>
+					<td>@song.Album</td>
+					<td>@song.Length.ToSongLength()</td>
+					<td>
+						<button>Add to day</button>
+						<button>Add to night</button>
+					</td>
+				</tr>
+			}
+			</tbody>
+		</table>
+	}
 </div>
 
 @code {
