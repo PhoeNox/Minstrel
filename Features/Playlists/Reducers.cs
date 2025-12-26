@@ -50,6 +50,37 @@ public static class Reducers
 	}
 
 	[ReducerMethod]
+	public static State AddSongToPlaylist(State state, AddSongToPlaylistAction action)
+	{
+		if (action.GamePhase == GamePhase.Day)
+			return AddSongToDayPlaylist(state, action.Song);
+		else
+			return AddSongToNightPlaylist(state, action.Song);
+	}
+
+	private static State AddSongToDayPlaylist(State state, Song song)
+	{
+		return state with
+		{
+				DayPlaylist = state.DayPlaylist with
+				{
+						Songs = [..state.DayPlaylist.Songs, song],
+				},
+		};
+	}
+	
+	private static State AddSongToNightPlaylist(State state, Song song)
+	{
+		return state with
+		{
+				NightPlaylist = state.NightPlaylist with
+				{
+						Songs = [..state.NightPlaylist.Songs, song],
+				},
+		};
+	}
+
+	[ReducerMethod]
 	public static State MoveNightSong(State state, MoveNightSongAction action)
 	{
 		var song = state.NightPlaylist.Songs[action.OldIndex];

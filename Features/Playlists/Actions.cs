@@ -5,6 +5,8 @@ public record PlaylistsLoadedAction;
 public record SetPlaylistsAction(Song[] DaySongs, Song[] NightSongs);
 public record SetDatabaseAction(Song[] Songs);
 
+public record AddSongToPlaylistAction(GamePhase GamePhase, Song Song);
+
 public record MoveDaySongAction(int OldIndex, int NewIndex);
 public record MoveNightSongAction(int OldIndex, int NewIndex);
 

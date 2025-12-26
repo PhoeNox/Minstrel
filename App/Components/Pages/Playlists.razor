@@ -1,7 +1,9 @@
 @page "/playlists"
+@using Features.Playlists
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @inject IState<Features.Playlists.State> State
+@inject IDispatcher Dispatcher
 
 <PageTitle>Minstrel - Playlists</PageTitle>
 
@@ -42,8 +44,8 @@
 					<td>@song.Album</td>
 					<td>@song.Length.ToSongLength()</td>
 					<td>
-						<button>Add to day</button>
-						<button>Add to night</button>
+						<button @onclick="() => AddSongToPlaylist(GamePhase.Day, song)">Add to day</button>
+						<button @onclick="() => AddSongToPlaylist(GamePhase.Night, song)">Add to night</button>
 					</td>
 				</tr>
 			}
@@ -54,4 +56,7 @@
 
 @code {
 	List<Song>? Database => State.Value.Database?.ToList();
+
+	void AddSongToPlaylist(GamePhase gamePhase, Song song)
+		=> Dispatcher.Dispatch(new AddSongToPlaylistAction(gamePhase, song));
 }
