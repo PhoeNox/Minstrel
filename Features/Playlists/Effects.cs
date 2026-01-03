@@ -41,7 +41,7 @@ public class Effects(
 	}
 
 	[EffectMethod]
-	public Task AddSongToPlaylist(AddSongToPlaylistAction action, IDispatcher dispatcher)
+	public Task AddSongToPlaylist(AddSongAction action, IDispatcher dispatcher)
 	{
 		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.ToList();
 		songs.Add(action.Song);

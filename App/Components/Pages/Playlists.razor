@@ -58,5 +58,5 @@
 	List<Song>? Database => State.Value.Database?.ToList();
 
 	void AddSongToPlaylist(GamePhase gamePhase, Song song)
-		=> Dispatcher.Dispatch(new AddSongToPlaylistAction(gamePhase, song));
+		=> Dispatcher.Dispatch(new AddSongAction(gamePhase, song));
 }

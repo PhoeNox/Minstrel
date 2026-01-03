@@ -26,7 +26,7 @@ public class AddingSongs
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongAction(gamePhase, song1));
 
 		loadedSongs.Clear();
-		AppContext.Dispatcher.Dispatch(new AddSongToPlaylistAction(gamePhase, song2));
+		AppContext.Dispatcher.Dispatch(new AddSongAction(gamePhase, song2));
 
 		await Assert.That(loadedSongs).Contains(song2);
 	}
@@ -44,7 +44,7 @@ public class AddingSongs
 		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(gamePhase, []));
 
 		loadedSongs.Clear();
-		AppContext.Dispatcher.Dispatch(new AddSongToPlaylistAction(gamePhase, song1));
+		AppContext.Dispatcher.Dispatch(new AddSongAction(gamePhase, song1));
 
 		await Assert.That(loadedSongs).Contains(song1);
 	}
