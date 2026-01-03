@@ -9,21 +9,17 @@ public static class Reducers
 	[ReducerMethod]
 	public static State SetPlaylists(State state, SetPlaylistsAction action)
 	{
-		var (daySongs, nightSongs) = action;
+		var playlist = state.GetPlaylist(action.GamePhase);
+		
+		playlist = playlist with {Songs = action.Songs};
+		
+		if (!playlist.Songs.Contains(playlist.CurrentSong))
+			playlist = playlist with {CurrentSong = playlist.Songs.FirstOrDefault()};
 
-		var dayPlaylist = state.DayPlaylist with {Songs = daySongs};
-		if (!dayPlaylist.Songs.Contains(dayPlaylist.CurrentSong))
-			dayPlaylist = dayPlaylist with {CurrentSong = dayPlaylist.Songs.FirstOrDefault()};
-
-		var nightPlaylist = state.NightPlaylist with {Songs = nightSongs};
-		if (!nightPlaylist.Songs.Contains(nightPlaylist.CurrentSong))
-			nightPlaylist = nightPlaylist with {CurrentSong = nightPlaylist.Songs.FirstOrDefault()};
-
-		return state with
-		{
-				DayPlaylist = dayPlaylist,
-				NightPlaylist = nightPlaylist,
-		};
+		if (action.GamePhase == GamePhase.Day)
+			return state with {DayPlaylist = playlist};
+		else
+			return state with {NightPlaylist = playlist};
 	}
 
 	[ReducerMethod]
@@ -68,7 +64,7 @@ public static class Reducers
 				},
 		};
 	}
-	
+
 	private static State AddSongToNightPlaylist(State state, Song song)
 	{
 		return state with

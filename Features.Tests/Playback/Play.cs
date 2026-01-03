@@ -25,7 +25,8 @@ public class Play
 		var state = AppContext.Services.GetRequiredService<IState<State>>();
 		state.Value.PlayingSongs.Clear();
 
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [daySong]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [nightSong]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		
 		AppContext.Dispatcher.Dispatch(new PlayAction());

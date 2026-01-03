@@ -23,7 +23,7 @@ public class MovingSongs
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 			action => loadedSongs.Add(action.Song));
 
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3, song4], []));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [song1, song2, song3, song4]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(GamePhase.Day));
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongForDayAction(song1));
 		AppContext.Dispatcher.Dispatch(new PlayAction());
@@ -42,7 +42,7 @@ public class MovingSongs
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 				action => loadedSongs.Add(action.Song));
 
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3, song4], []));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [song1, song2, song3, song4]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(GamePhase.Day));
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongForDayAction(song1));
 		AppContext.Dispatcher.Dispatch(new PlayAction());
@@ -61,7 +61,7 @@ public class MovingSongs
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 				action => loadedSongs.Add(action.Song));
 		
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3, song4], []));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [song1, song2, song3, song4]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(GamePhase.Day));
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongForDayAction(song1));
 		AppContext.Dispatcher.Dispatch(new PlayAction());
@@ -80,7 +80,7 @@ public class MovingSongs
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 			action => loadedSongs.Add(action.Song));
 
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([], [song1, song2, song3, song4]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [song1, song2, song3, song4]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(GamePhase.Night));
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongForNightAction(song1));
 		AppContext.Dispatcher.Dispatch(new PlayAction());
@@ -99,7 +99,7 @@ public class MovingSongs
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 				action => loadedSongs.Add(action.Song));
 		
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([], [song1, song2, song3, song4]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [song1, song2, song3, song4]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(GamePhase.Night));
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongForNightAction(song1));
 		AppContext.Dispatcher.Dispatch(new PlayAction());
@@ -118,7 +118,7 @@ public class MovingSongs
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 				action => loadedSongs.Add(action.Song));
 		
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([], [song1, song2, song3, song4]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [song1, song2, song3, song4]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(GamePhase.Night));
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongForNightAction(song1));
 		AppContext.Dispatcher.Dispatch(new PlayAction());

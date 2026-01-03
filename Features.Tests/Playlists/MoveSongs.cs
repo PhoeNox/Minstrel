@@ -16,7 +16,7 @@ public class MoveSongs
 	[Test]
 	public async Task MoveDaySong_MovesForward()
 	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3], []));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [song1, song2, song3]));
 		AppContext.Dispatcher.Dispatch(new MoveDaySongAction(0, 2));
 
 		var state = AppContext.Services.GetRequiredService<IState<State>>();
@@ -26,7 +26,7 @@ public class MoveSongs
 	[Test]
 	public async Task MoveDaySong_MovesBackward()
 	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3], []));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [song1, song2, song3]));
 		AppContext.Dispatcher.Dispatch(new MoveDaySongAction(2, 0));
 
 		var state = AppContext.Services.GetRequiredService<IState<State>>();
@@ -36,7 +36,7 @@ public class MoveSongs
 	[Test]
 	public async Task MoveNightSong_MovesForward()
 	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([], [song1, song2, song3]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [song1, song2, song3]));
 		AppContext.Dispatcher.Dispatch(new MoveNightSongAction(0, 2));
 
 		var state = AppContext.Services.GetRequiredService<IState<State>>();
@@ -46,7 +46,7 @@ public class MoveSongs
 	[Test]
 	public async Task MoveNightSong_MovesBackward()
 	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([], [song1, song2, song3]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [song1, song2, song3]));
 		AppContext.Dispatcher.Dispatch(new MoveNightSongAction(2, 0));
 
 		var state = AppContext.Services.GetRequiredService<IState<State>>();

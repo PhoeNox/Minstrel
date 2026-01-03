@@ -41,7 +41,7 @@ public class LoadPlaylists
 	public async Task WhenCurrentSongIsNotInNewPlaylist_SetsCurrentSongToFirstSong()
 	{
 		var oldSong = Dummies.Song with {Title = "Old Song"};
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([oldSong], [Dummies.Song]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [oldSong]));
 
 		AppContext.Dispatcher.Dispatch(new LoadPlaylistsAction());
 

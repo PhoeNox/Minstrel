@@ -22,7 +22,7 @@ public class AddingSongs
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 				action => loadedSongs.Add(action.Song));
 
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1], [song1]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(gamePhase, [song1]));
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongForDayAction(song1));
 		AppContext.Dispatcher.Dispatch(new SetCurrentSongForNightAction(song1));
 
@@ -42,7 +42,7 @@ public class AddingSongs
 		actionSubscriber.SubscribeToAction<LoadSongSignal>(this,
 				action => loadedSongs.Add(action.Song));
 
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([], []));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(gamePhase, []));
 
 		loadedSongs.Clear();
 		AppContext.Dispatcher.Dispatch(new AddSongToPlaylistAction(gamePhase, song1));

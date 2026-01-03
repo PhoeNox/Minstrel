@@ -7,4 +7,7 @@ public record State
 	public Playlist NightPlaylist { get; init; } = new([]);
 	
 	public Song[]? Database { get; init; }
+
+	public Playlist GetPlaylist(GamePhase gamePhase)
+		=> gamePhase == GamePhase.Day ? DayPlaylist : NightPlaylist;
 }

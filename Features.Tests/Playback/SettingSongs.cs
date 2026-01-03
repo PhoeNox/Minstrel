@@ -31,7 +31,7 @@ public class SettingSongs
 		actionSubscriber.SubscribeToAction<PauseSongSignal>(this,
 				action => pausedSong = action.Song);
 
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([song1, song2, song3], [Dummies.Song]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [song1, song2, song3]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		if (isPlaying)
 			AppContext.Dispatcher.Dispatch(new PlayAction());
@@ -64,7 +64,7 @@ public class SettingSongs
 		actionSubscriber.SubscribeToAction<PauseSongSignal>(this,
 				action => pausedSong = action.Song);
 
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([Dummies.Song], [song1, song2, song3]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [song1, song2, song3]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		if (isPlaying)
 			AppContext.Dispatcher.Dispatch(new PlayAction());

@@ -8,7 +8,8 @@ public class Effects(IFileSystemProvider fileSystemProvider)
 	public Task LoadPlaylists(IDispatcher dispatcher)
 	{
 		var (daySongs, nightSongs) = fileSystemProvider.LoadPlaylists();
-		dispatcher.Dispatch(new SetPlaylistsAction(daySongs, nightSongs));
+		dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, daySongs));
+		dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, nightSongs));
 		dispatcher.Dispatch(new PlaylistsLoadedAction());
 		return Task.CompletedTask;
 	}

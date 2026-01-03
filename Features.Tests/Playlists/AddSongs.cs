@@ -16,8 +16,6 @@ public class AddSongs
 	[Arguments(GamePhase.Night)]
 	public async Task AddSong(GamePhase gamePhase)
 	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([], []));
-
 		AppContext.Dispatcher.Dispatch(new AddSongToPlaylistAction(gamePhase, song1));
 
 		var state = AppContext.Services.GetRequiredService<IState<State>>();

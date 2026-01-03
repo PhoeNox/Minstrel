@@ -25,7 +25,8 @@ public class SwitchGamePhase
 		var requestedSongToBePaused = Dummies.Song;
 		actionSubscriber.SubscribeToAction<PauseSongSignal>(this, action => requestedSongToBePaused = action.Song);
 		
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction([daySong], [nightSong]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [daySong]));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [nightSong]));
 		AppContext.Dispatcher.Dispatch(new SetGamePhaseAction(gamePhase));
 		AppContext.Dispatcher.Dispatch(new PlayAction());
 		
