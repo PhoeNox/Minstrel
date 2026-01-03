@@ -184,25 +184,14 @@ public class Effects(
 	}
 
 	[EffectMethod]
-	public Task OnDayGainChanged(SetDayGainAction action, IDispatcher dispatcher)
+	public Task OnGainChanged(SetGainAction action, IDispatcher dispatcher)
 	{
-		if (gamePhaseState.Value.Phase != GamePhase.Day)
+		if (gamePhaseState.Value.Phase != action.GamePhase)
 			return Task.CompletedTask;
 
-		var song = playlistState.Value.DayPlaylist.CurrentSong!;
-		var gain = playlistState.Value.DayPlaylist.Gain;
-		dispatcher.Dispatch(new SetGainSignal(song, gain));
-		return Task.CompletedTask;
-	}
-
-	[EffectMethod]
-	public Task OnNightGainChanged(SetNightGainAction action, IDispatcher dispatcher)
-	{
-		if (gamePhaseState.Value.Phase != GamePhase.Night)
-			return Task.CompletedTask;
-
-		var song = playlistState.Value.NightPlaylist.CurrentSong!;
-		var gain = playlistState.Value.NightPlaylist.Gain;
+		var playlist = playlistState.Value.GetPlaylist(action.GamePhase);
+		var song = playlist.CurrentSong!;
+		var gain = playlist.Gain;
 		dispatcher.Dispatch(new SetGainSignal(song, gain));
 		return Task.CompletedTask;
 	}

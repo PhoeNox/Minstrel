@@ -13,5 +13,4 @@ public record MoveNightSongAction(int OldIndex, int NewIndex);
 public record SetCurrentSongForDayAction(Song Song, Song? PreviousSong = null);
 public record SetCurrentSongForNightAction(Song Song, Song? PreviousSong = null);
 
-public record SetDayGainAction(float Volume);
-public record SetNightGainAction(float Volume);
+public record SetGainAction(GamePhase GamePhase, float Volume);

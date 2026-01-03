@@ -87,13 +87,13 @@
 	double DayGain
 	{
 		get => PlaylistState.Value.DayPlaylist.Gain;
-		set => Dispatcher.Dispatch(new Features.Playlists.SetDayGainAction((float) value));
+		set => Dispatcher.Dispatch(new Features.Playlists.SetGainAction(GamePhase.Day, (float) value));
 	}
 
 	double NightGain
 	{
 		get => PlaylistState.Value.NightPlaylist.Gain;
-		set => Dispatcher.Dispatch(new Features.Playlists.SetNightGainAction((float) value));
+		set => Dispatcher.Dispatch(new Features.Playlists.SetGainAction(GamePhase.Night, (float) value));
 	}
 
 	protected override void OnInitialized()

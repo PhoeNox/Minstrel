@@ -10,9 +10,9 @@ public static class Reducers
 	public static State SetPlaylists(State state, SetPlaylistsAction action)
 	{
 		var playlist = state.GetPlaylist(action.GamePhase);
-		
+
 		playlist = playlist with {Songs = action.Songs};
-		
+
 		if (!playlist.Songs.Contains(playlist.CurrentSong))
 			playlist = playlist with {CurrentSong = playlist.Songs.FirstOrDefault()};
 
@@ -23,12 +23,13 @@ public static class Reducers
 	}
 
 	[ReducerMethod]
-	public static State SetDayGain(State state, SetDayGainAction action)
-		=> state with {DayPlaylist = state.DayPlaylist with {Gain = action.Volume}};
-
-	[ReducerMethod]
-	public static State SetNightGain(State state, SetNightGainAction action)
-		=> state with {NightPlaylist = state.NightPlaylist with {Gain = action.Volume}};
+	public static State SetGain(State state, SetGainAction action)
+	{
+		if (action.GamePhase == GamePhase.Day)
+			return state with {DayPlaylist = state.DayPlaylist with {Gain = action.Volume}};
+		else
+			return state with {NightPlaylist = state.NightPlaylist with {Gain = action.Volume}};
+	}
 
 	[ReducerMethod]
 	public static State MoveDaySong(State state, MoveDaySongAction action)
