@@ -2,20 +2,21 @@ namespace Features.Playlists;
 
 using Infrastructure.FileSystem;
 
-public class Effects(IPlaylistLoader playlistLoader, ISongLoader songLoader)
+public class Effects(IFileSystemProvider fileSystemProvider)
 {
 	[EffectMethod(typeof(LoadPlaylistsAction))]
-	public async Task LoadPlaylists(IDispatcher dispatcher)
+	public Task LoadPlaylists(IDispatcher dispatcher)
 	{
-		var (daySongs, nightSongs) = await playlistLoader.LoadPlaylists();
+		var (daySongs, nightSongs) = fileSystemProvider.LoadPlaylists();
 		dispatcher.Dispatch(new SetPlaylistsAction(daySongs, nightSongs));
 		dispatcher.Dispatch(new PlaylistsLoadedAction());
+		return Task.CompletedTask;
 	}
 
 	[EffectMethod(typeof(StoreInitializedAction))]
 	public Task LoadSongs(IDispatcher dispatcher)
 	{
-		var songs = songLoader.LoadSongs();
+		var songs = fileSystemProvider.LoadSongs();
 		dispatcher.Dispatch(new SetDatabaseAction(songs));
 		return Task.CompletedTask;
 	}

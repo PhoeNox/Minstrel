@@ -12,7 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Blazor.LocalStorage" Version="9.0.1" />
       <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
       <PackageReference Include="TagLibSharp" Version="2.3.0" />
     </ItemGroup>

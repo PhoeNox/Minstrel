@@ -1,13 +1,10 @@
 @using Features.Playback
-@using Infrastructure.FileSystem
 @using Infrastructure.Playback
 
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @inject PlaybackService PlaybackService
-@inject IPlaylistLoader PlaylistLoader
 @inject IDispatcher Dispatcher
-@inject ILocalStorageService LocalStorage
 
 @code {
 
@@ -26,8 +23,6 @@
 
 		PlaybackService.SongEnded += s => Dispatcher.Dispatch(new SongEndedSignal(s));
 		PlaybackService.SongRepository.SongLoaded += s => Dispatcher.Dispatch(new SongLoadedSignal(s));
-
-		PlaylistLoader.LocalStorage = LocalStorage;
 
 		Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
 	}

@@ -13,9 +13,7 @@ public class AppContext : IAsyncInitializer
 	
 	public IDispatcher Dispatcher => Services.GetRequiredService<IDispatcher>();
 
-	public Mock<IPlaylistLoader> PlaylistLoader { get; } = new();
-	
-	public Mock<ISongLoader> SongLoader { get; } = new();
+	public Mock<IFileSystemProvider> FileSystemProvider { get; } = new();
 	
 	public Mock<INetworkProvider> NetworkProvider { get; } = new();
 
@@ -30,8 +28,7 @@ public class AppContext : IAsyncInitializer
 			o.WithLifetime(StoreLifetime.Singleton);
 		});
 
-		serviceCollection.AddSingleton(PlaylistLoader.Object);
-		serviceCollection.AddSingleton(SongLoader.Object);
+		serviceCollection.AddSingleton(FileSystemProvider.Object);
 		serviceCollection.AddSingleton(NetworkProvider.Object);
 		serviceCollection.AddSingleton<TimeProvider, FakeTimeProvider>();
 

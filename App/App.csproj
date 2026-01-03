@@ -23,5 +23,9 @@
 			CopyToOutputDirectory="PreserveNewest"
 			CopyToPublishDirectory="PreserveNewest"
 	  />
+	  <None Include="*.m3u"
+	  		CopyToOutputDirectory="PreserveNewest"
+	  		CopyToPublishDirectory="PreserveNewest"
+	  />
 	</ItemGroup>
 </Project>

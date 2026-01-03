@@ -9,11 +9,11 @@ public class LoadPlaylists
 	public required AppContext AppContext { get; init; }
 
 	[Before(Test)]
-	public void MockPlaylistLoader()
+	public void MockFileSystem()
 	{
-		AppContext.PlaylistLoader
+		AppContext.FileSystemProvider
 				.Setup(x => x.LoadPlaylists())
-				.ReturnsAsync(([Dummies.Song], [Dummies.Song]));
+				.Returns(([Dummies.Song], [Dummies.Song]));
 	}
 
 	[Test]
