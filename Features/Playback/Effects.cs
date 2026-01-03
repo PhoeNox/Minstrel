@@ -1,5 +1,6 @@
 namespace Features.Playback;
 
+using System.Diagnostics.CodeAnalysis;
 using Playlists;
 
 public class Effects(
@@ -25,8 +26,10 @@ public class Effects(
 	public Task Play(PlayAction action, IDispatcher dispatcher)
 	{
 		var (_, currentSong, gain, nextSong) = GetSongsAndGainForCurrentGamePhase();
-		dispatcher.Dispatch(new PlaySongSignal(currentSong, gain));
-		dispatcher.Dispatch(new LoadSongSignal(nextSong));
+		if (currentSong is not null)
+			dispatcher.Dispatch(new PlaySongSignal(currentSong, gain));
+		if (nextSong is not null)
+			dispatcher.Dispatch(new LoadSongSignal(nextSong));
 		return Task.CompletedTask;
 	}
 
@@ -44,35 +47,42 @@ public class Effects(
 	public Task OnPlaylistSwitched(SwitchPlaylist action, IDispatcher dispatcher)
 	{
 		var (oldSong, currentSong, gain, nextSong) = GetSongsAndGainForCurrentGamePhase();
-		dispatcher.Dispatch(new PauseSongSignal(oldSong));
-		dispatcher.Dispatch(new PlaySongSignal(currentSong, gain));
-		dispatcher.Dispatch(new LoadSongSignal(nextSong));
+		if (oldSong is not null)
+			dispatcher.Dispatch(new PauseSongSignal(oldSong));
+		if (currentSong is not null)
+			dispatcher.Dispatch(new PlaySongSignal(currentSong, gain));
+		if (nextSong is not null)
+			dispatcher.Dispatch(new LoadSongSignal(nextSong));
 		return Task.CompletedTask;
 	}
 
-	private (Song oldSong, Song currentSong, float currentGain, Song nextSong)
+	private (Song? oldSong, Song? currentSong, float currentGain, Song? nextSong)
 			GetSongsAndGainForCurrentGamePhase()
 	{
 		if (gamePhaseState.Value.Phase == GamePhase.Day)
 		{
-			var oldSong = playlistState.Value.NightPlaylist.CurrentSong!;
-			var song = playlistState.Value.DayPlaylist.CurrentSong!;
+			var oldSong = playlistState.Value.NightPlaylist.CurrentSong;
+			var song = playlistState.Value.DayPlaylist.CurrentSong;
 			var gain = playlistState.Value.DayPlaylist.Gain;
 			var nextSong = GetNextSong(song, playlistState.Value.DayPlaylist);
 			return (oldSong, song, gain, nextSong);
 		}
 		else
 		{
-			var oldSong = playlistState.Value.DayPlaylist.CurrentSong!;
-			var song = playlistState.Value.NightPlaylist.CurrentSong!;
+			var oldSong = playlistState.Value.DayPlaylist.CurrentSong;
+			var song = playlistState.Value.NightPlaylist.CurrentSong;
 			var gain = playlistState.Value.NightPlaylist.Gain;
 			var nextSong = GetNextSong(song, playlistState.Value.NightPlaylist);
 			return (oldSong, song, gain, nextSong);
 		}
 	}
 
-	private static Song GetNextSong(Song song, Playlist playlist)
+	[return: NotNullIfNotNull(nameof(song))]
+	private static Song? GetNextSong(Song? song, Playlist playlist)
 	{
+		if (song is null)
+			return null;
+		
 		var indexOfSong = Array.IndexOf(playlist.Songs, song);
 		return playlist.Songs[(indexOfSong + 1) % playlist.Songs.Length];
 	}
@@ -109,26 +119,27 @@ public class Effects(
 	public Task OnPlaylistSet(SetPlaylistsAction action, IDispatcher dispatcher)
 	{
 		var playlist = playlistState.Value.GetPlaylist(action.GamePhase);
-		var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
-		var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
-		var nextSong = playlist.Songs[nextSongIndex];
-		
-		dispatcher.Dispatch(new LoadSongSignal(playlist.CurrentSong!));
-		dispatcher.Dispatch(new LoadSongSignal(nextSong));
-		
+
+		if (playlist.CurrentSong is not null)
+			dispatcher.Dispatch(new LoadSongSignal(playlist.CurrentSong));
+
+		if (playlist.Songs.Length > 1)
+		{
+			var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
+			var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
+			var nextSong = playlist.Songs[nextSongIndex];
+			dispatcher.Dispatch(new LoadSongSignal(nextSong));
+		}
+
 		return Task.CompletedTask;
 	}
-	
+
 	[EffectMethod]
 	public Task OnGainChanged(SetGainAction action, IDispatcher dispatcher)
 	{
-		if (gamePhaseState.Value.Phase != action.GamePhase)
-			return Task.CompletedTask;
-
 		var playlist = playlistState.Value.GetPlaylist(action.GamePhase);
-		var song = playlist.CurrentSong!;
-		var gain = playlist.Gain;
-		dispatcher.Dispatch(new SetGainSignal(song, gain));
+		if (gamePhaseState.Value.Phase == action.GamePhase && playlist.CurrentSong is not null)
+			dispatcher.Dispatch(new SetGainSignal(playlist.CurrentSong, playlist.Gain));
 		return Task.CompletedTask;
 	}
 }
