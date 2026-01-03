@@ -2,7 +2,9 @@ namespace Features.Playlists;
 
 using Infrastructure.FileSystem;
 
-public class Effects(IFileSystemProvider fileSystemProvider)
+public class Effects(
+		IFileSystemProvider fileSystemProvider,
+		IState<State> state)
 {
 	[EffectMethod(typeof(LoadPlaylistsAction))]
 	public Task LoadPlaylists(IDispatcher dispatcher)
@@ -19,6 +21,31 @@ public class Effects(IFileSystemProvider fileSystemProvider)
 	{
 		var songs = fileSystemProvider.LoadSongs();
 		dispatcher.Dispatch(new SetDatabaseAction(songs));
+		return Task.CompletedTask;
+	}
+
+	[EffectMethod]
+	public Task MoveSong(MoveSongAction action, IDispatcher dispatcher)
+	{
+		var songToMove = state.Value.GetPlaylist(action.GamePhase).Songs[action.OldIndex];
+		
+		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.ToList();
+		songs.RemoveAt(action.OldIndex);
+		if (action.NewIndex < songs.Count)
+			songs.Insert(action.NewIndex, songToMove);
+		else
+			songs.Add(songToMove);
+		
+		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs.ToArray()));
+		return Task.CompletedTask;
+	}
+
+	[EffectMethod]
+	public Task AddSongToPlaylist(AddSongToPlaylistAction action, IDispatcher dispatcher)
+	{
+		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.ToList();
+		songs.Add(action.Song);
+		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs.ToArray()));
 		return Task.CompletedTask;
 	}
 }
