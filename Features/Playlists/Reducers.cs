@@ -32,18 +32,21 @@ public static class Reducers
 	}
 
 	[ReducerMethod]
-	public static State MoveDaySong(State state, MoveDaySongAction action)
+	public static State MoveSong(State state, MoveSongAction action)
 	{
-		var song = state.DayPlaylist.Songs[action.OldIndex];
+		var song = state.GetPlaylist(action.GamePhase).Songs[action.OldIndex];
 
-		var songs = state.DayPlaylist.Songs.ToList();
+		var songs = state.GetPlaylist(action.GamePhase).Songs.ToList();
 		songs.RemoveAt(action.OldIndex);
 		if (action.NewIndex < songs.Count)
 			songs.Insert(action.NewIndex, song);
 		else
 			songs.Add(song);
 
-		return state with {DayPlaylist = state.DayPlaylist with {Songs = songs.ToArray()}};
+		if (action.GamePhase == GamePhase.Day)
+			return state with {DayPlaylist = state.DayPlaylist with {Songs = songs.ToArray()}};
+		else
+			return state with {NightPlaylist = state.NightPlaylist with {Songs = songs.ToArray()}};
 	}
 
 	[ReducerMethod]
@@ -75,21 +78,6 @@ public static class Reducers
 						Songs = [..state.NightPlaylist.Songs, song],
 				},
 		};
-	}
-
-	[ReducerMethod]
-	public static State MoveNightSong(State state, MoveNightSongAction action)
-	{
-		var song = state.NightPlaylist.Songs[action.OldIndex];
-
-		var songs = state.NightPlaylist.Songs.ToList();
-		songs.RemoveAt(action.OldIndex);
-		if (action.NewIndex < songs.Count)
-			songs.Insert(action.NewIndex, song);
-		else
-			songs.Add(song);
-
-		return state with {NightPlaylist = state.NightPlaylist with {Songs = songs.ToArray()}};
 	}
 
 	[ReducerMethod]

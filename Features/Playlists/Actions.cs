@@ -7,8 +7,7 @@ public record SetDatabaseAction(Song[] Songs);
 
 public record AddSongToPlaylistAction(GamePhase GamePhase, Song Song);
 
-public record MoveDaySongAction(int OldIndex, int NewIndex);
-public record MoveNightSongAction(int OldIndex, int NewIndex);
+public record MoveSongAction(GamePhase GamePhase, int OldIndex, int NewIndex);
 
 public record SetCurrentSongForDayAction(Song Song, Song? PreviousSong = null);
 public record SetCurrentSongForNightAction(Song Song, Song? PreviousSong = null);

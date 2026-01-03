@@ -130,32 +130,12 @@ public class Effects(
 	}
 
 	[EffectMethod]
-	public Task OnDaySongMoved(MoveDaySongAction action, IDispatcher dispatcher)
+	public Task OnSongMoved(MoveSongAction action, IDispatcher dispatcher)
 	{
-		if (!playbackState.Value.IsPlaying || gamePhaseState.Value.Phase is not GamePhase.Day)
+		if (!playbackState.Value.IsPlaying || gamePhaseState.Value.Phase != action.GamePhase)
 			return Task.CompletedTask;
 
-		var playlist = playlistState.Value.DayPlaylist;
-		var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
-		var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
-		if (currentSongIndex == action.NewIndex
-		    || nextSongIndex == action.NewIndex
-		    || nextSongIndex == action.OldIndex)
-		{
-			var nextSong = playlist.Songs[nextSongIndex];
-			dispatcher.Dispatch(new LoadSongSignal(nextSong));
-		}
-
-		return Task.CompletedTask;
-	}
-
-	[EffectMethod]
-	public Task OnNightSongMoved(MoveNightSongAction action, IDispatcher dispatcher)
-	{
-		if (!playbackState.Value.IsPlaying || gamePhaseState.Value.Phase is not GamePhase.Night)
-			return Task.CompletedTask;
-
-		var playlist = playlistState.Value.NightPlaylist;
+		var playlist = playlistState.Value.GetPlaylist(action.GamePhase);
 		var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
 		var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
 		if (currentSongIndex == action.NewIndex

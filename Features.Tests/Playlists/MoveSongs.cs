@@ -14,42 +14,26 @@ public class MoveSongs
 	private readonly Song song3 = Dummies.Song with {Title = "Song3"};
 
 	[Test]
-	public async Task MoveDaySong_MovesForward()
+	[Arguments(GamePhase.Day)]
+	[Arguments(GamePhase.Night)]
+	public async Task MoveSong_MovesForward(GamePhase gamePhase)
 	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [song1, song2, song3]));
-		AppContext.Dispatcher.Dispatch(new MoveDaySongAction(0, 2));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(gamePhase, [song1, song2, song3]));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(gamePhase, 0, 2));
 
 		var state = AppContext.Services.GetRequiredService<IState<State>>();
-		await Assert.That(state.Value.DayPlaylist.Songs).IsEquivalentTo([song2, song3, song1]);
+		await Assert.That(state.Value.GetPlaylist(gamePhase).Songs).IsEquivalentTo([song2, song3, song1]);
 	}
 
 	[Test]
-	public async Task MoveDaySong_MovesBackward()
+	[Arguments(GamePhase.Day)]
+	[Arguments(GamePhase.Night)]
+	public async Task MoveSong_MovesBackward(GamePhase gamePhase)
 	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Day, [song1, song2, song3]));
-		AppContext.Dispatcher.Dispatch(new MoveDaySongAction(2, 0));
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(gamePhase, [song1, song2, song3]));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(gamePhase, 2, 0));
 
 		var state = AppContext.Services.GetRequiredService<IState<State>>();
-		await Assert.That(state.Value.DayPlaylist.Songs).IsEquivalentTo([song3, song1, song2]);
-	}
-
-	[Test]
-	public async Task MoveNightSong_MovesForward()
-	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [song1, song2, song3]));
-		AppContext.Dispatcher.Dispatch(new MoveNightSongAction(0, 2));
-
-		var state = AppContext.Services.GetRequiredService<IState<State>>();
-		await Assert.That(state.Value.NightPlaylist.Songs).IsEquivalentTo([song2, song3, song1]);
-	}
-
-	[Test]
-	public async Task MoveNightSong_MovesBackward()
-	{
-		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(GamePhase.Night, [song1, song2, song3]));
-		AppContext.Dispatcher.Dispatch(new MoveNightSongAction(2, 0));
-
-		var state = AppContext.Services.GetRequiredService<IState<State>>();
-		await Assert.That(state.Value.NightPlaylist.Songs).IsEquivalentTo([song3, song1, song2]);
+		await Assert.That(state.Value.GetPlaylist(gamePhase).Songs).IsEquivalentTo([song3, song1, song2]);
 	}
 }

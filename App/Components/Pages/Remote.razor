@@ -125,10 +125,10 @@
 		=> Dispatcher.Dispatch(new SwitchGamePhaseAction());
 
 	void MoveDaySong(int oldIndex, int newIndex)
-		=> Dispatcher.Dispatch(new Features.Playlists.MoveDaySongAction(oldIndex, newIndex));
+		=> Dispatcher.Dispatch(new Features.Playlists.MoveSongAction(GamePhase.Day, oldIndex, newIndex));
 
 	void MoveNightSong(int oldIndex, int newIndex)
-		=> Dispatcher.Dispatch(new Features.Playlists.MoveNightSongAction(oldIndex, newIndex));
+		=> Dispatcher.Dispatch(new Features.Playlists.MoveSongAction(GamePhase.Night, oldIndex, newIndex));
 
 	void ToggleMenu()
 		=> sideMenu?.Toggle();

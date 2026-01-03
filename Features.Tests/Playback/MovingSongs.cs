@@ -29,7 +29,7 @@ public class MovingSongs
 		AppContext.Dispatcher.Dispatch(new PlayAction());
 
 		loadedSongs.Clear();
-		AppContext.Dispatcher.Dispatch(new MoveDaySongAction(1, 3));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(GamePhase.Day, 1, 3));
 
 		await Assert.That(loadedSongs).Contains(song3);
 	}
@@ -48,7 +48,7 @@ public class MovingSongs
 		AppContext.Dispatcher.Dispatch(new PlayAction());
 
 		loadedSongs.Clear();
-		AppContext.Dispatcher.Dispatch(new MoveDaySongAction(3, 1));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(GamePhase.Day, 3, 1));
 
 		await Assert.That(loadedSongs).Contains(song4);
 	}
@@ -67,7 +67,7 @@ public class MovingSongs
 		AppContext.Dispatcher.Dispatch(new PlayAction());
 		
 		loadedSongs.Clear();
-		AppContext.Dispatcher.Dispatch(new MoveDaySongAction(0, 2));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(GamePhase.Day, 0, 2));
 		
 		await Assert.That(loadedSongs).Contains(song4);
 	}
@@ -86,7 +86,7 @@ public class MovingSongs
 		AppContext.Dispatcher.Dispatch(new PlayAction());
 
 		loadedSongs.Clear();
-		AppContext.Dispatcher.Dispatch(new MoveNightSongAction(1, 3));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(GamePhase.Night, 1, 3));
 
 		await Assert.That(loadedSongs).Contains(song3);
 	}
@@ -105,7 +105,7 @@ public class MovingSongs
 		AppContext.Dispatcher.Dispatch(new PlayAction());
 		
 		loadedSongs.Clear();
-		AppContext.Dispatcher.Dispatch(new MoveNightSongAction(3, 1));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(GamePhase.Night, 3, 1));
 		
 		await Assert.That(loadedSongs).Contains(song4);
 	}
@@ -124,7 +124,7 @@ public class MovingSongs
 		AppContext.Dispatcher.Dispatch(new PlayAction());
 		
 		loadedSongs.Clear();
-		AppContext.Dispatcher.Dispatch(new MoveNightSongAction(0, 2));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(GamePhase.Night, 0, 2));
 		
 		await Assert.That(loadedSongs).Contains(song4);
 	}
