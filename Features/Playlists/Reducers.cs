@@ -81,10 +81,11 @@ public static class Reducers
 	}
 
 	[ReducerMethod]
-	public static State SetCurrentSongForDay(State state, SetCurrentSongForDayAction action)
-		=> state with {DayPlaylist = state.DayPlaylist with {CurrentSong = action.Song}};
-
-	[ReducerMethod]
-	public static State SetCurrentSongForNight(State state, SetCurrentSongForNightAction action)
-		=> state with {NightPlaylist = state.NightPlaylist with {CurrentSong = action.Song}};
+	public static State SetCurrentSong(State state, SetCurrentSongAction action)
+	{
+		if (action.GamePhase == GamePhase.Day)
+			return state with {DayPlaylist = state.DayPlaylist with {CurrentSong = action.Song}};
+		else
+			return state with {NightPlaylist = state.NightPlaylist with {CurrentSong = action.Song}};
+	}
 }

@@ -23,8 +23,7 @@ public class AddingSongs
 				action => loadedSongs.Add(action.Song));
 
 		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(gamePhase, [song1]));
-		AppContext.Dispatcher.Dispatch(new SetCurrentSongForDayAction(song1));
-		AppContext.Dispatcher.Dispatch(new SetCurrentSongForNightAction(song1));
+		AppContext.Dispatcher.Dispatch(new SetCurrentSongAction(gamePhase, song1));
 
 		loadedSongs.Clear();
 		AppContext.Dispatcher.Dispatch(new AddSongToPlaylistAction(gamePhase, song2));

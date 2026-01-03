@@ -105,7 +105,8 @@
 	void SelectDaySong(Song song)
 	{
 		Dispatcher.Dispatch(
-			new Features.Playlists.SetCurrentSongForDayAction(
+			new Features.Playlists.SetCurrentSongAction(
+				GamePhase.Day,
 				song,
 				PlaylistState.Value.DayPlaylist.CurrentSong));
 	}
@@ -113,7 +114,8 @@
 	void SelectNightSong(Song song)
 	{
 		Dispatcher.Dispatch(
-			new Features.Playlists.SetCurrentSongForNightAction(
+			new Features.Playlists.SetCurrentSongAction(
+				GamePhase.Night,
 				song,
 				PlaylistState.Value.NightPlaylist.CurrentSong));
 	}
