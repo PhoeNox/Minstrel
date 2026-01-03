@@ -36,4 +36,16 @@ public class MoveSongs
 		var state = AppContext.Services.GetRequiredService<IState<State>>();
 		await Assert.That(state.Value.GetPlaylist(gamePhase).Songs).IsEquivalentTo([song3, song1, song2]);
 	}
+	
+	[Test]
+	[Arguments(GamePhase.Day)]
+	[Arguments(GamePhase.Night)]
+	public Task MoveSong_SavesPlaylist(GamePhase gamePhase)
+	{
+		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(gamePhase, [song1, song2, song3]));
+		AppContext.Dispatcher.Dispatch(new MoveSongAction(gamePhase, 0, 2));
+		
+		AppContext.FileSystemProvider.Verify(x => x.SavePlaylist(gamePhase, It.IsAny<Song[]>()));
+		return Task.CompletedTask;
+	}
 }

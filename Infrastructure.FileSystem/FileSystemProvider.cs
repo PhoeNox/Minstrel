@@ -8,6 +8,8 @@ public interface IFileSystemProvider
 	Song[] LoadSongs();
 
 	(Song[] DayPlaylist, Song[] NightPlaylist) LoadPlaylists();
+
+	void SavePlaylist(GamePhase gamePhase, Song[] songs);
 }
 
 public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSystemProvider
@@ -19,11 +21,22 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSy
 		return (daySongs, nightSongs);
 	}
 
+	public void SavePlaylist(GamePhase gamePhase, Song[] songs)
+	{
+		var fileName = GetPlaylistFileName(gamePhase);
+		File.WriteAllLines(fileName, songs.Select(song => song.Path));
+	}
+
 	private static Song[] LoadPlaylist(GamePhase gamePhase)
 	{
-		var playlist = gamePhase == GamePhase.Day ? "day.m3u" : "night.m3u";
+		var playlist = GetPlaylistFileName(gamePhase);
 		var songPaths = File.ReadAllLines(playlist);
 		return songPaths.SelectMany(CreateSongFromFile).ToArray();
+	}
+
+	private static string GetPlaylistFileName(GamePhase gamePhase)
+	{
+		return gamePhase == GamePhase.Day ? "day.m3u" : "night.m3u";
 	}
 
 	public Song[] LoadSongs()

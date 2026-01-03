@@ -24,4 +24,15 @@ public class AddSongs
 		else
 			await Assert.That(state.Value.NightPlaylist.Songs).IsEquivalentTo([song1]);
 	}
+	
+	[Test]
+	[Arguments(GamePhase.Day)]
+	[Arguments(GamePhase.Night)]
+	public Task AddSong_SavesPlaylist(GamePhase gamePhase)
+	{
+		AppContext.Dispatcher.Dispatch(new AddSongAction(gamePhase, song1));
+		
+		AppContext.FileSystemProvider.Verify(x => x.SavePlaylist(gamePhase, It.IsAny<Song[]>()));
+		return Task.CompletedTask;
+	}
 }

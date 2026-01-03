@@ -48,4 +48,11 @@ public class Effects(
 		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs.ToArray()));
 		return Task.CompletedTask;
 	}
+
+	[EffectMethod]
+	public Task SavePlaylist(SetPlaylistsAction action, IDispatcher dispatcher)
+	{
+		fileSystemProvider.SavePlaylist(action.GamePhase, action.Songs);
+		return Task.CompletedTask;
+	}
 }
