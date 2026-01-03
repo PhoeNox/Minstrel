@@ -1,0 +1,43 @@
+<div class="playlist-control">
+	<SortableList Data="Songs" OnUpdate="@OnSongMoved" Handle=".bb-sortable-list-handle">
+		<ItemTemplate>
+			<div class="song-entry">
+				<div class="bb-sortable-list-handle">
+					<Icon Name="IconName.GripVertical"/>
+				</div>
+				<div class="song-info">
+					<div>
+						@context.Title
+						@if (!string.IsNullOrEmpty(context.Artist))
+						{
+							<span> - @context.Artist</span>
+						}
+						@if (!string.IsNullOrEmpty(context.Album))
+						{
+							<span> - @context.Album</span>
+						}
+					</div>
+					<div class="song-length">@context.Length.ToSongLength()</div>
+				</div>
+			</div>
+		</ItemTemplate>
+	</SortableList>
+</div>
+
+@code {
+	[Parameter] 
+	public required Playlist Playlist { get; set; }
+
+	[Parameter]
+	public EventCallback<SongMovedEvent> SongMoved { get; set; }
+
+	List<Song> Songs => Playlist.Songs.ToList();
+
+	private async Task OnSongMoved(SortableListEventArgs args)
+	{
+		var @event = new SongMovedEvent(args.OldIndex, args.NewIndex);
+		await SongMoved.InvokeAsync(@event);
+	}
+	
+	public record SongMovedEvent(int OldIndex, int NewIndex);
+}

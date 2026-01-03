@@ -22,7 +22,7 @@
 		<PlayableList
 			Playlist="PlaylistState.Value.DayPlaylist"
 			SongSelected="song => SelectDaySong(song)"
-			SongMoved="e => MoveDaySong(e.OldIndex, e.NewIndex)"/>
+			SongMoved="e => MoveSong(GamePhase.Day, e.OldIndex, e.NewIndex)"/>
 
 		@if (TimerState.Value.IsRunning)
 		{
@@ -63,7 +63,7 @@
 		<PlayableList
 			Playlist="PlaylistState.Value.NightPlaylist"
 			SongSelected="song => SelectNightSong(song)"
-			SongMoved="e => MoveNightSong(e.OldIndex, e.NewIndex)"/>
+			SongMoved="e => MoveSong(GamePhase.Night, e.OldIndex, e.NewIndex)"/>
 
 		<VolumeControl @bind-Gain="NightGain"/>
 	</div>
@@ -126,11 +126,8 @@
 	void SwitchGamePhase()
 		=> Dispatcher.Dispatch(new SwitchGamePhaseAction());
 
-	void MoveDaySong(int oldIndex, int newIndex)
-		=> Dispatcher.Dispatch(new Features.Playlists.MoveSongAction(GamePhase.Day, oldIndex, newIndex));
-
-	void MoveNightSong(int oldIndex, int newIndex)
-		=> Dispatcher.Dispatch(new Features.Playlists.MoveSongAction(GamePhase.Night, oldIndex, newIndex));
+	void MoveSong(GamePhase gamePhase, int oldIndex, int newIndex)
+		=> Dispatcher.Dispatch(new Features.Playlists.MoveSongAction(gamePhase, oldIndex, newIndex));
 
 	void ToggleMenu()
 		=> sideMenu?.Toggle();

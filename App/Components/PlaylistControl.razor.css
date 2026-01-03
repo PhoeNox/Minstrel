@@ -1,0 +1,43 @@
+.playlist-control {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.song-entry {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	gap: 1rem;
+}
+
+.bb-sortable-list-handle {
+	align-self: stretch;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+}
+
+.song-info {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-grow: 1;
+}
+
+.play-button {
+	width: 2rem;
+	height: 2rem;
+	padding: 0 0 0 0.2rem;
+	line-height: 1;
+	border-radius: 9999px;
+	color: white;
+	background: var(--primary-color);
+	flex-shrink: 0;
+}
+
+.play-button:disabled {
+	background: #ccc;
+	cursor: not-allowed;
+}
