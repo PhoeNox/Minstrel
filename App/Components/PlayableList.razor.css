@@ -9,7 +9,7 @@
 	display: flex;
 	justify-content: flex-start;
 	align-items: center;
-	gap: 1rem;
+	gap: 0.5rem;
 }
 
 .bb-sortable-list-handle {
@@ -17,6 +17,8 @@
 	flex-shrink: 0;
 	display: flex;
 	align-items: center;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
 }
 
 .song-info {
@@ -24,20 +26,25 @@
 	justify-content: space-between;
 	align-items: center;
 	flex-grow: 1;
+	gap: 0.5rem;
 }
 
-.play-button {
-	width: 2rem;
-	height: 2rem;
-	padding: 0 0 0 0.2rem;
-	line-height: 1;
-	border-radius: 9999px;
-	color: white;
-	background: var(--primary-color);
-	flex-shrink: 0;
+::deep .list-group-item {
+	padding-left: 8px;
+	padding-right: 8px;
 }
 
-.play-button:disabled {
-	background: #ccc;
-	cursor: not-allowed;
+::deep .dropdown-toggle {
+	border: none;
+	color: black;
+	background: none;
+	border-radius: 999px;
+}
+
+::deep .dropdown-toggle:hover {
+	background: #f8f9fa;
+}
+
+::deep .dropdown-toggle::after {
+	content: none;
 }

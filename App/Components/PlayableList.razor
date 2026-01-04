@@ -5,12 +5,6 @@
 				<div class="bb-sortable-list-handle">
 					<Icon Name="IconName.GripVertical"/>
 				</div>
-				<button
-					class="play-button"
-					onclick="@(() => SongSelected.InvokeAsync(context))"
-					disabled="@(context == Playlist.CurrentSong)">
-					▶
-				</button>
 				<div class="song-info">
 					<div>
 						@context.Title
@@ -21,6 +15,16 @@
 					</div>
 					<div class="song-length">@context.Length.ToSongLength()</div>
 				</div>
+				<Dropdown Color="DropdownColor.Secondary" Disabled="@(context == Playlist.CurrentSong)">
+					<DropdownToggleButton>⋯</DropdownToggleButton>
+					<DropdownMenu Position="DropdownMenuPosition.End">
+						<DropdownItem
+							onclick="@(() => SongSelected.InvokeAsync(context))"
+							Type="DropdownItemType.Button">
+							Set Active
+						</DropdownItem>
+					</DropdownMenu>
+				</Dropdown>
 			</div>
 		</ItemTemplate>
 	</SortableList>
