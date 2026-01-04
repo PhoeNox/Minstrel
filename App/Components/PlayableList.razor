@@ -1,7 +1,7 @@
-<div class="playlist-control">
+<div class="playlist-control @Class">
 	<SortableList Data="Songs" OnUpdate="@OnSongMoved" Handle=".bb-sortable-list-handle">
 		<ItemTemplate>
-			<div class="song-entry">
+			<div class="song-entry @GetActiveClass(context)">
 				<div class="bb-sortable-list-handle">
 					<Icon Name="IconName.GripVertical"/>
 				</div>
@@ -40,6 +40,9 @@
 	[Parameter]
 	public EventCallback<SongMovedEvent> SongMoved { get; set; }
 
+	[Parameter]
+	public string Class { get; set; } = string.Empty;
+
 	List<Song> Songs => Playlist.Songs.ToList();
 
 	private async Task OnSongMoved(SortableListEventArgs args)
@@ -49,4 +52,7 @@
 	}
 	
 	public record SongMovedEvent(int OldIndex, int NewIndex);
+	
+	private string GetActiveClass(Song song)
+		=> song == Playlist.CurrentSong ? "active" : "";
 }

@@ -21,6 +21,7 @@
 
 		<PlayableList
 			Playlist="PlaylistState.Value.DayPlaylist"
+			Class="@(GamePhaseState.Value.Phase == GamePhase.Day ? "active" : string.Empty)"
 			SongSelected="song => SelectDaySong(song)"
 			SongMoved="e => MoveSong(GamePhase.Day, e.OldIndex, e.NewIndex)"/>
 
@@ -62,6 +63,7 @@
 	<div id="night-phase" class="game-phase-section">
 		<PlayableList
 			Playlist="PlaylistState.Value.NightPlaylist"
+			Class="@(GamePhaseState.Value.Phase == GamePhase.Night ? "active" : string.Empty)"
 			SongSelected="song => SelectNightSong(song)"
 			SongMoved="e => MoveSong(GamePhase.Night, e.OldIndex, e.NewIndex)"/>
 
