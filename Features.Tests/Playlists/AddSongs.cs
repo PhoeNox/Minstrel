@@ -19,20 +19,17 @@ public class AddSongs
 		AppContext.Dispatcher.Dispatch(new AddSongAction(gamePhase, song1));
 
 		var state = AppContext.Services.GetRequiredService<IState<State>>();
-		if (gamePhase == GamePhase.Day)
-			await Assert.That(state.Value.DayPlaylist.Songs).IsEquivalentTo([song1]);
-		else
-			await Assert.That(state.Value.NightPlaylist.Songs).IsEquivalentTo([song1]);
+		await Assert.That(state.Value.GetPlaylist(gamePhase).Songs).IsEquivalentTo([song1]);
 	}
-	
+
 	[Test]
 	[Arguments(GamePhase.Day)]
 	[Arguments(GamePhase.Night)]
 	public Task AddSong_SavesPlaylist(GamePhase gamePhase)
 	{
 		AppContext.Dispatcher.Dispatch(new AddSongAction(gamePhase, song1));
-		
-		AppContext.FileSystemProvider.Verify(x => x.SavePlaylist(gamePhase, It.IsAny<Song[]>()));
+
+		AppContext.FileSystemProvider.Verify(x => x.SavePlaylist(gamePhase, new[] {song1}));
 		return Task.CompletedTask;
 	}
 }

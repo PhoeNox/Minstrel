@@ -11,14 +11,16 @@
 	<h2>Day Playlist</h2>
 	<PlaylistControl
 		Playlist="State.Value.DayPlaylist"
-		SongMoved="e => MoveSong(GamePhase.Day, e.OldIndex, e.NewIndex)"/>
+		SongMoved="e => MoveSong(GamePhase.Day, e.OldIndex, e.NewIndex)"
+		SongRemoved="e => RemoveSong(GamePhase.Day, e.Song)"/>
 </div>
 
 <div id="night-playlist">
 	<h2>Night Playlist</h2>
 	<PlaylistControl
 		Playlist="State.Value.NightPlaylist"
-		SongMoved="e => MoveSong(GamePhase.Night, e.OldIndex, e.NewIndex)"/>
+		SongMoved="e => MoveSong(GamePhase.Night, e.OldIndex, e.NewIndex)"
+		SongRemoved="e => RemoveSong(GamePhase.Night, e.Song)"/>
 </div>
 
 <div id="other-songs">
@@ -66,4 +68,7 @@
 	
 	void MoveSong(GamePhase gamePhase, int oldIndex, int newIndex)
 		=> Dispatcher.Dispatch(new MoveSongAction(gamePhase, oldIndex, newIndex));
+	
+	void RemoveSong(GamePhase gamePhase, Song song)
+		=> Dispatcher.Dispatch(new RemoveSongAction(gamePhase, song));
 }

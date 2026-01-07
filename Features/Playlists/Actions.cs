@@ -7,6 +7,7 @@ public record SetDatabaseAction(Song[] Songs);
 
 public record AddSongAction(GamePhase GamePhase, Song Song);
 public record MoveSongAction(GamePhase GamePhase, int OldIndex, int NewIndex);
+public record RemoveSongAction(GamePhase GamePhase, Song Song);
 
 public record SetCurrentSongAction(GamePhase GamePhase, Song Song, Song? PreviousSong = null);
 

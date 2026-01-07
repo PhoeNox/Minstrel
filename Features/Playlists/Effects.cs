@@ -41,10 +41,19 @@ public class Effects(
 	}
 
 	[EffectMethod]
-	public Task AddSongToPlaylist(AddSongAction action, IDispatcher dispatcher)
+	public Task AddSong(AddSongAction action, IDispatcher dispatcher)
 	{
 		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.ToList();
 		songs.Add(action.Song);
+		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs.ToArray()));
+		return Task.CompletedTask;
+	}
+
+	[EffectMethod]
+	public Task RemoveSong(RemoveSongAction action, IDispatcher dispatcher)
+	{
+		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.ToList();
+		songs.Remove(action.Song);
 		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs.ToArray()));
 		return Task.CompletedTask;
 	}

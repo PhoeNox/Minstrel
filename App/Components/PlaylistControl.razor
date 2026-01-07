@@ -19,6 +19,7 @@
 					</div>
 					<div class="song-length">@context.Length.ToSongLength()</div>
 				</div>
+				<button class="remove" @onclick="() => OnSongRemoved(context)">-</button>
 			</div>
 		</ItemTemplate>
 	</SortableList>
@@ -30,6 +31,9 @@
 
 	[Parameter]
 	public EventCallback<SongMovedEvent> SongMoved { get; set; }
+	
+	[Parameter]
+	public EventCallback<SongRemovedEvent> SongRemoved { get; set; }
 
 	List<Song> Songs => Playlist.Songs.ToList();
 
@@ -38,6 +42,13 @@
 		var @event = new SongMovedEvent(args.OldIndex, args.NewIndex);
 		await SongMoved.InvokeAsync(@event);
 	}
+
+	private async Task OnSongRemoved(Song song)
+	{
+		var @event = new SongRemovedEvent(song);
+		await SongRemoved.InvokeAsync(@event);
+	}
 	
 	public record SongMovedEvent(int OldIndex, int NewIndex);
+	public record SongRemovedEvent(Song Song);
 }

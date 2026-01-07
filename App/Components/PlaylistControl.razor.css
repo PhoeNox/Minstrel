@@ -26,18 +26,6 @@
 	flex-grow: 1;
 }
 
-.play-button {
-	width: 2rem;
-	height: 2rem;
-	padding: 0 0 0 0.2rem;
-	line-height: 1;
-	border-radius: 9999px;
-	color: white;
-	background: var(--primary-color);
-	flex-shrink: 0;
-}
-
-.play-button:disabled {
-	background: #ccc;
-	cursor: not-allowed;
+button.remove {
+	padding: 0.75rem 1.25rem;
 }
