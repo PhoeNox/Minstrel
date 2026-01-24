@@ -19,7 +19,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="DemoMusic\**\*"
+	  <None Include="Music\**\*"
 			CopyToOutputDirectory="PreserveNewest"
 			CopyToPublishDirectory="PreserveNewest"
 	  />
