@@ -6,8 +6,8 @@ using Infrastructure.Playback;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var url = builder.Configuration["Url"]!;
-builder.WebHost.UseUrls(url);
+var port = builder.Configuration["Port"]!;
+builder.WebHost.UseUrls($"http://*:{port}");
 
 builder.Services.AddOptions<MusicOptions>()
 		.Bind(builder.Configuration.GetSection(MusicOptions.Section))
@@ -45,7 +45,7 @@ app.MapRazorComponents<App.Components.App>()
 	.AddInteractiveServerRenderMode();
 
 var appTask = app.RunAsync();
-OpenPlayerInBrowser(url);
+OpenPlayerInBrowser($"http://botc.localhost:{port}");
 await appTask;
 
 void OpenPlayerInBrowser(string playerUrl)
