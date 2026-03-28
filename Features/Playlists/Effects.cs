@@ -27,34 +27,24 @@ public class Effects(
 	[EffectMethod]
 	public Task MoveSong(MoveSongAction action, IDispatcher dispatcher)
 	{
-		var songToMove = state.Value.GetPlaylist(action.GamePhase).Songs[action.OldIndex];
-		
-		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.ToList();
-		songs.RemoveAt(action.OldIndex);
-		if (action.NewIndex < songs.Count)
-			songs.Insert(action.NewIndex, songToMove);
-		else
-			songs.Add(songToMove);
-		
-		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs.ToArray()));
+		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.WithSongMoved(action.OldIndex, action.NewIndex);
+		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs));
 		return Task.CompletedTask;
 	}
 
 	[EffectMethod]
 	public Task AddSong(AddSongAction action, IDispatcher dispatcher)
 	{
-		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.ToList();
-		songs.Add(action.Song);
-		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs.ToArray()));
+		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.WithSongAdded(action.Song);
+		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs));
 		return Task.CompletedTask;
 	}
 
 	[EffectMethod]
 	public Task RemoveSong(RemoveSongAction action, IDispatcher dispatcher)
 	{
-		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.ToList();
-		songs.Remove(action.Song);
-		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs.ToArray()));
+		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.WithSongRemoved(action.Song);
+		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs));
 		return Task.CompletedTask;
 	}
 

@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="App/App.csproj" />
   <Project Path="Core/Core.csproj" />
+  <Project Path="Core.Tests/Core.Tests.csproj" />
   <Project Path="Features.Tests/Features.Tests.csproj" />
   <Project Path="Features/Features.csproj" />
   <Project Path="Infrastructure.FileSystem/Infrastructure.FileSystem.csproj" />
