@@ -3,6 +3,8 @@
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
+public record ConnectionOptions(string Port);
+
 public interface INetworkProvider
 {
 	string GetLocalIpAddress();

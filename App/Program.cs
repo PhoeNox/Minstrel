@@ -21,6 +21,7 @@ builder.Services.AddBlazorBootstrap();
 builder.Services.AddScoped<PlaybackService>();
 builder.Services.AddSingleton<IFileSystemProvider, FileSystemProvider>();
 builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
+builder.Services.AddSingleton(new ConnectionOptions(port));
 builder.Services.AddSingleton(TimeProvider.System);
 
 var coreAssembly = typeof(Features.Playback.State).Assembly;

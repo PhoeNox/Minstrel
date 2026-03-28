@@ -30,6 +30,7 @@ public class AppContext : IAsyncInitializer
 
 		serviceCollection.AddSingleton(FileSystemProvider.Object);
 		serviceCollection.AddSingleton(NetworkProvider.Object);
+		serviceCollection.AddSingleton(new ConnectionOptions("5000"));
 		serviceCollection.AddSingleton<TimeProvider, FakeTimeProvider>();
 
 		Services = serviceCollection.BuildServiceProvider();
