@@ -56,6 +56,12 @@ UI Component → Dispatch Action/Signal → Reducer (pure state update) + Effect
 - **Phase switching:** `SwitchGamePhaseAction` → toggles Day/Night state → sends `SwitchPlaylistSignal` → fades out current song, fades in next song from the other playlist.
 - **Timer:** Uses `PeriodicTimer` (100ms ticks); plays `Gong.mp3` at configurable volume when it expires.
 
+### Project-Specific Coding Exceptions
+
+The global rule against inline construction/function calls in arguments has the following exceptions in this project:
+
+- `dispatcher.Dispatch(new SomeAction(...))` — Fluxor dispatch calls may inline the action construction.
+
 ### Configuration
 
 The app reads `Music:Directory` from `appsettings.json` (wrapped in `MusicOptions`). The HTTP port defaults to 5000.
