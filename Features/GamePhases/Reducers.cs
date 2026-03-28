@@ -1,6 +1,6 @@
 namespace Features.GamePhases;
 
-public record Reducers
+public static class Reducers
 {
 	[ReducerMethod]
 	public static State SetGamePhase(State state, SetGamePhaseAction action)

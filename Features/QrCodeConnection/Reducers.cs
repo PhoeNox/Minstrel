@@ -1,6 +1,6 @@
 namespace Features.QrCodeConnection;
 
-public class Reducers
+public static class Reducers
 {
 	[ReducerMethod]
 	public static State ShowQrCode(State state, ShowQrCodeAction action)
