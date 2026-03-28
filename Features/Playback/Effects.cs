@@ -39,7 +39,8 @@ public class Effects(
 		var song = gamePhaseState.Value.Phase == GamePhase.Day
 				? playlistState.Value.DayPlaylist.CurrentSong
 				: playlistState.Value.NightPlaylist.CurrentSong;
-		dispatcher.Dispatch(new PauseSongSignal(song!));
+		if (song is not null)
+			dispatcher.Dispatch(new PauseSongSignal(song));
 		return Task.CompletedTask;
 	}
 
