@@ -63,7 +63,7 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSy
 			);
 			return [song];
 		}
-		catch
+		catch (Exception)
 		{
 			return [];
 		}
