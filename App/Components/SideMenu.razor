@@ -87,16 +87,7 @@
 	int timerMinutes = 5;
 
 	bool IsSongOnOtherPlaylistAvailable
-	{
-		get
-		{
-			var songOnOtherPlaylist = GamePhaseState.Value.Phase == GamePhase.Day
-				? PlaylistState.Value.NightPlaylist.CurrentSong
-				: PlaylistState.Value.DayPlaylist.CurrentSong;
-			return songOnOtherPlaylist is not null
-			       && PlaybackState.Value.LoadedSongs.Contains(songOnOtherPlaylist);
-		}
-	}
+		=> PlaybackState.Value.IsSongOnOtherPlaylistAvailable(PlaylistState.Value, GamePhaseState.Value);
 
 	public void Toggle()
 	{
