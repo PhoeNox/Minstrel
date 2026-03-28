@@ -26,12 +26,15 @@ public class Effects(TimeProvider timeProvider, IState<State> state)
 				
 				dispatcher.Dispatch(new SetTimeLeftAction(timeLeft));
 
-				if (timeLeft <= TimeSpan.Zero || !state.Value.IsRunning)
+				if (timeLeft <= TimeSpan.Zero)
 				{
 					dispatcher.Dispatch(new PlaySoundSignal(GongSong, state.Value.GongGain));
 					dispatcher.Dispatch(new SetIsTimeRunningAction(false));
 					break;
 				}
+
+				if (!state.Value.IsRunning)
+					break;
 			}
 		}
 		catch (OperationCanceledException)
