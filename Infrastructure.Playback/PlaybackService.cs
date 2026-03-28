@@ -66,6 +66,7 @@ public class PlaybackService(IJSRuntime jsRuntime)
 		var songLeft = activeSong.Song.Length - activeSong.AlreadyPlayed - fadeDuration;
 		if (songLeft > TimeSpan.Zero)
 			await Task.Delay(songLeft, ct);
+		ct.ThrowIfCancellationRequested();
 		SongEnded(activeSong.Song);
 	}
 

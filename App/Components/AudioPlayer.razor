@@ -21,10 +21,23 @@
 
 		SubscribeToAction<SetGainSignal>(s => _ = PlaybackService.SetGain(s.Song, s.Gain));
 
-		PlaybackService.SongEnded += s => Dispatcher.Dispatch(new SongEndedSignal(s));
-		PlaybackService.SongRepository.SongLoaded += s => Dispatcher.Dispatch(new SongLoadedSignal(s));
+		PlaybackService.SongEnded += OnSongEnded;
+		PlaybackService.SongRepository.SongLoaded += OnSongLoaded;
 
 		Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
+	}
+
+	private void OnSongEnded(Song song) => Dispatcher.Dispatch(new SongEndedSignal(song));
+	private void OnSongLoaded(Song song) => Dispatcher.Dispatch(new SongLoadedSignal(song));
+
+	protected override ValueTask DisposeAsyncCore(bool disposing)
+	{
+		if (disposing)
+		{
+			PlaybackService.SongEnded -= OnSongEnded;
+			PlaybackService.SongRepository.SongLoaded -= OnSongLoaded;
+		}
+		return base.DisposeAsyncCore(disposing);
 	}
 
 }
