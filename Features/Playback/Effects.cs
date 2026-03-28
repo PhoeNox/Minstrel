@@ -1,6 +1,5 @@
 namespace Features.Playback;
 
-using System.Diagnostics.CodeAnalysis;
 using Playlists;
 
 public class Effects(
@@ -60,39 +59,26 @@ public class Effects(
 	private (Song? oldSong, Song? currentSong, float currentGain, Song? nextSong)
 			GetSongsAndGainForCurrentGamePhase()
 	{
-		if (gamePhaseState.Value.Phase == GamePhase.Day)
-		{
-			var oldSong = playlistState.Value.NightPlaylist.CurrentSong;
-			var song = playlistState.Value.DayPlaylist.CurrentSong;
-			var gain = playlistState.Value.DayPlaylist.Gain;
-			var nextSong = GetNextSong(song, playlistState.Value.DayPlaylist);
-			return (oldSong, song, gain, nextSong);
-		}
-		else
-		{
-			var oldSong = playlistState.Value.DayPlaylist.CurrentSong;
-			var song = playlistState.Value.NightPlaylist.CurrentSong;
-			var gain = playlistState.Value.NightPlaylist.Gain;
-			var nextSong = GetNextSong(song, playlistState.Value.NightPlaylist);
-			return (oldSong, song, gain, nextSong);
-		}
+		var (active, other) = gamePhaseState.Value.Phase == GamePhase.Day
+				? (playlistState.Value.DayPlaylist, playlistState.Value.NightPlaylist)
+				: (playlistState.Value.NightPlaylist, playlistState.Value.DayPlaylist);
+		return GetSongsAndGain(active, other);
 	}
 
-	[return: NotNullIfNotNull(nameof(song))]
-	private static Song? GetNextSong(Song? song, Playlist playlist)
+	private static (Song? oldSong, Song? currentSong, float gain, Song? nextSong)
+			GetSongsAndGain(Playlist active, Playlist other)
 	{
-		if (song is null)
-			return null;
-		
-		var indexOfSong = Array.IndexOf(playlist.Songs, song);
-		return playlist.Songs[(indexOfSong + 1) % playlist.Songs.Length];
+		var nextSong = active.CurrentSong is not null
+				? active.Songs.GetNextSong(active.CurrentSong)
+				: null;
+		return (other.CurrentSong, active.CurrentSong, active.Gain, nextSong);
 	}
 
 	[EffectMethod]
 	public Task OnSongEnded(SongEndedSignal signal, IDispatcher dispatcher)
 	{
 		var playlist = playlistState.Value.GetPlaylist(gamePhaseState.Value.Phase);
-		var nextSong = GetNextSong(signal.Song, playlist);
+		var nextSong = playlist.Songs.GetNextSong(signal.Song);
 		dispatcher.Dispatch(new SetCurrentSongAction(gamePhaseState.Value.Phase, nextSong, signal.Song));
 		return Task.CompletedTask;
 	}
@@ -109,8 +95,7 @@ public class Effects(
 		{
 			var playlist = playlistState.Value.GetPlaylist(action.GamePhase);
 			dispatcher.Dispatch(new PlaySongSignal(action.Song, playlist.Gain));
-			var songAfterNextSong = GetNextSong(action.Song, playlist);
-			dispatcher.Dispatch(new LoadSongSignal(songAfterNextSong));
+			dispatcher.Dispatch(new LoadSongSignal(playlist.Songs.GetNextSong(action.Song)));
 		}
 
 		return Task.CompletedTask;
@@ -124,13 +109,8 @@ public class Effects(
 		if (playlist.CurrentSong is not null)
 			dispatcher.Dispatch(new LoadSongSignal(playlist.CurrentSong));
 
-		if (playlist.Songs.Length > 1)
-		{
-			var currentSongIndex = Array.IndexOf(playlist.Songs, playlist.CurrentSong);
-			var nextSongIndex = (currentSongIndex + 1) % playlist.Songs.Length;
-			var nextSong = playlist.Songs[nextSongIndex];
-			dispatcher.Dispatch(new LoadSongSignal(nextSong));
-		}
+		if (playlist.Songs.Length > 1 && playlist.CurrentSong is not null)
+			dispatcher.Dispatch(new LoadSongSignal(playlist.Songs.GetNextSong(playlist.CurrentSong)));
 
 		return Task.CompletedTask;
 	}

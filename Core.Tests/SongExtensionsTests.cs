@@ -42,4 +42,18 @@ public class SongExtensionsTests
 		Song[] songs = [song1, song2, song3];
 		await Assert.That(songs.WithSongMoved(0, 3)).IsEquivalentTo([song2, song3, song1]);
 	}
+
+	[Test]
+	public async Task GetNextSong_ReturnsNextSong()
+	{
+		Song[] songs = [song1, song2, song3];
+		await Assert.That(songs.GetNextSong(song1)).IsEqualTo(song2);
+	}
+
+	[Test]
+	public async Task GetNextSong_WrapsAroundAtEnd()
+	{
+		Song[] songs = [song1, song2, song3];
+		await Assert.That(songs.GetNextSong(song3)).IsEqualTo(song1);
+	}
 }

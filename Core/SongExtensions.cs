@@ -24,5 +24,11 @@ public static class SongExtensions
 				list.Add(song);
 			return list.ToArray();
 		}
+
+		public Song GetNextSong(Song current)
+		{
+			var index = Array.IndexOf(songs, current);
+			return songs[(index + 1) % songs.Length];
+		}
 	}
 }
