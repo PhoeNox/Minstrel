@@ -50,8 +50,8 @@
 					<td>@song.Album</td>
 					<td>@song.Length.ToSongLength()</td>
 					<td>
-						<button @onclick="() => AddSongToPlaylist(GamePhase.Day, song)">Add to day</button>
-						<button @onclick="() => AddSongToPlaylist(GamePhase.Night, song)">Add to night</button>
+						<button class="icon-btn" title="Add to day playlist" @onclick="() => AddSongToPlaylist(GamePhase.Day, song)">☀</button>
+						<button class="icon-btn" title="Add to night playlist" @onclick="() => AddSongToPlaylist(GamePhase.Night, song)">☾</button>
 					</td>
 				</tr>
 			}
