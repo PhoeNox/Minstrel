@@ -49,6 +49,14 @@ public class Effects(
 	}
 
 	[EffectMethod]
+	public Task ShufflePlaylist(ShufflePlaylistAction action, IDispatcher dispatcher)
+	{
+		var songs = state.Value.GetPlaylist(action.GamePhase).Songs.Shuffled(Random.Shared);
+		dispatcher.Dispatch(new SetPlaylistsAction(action.GamePhase, songs));
+		return Task.CompletedTask;
+	}
+
+	[EffectMethod]
 	public Task SavePlaylist(SetPlaylistsAction action, IDispatcher dispatcher)
 	{
 		fileSystemProvider.SavePlaylist(action.GamePhase, action.Songs);

@@ -56,4 +56,19 @@ public class SongExtensionsTests
 		Song[] songs = [song1, song2, song3];
 		await Assert.That(songs.GetNextSong(song3)).IsEqualTo(song1);
 	}
+
+	[Test]
+	public async Task Shuffled_ContainsAllOriginalSongs()
+	{
+		Song[] songs = [song1, song2, song3];
+		await Assert.That(songs.Shuffled(new Random(42))).IsEquivalentTo(songs);
+	}
+
+	[Test]
+	public async Task Shuffled_ProducesNewOrder()
+	{
+		Song[] songs = [song1, song2, song3];
+		var shuffled = songs.Shuffled(new Random(42));
+		await Assert.That(shuffled).IsNotEqualTo(songs);
+	}
 }

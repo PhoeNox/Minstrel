@@ -8,7 +8,10 @@
 <PageTitle>Minstrel - Playlists</PageTitle>
 
 <div id="day-playlist">
-	<h2>Day Playlist</h2>
+	<div class="playlist-header">
+		<h2>Day Playlist</h2>
+		<button @onclick="() => ShufflePlaylist(GamePhase.Day)" title="Shuffle day playlist">⇄</button>
+	</div>
 	<PlaylistControl
 		Playlist="State.Value.DayPlaylist"
 		SongMoved="e => MoveSong(GamePhase.Day, e.OldIndex, e.NewIndex)"
@@ -16,7 +19,10 @@
 </div>
 
 <div id="night-playlist">
-	<h2>Night Playlist</h2>
+	<div class="playlist-header">
+		<h2>Night Playlist</h2>
+		<button @onclick="() => ShufflePlaylist(GamePhase.Night)" title="Shuffle night playlist">⇄</button>
+	</div>
 	<PlaylistControl
 		Playlist="State.Value.NightPlaylist"
 		SongMoved="e => MoveSong(GamePhase.Night, e.OldIndex, e.NewIndex)"
@@ -71,4 +77,7 @@
 	
 	void RemoveSong(GamePhase gamePhase, Song song)
 		=> Dispatcher.Dispatch(new RemoveSongAction(gamePhase, song));
+
+	void ShufflePlaylist(GamePhase gamePhase)
+		=> Dispatcher.Dispatch(new ShufflePlaylistAction(gamePhase));
 }

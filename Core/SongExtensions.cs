@@ -30,5 +30,16 @@ public static class SongExtensions
 			var index = Array.IndexOf(songs, current);
 			return songs[(index + 1) % songs.Length];
 		}
+
+		public Song[] Shuffled(Random random)
+		{
+			var list = songs.ToList();
+			for (var i = list.Count - 1; i > 0; i--)
+			{
+				var j = random.Next(i + 1);
+				(list[i], list[j]) = (list[j], list[i]);
+			}
+			return list.ToArray();
+		}
 	}
 }
