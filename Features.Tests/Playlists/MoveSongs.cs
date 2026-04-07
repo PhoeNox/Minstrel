@@ -45,7 +45,7 @@ public class MoveSongs
 		AppContext.Dispatcher.Dispatch(new SetPlaylistsAction(gamePhase, [song1, song2, song3]));
 		AppContext.Dispatcher.Dispatch(new MoveSongAction(gamePhase, 0, 2));
 		
-		AppContext.FileSystemProvider.Verify(x => x.SavePlaylist(gamePhase, It.IsAny<Song[]>()));
+		AppContext.FileSystemProvider.SavePlaylist(gamePhase, Any()).WasCalled();
 		return Task.CompletedTask;
 	}
 }

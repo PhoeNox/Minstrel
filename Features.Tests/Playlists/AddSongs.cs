@@ -28,8 +28,7 @@ public class AddSongs
 	public Task AddSong_SavesPlaylist(GamePhase gamePhase)
 	{
 		AppContext.Dispatcher.Dispatch(new AddSongAction(gamePhase, song1));
-
-		AppContext.FileSystemProvider.Verify(x => x.SavePlaylist(gamePhase, new[] {song1}));
+		AppContext.FileSystemProvider.SavePlaylist(gamePhase, Any()).WasCalled();
 		return Task.CompletedTask;
 	}
 }

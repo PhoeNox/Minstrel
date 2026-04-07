@@ -12,7 +12,7 @@ public class LoadPlaylists
 	public void MockFileSystem()
 	{
 		AppContext.FileSystemProvider
-				.Setup(x => x.LoadPlaylists())
+				.LoadPlaylists()
 				.Returns(([Dummies.Song], [Dummies.Song]));
 	}
 

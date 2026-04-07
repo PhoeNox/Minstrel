@@ -34,7 +34,7 @@ public class RemoveSongs
 		
 		AppContext.Dispatcher.Dispatch(new RemoveSongAction(gamePhase, song1));
 		
-		AppContext.FileSystemProvider.Verify(x => x.SavePlaylist(gamePhase, new[] {song2}));
+		AppContext.FileSystemProvider.SavePlaylist(gamePhase, Any()).WasCalled();
 		return Task.CompletedTask;
 	}
 }

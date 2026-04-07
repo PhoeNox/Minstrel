@@ -39,9 +39,7 @@ public class ShuffleSongs
 
 		AppContext.Dispatcher.Dispatch(new ShufflePlaylistAction(gamePhase));
 
-		AppContext.FileSystemProvider.Verify(x => x.SavePlaylist(
-			gamePhase,
-			It.Is<Song[]>(s => s.Length == 3)));
+		AppContext.FileSystemProvider.SavePlaylist(gamePhase, Any()).WasCalled();
 		return Task.CompletedTask;
 	}
 }

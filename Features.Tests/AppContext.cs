@@ -13,9 +13,9 @@ public class AppContext : IAsyncInitializer
 	
 	public IDispatcher Dispatcher => Services.GetRequiredService<IDispatcher>();
 
-	public Mock<IFileSystemProvider> FileSystemProvider { get; } = new();
-	
-	public Mock<INetworkProvider> NetworkProvider { get; } = new();
+	public Mock<IFileSystemProvider> FileSystemProvider { get; } = Mock.Of<IFileSystemProvider>();
+
+	public Mock<INetworkProvider> NetworkProvider { get; } = Mock.Of<INetworkProvider>();
 
 	public AppContext()
 	{
