@@ -26,3 +26,9 @@ table td:last-child {
 	padding: 0.25rem 0.5rem;
 	font-size: 1.1rem;
 }
+
+@media (max-width: 600px) {
+	.col-album {
+		display: none;
+	}
+}

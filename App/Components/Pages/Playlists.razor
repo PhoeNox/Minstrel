@@ -36,7 +36,7 @@
 			<tr>
 				<th>Artist</th>
 				<th>Title</th>
-				<th>Album</th>
+				<th class="col-album">Album</th>
 				<th>Length</th>
 				<th></th>
 			</tr>
@@ -47,7 +47,7 @@
 				<tr>
 					<td>@song.Artist</td>
 					<td>@song.Title</td>
-					<td>@song.Album</td>
+					<td class="col-album">@song.Album</td>
 					<td>@song.Length.ToSongLength()</td>
 					<td>
 						<button class="icon-btn" title="Add to day playlist" @onclick="() => AddSongToPlaylist(GamePhase.Day, song)">☀</button>
