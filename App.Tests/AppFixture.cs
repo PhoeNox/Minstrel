@@ -15,6 +15,12 @@ public static class AppFixture
         Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "screenshots"));
 
     [Before(HookType.TestSession)]
+    public static void InstallPlaywright()
+    {
+        Microsoft.Playwright.Program.Main(["install", "chromium"]);
+    }
+
+    [Before(HookType.TestSession)]
     public static async Task StartServer()
     {
         Directory.CreateDirectory(ScreenshotsDir);
