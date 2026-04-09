@@ -7,4 +7,5 @@
   <Project Path="Infrastructure.FileSystem/Infrastructure.FileSystem.csproj" />
   <Project Path="Infrastructure.Network/Infrastructure.Network.csproj" />
   <Project Path="Infrastructure.Playback/Infrastructure.Playback.csproj" />
+  <Project Path="App.Tests/App.Tests.csproj" />
 </Solution>
