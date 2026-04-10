@@ -1,8 +1,7 @@
-using Microsoft.Playwright;
-using TUnit.Core;
-using TUnit.Playwright;
-
 namespace App.Tests;
+
+using Microsoft.Playwright;
+using TUnit.Playwright;
 
 public class RemotePageTests : PageTest
 {
@@ -11,7 +10,7 @@ public class RemotePageTests : PageTest
         return new BrowserNewContextOptions(Playwright.Devices["iPhone 13"])
         {
             Locale = "en-US",
-            ColorScheme = ColorScheme.Light
+            ColorScheme = ColorScheme.Light,
         };
     }
 
@@ -24,7 +23,7 @@ public class RemotePageTests : PageTest
         await Page.ScreenshotAsync(new PageScreenshotOptions
         {
             Path = Path.Combine(AppFixture.ScreenshotsDir, "remote-mobile.png"),
-            FullPage = true
+            FullPage = true,
         });
     }
 }

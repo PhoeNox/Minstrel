@@ -1,33 +1,32 @@
+namespace App.Tests;
+
 using Fluxor;
 using Infrastructure.FileSystem;
 using Infrastructure.Network;
 using Infrastructure.Playback;
-using TUnit.Core;
-
-namespace App.Tests;
 
 public static class AppFixture
 {
     public static string BaseUrl { get; private set; } = "";
-    static WebApplication? _app;
+    private static WebApplication? app;
 
     public static readonly string ScreenshotsDir = Path.GetFullPath(
         Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "screenshots"));
 
-    [Before(HookType.TestSession)]
+    [Before(TestSession)]
     public static void InstallPlaywright()
     {
         Microsoft.Playwright.Program.Main(["install", "chromium"]);
     }
 
-    [Before(HookType.TestSession)]
+    [Before(TestSession)]
     public static async Task StartServer()
     {
         Directory.CreateDirectory(ScreenshotsDir);
 
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
-            EnvironmentName = "Development"
+            EnvironmentName = "Development",
         });
 
         builder.WebHost.UseUrls("http://127.0.0.1:0");
@@ -48,21 +47,21 @@ public static class AppFixture
             .ScanAssemblies(coreAssembly)
             .WithLifetime(StoreLifetime.Singleton));
 
-        _app = builder.Build();
+        app = builder.Build();
 
-        _app.UseAntiforgery();
-        _app.MapStaticAssets();
-        _app.MapRazorComponents<App.Components.App>()
+        app.UseAntiforgery();
+        app.MapStaticAssets();
+        app.MapRazorComponents<App.Components.App>()
             .AddInteractiveServerRenderMode();
 
-        await _app.StartAsync();
-        BaseUrl = _app.Urls.First();
+        await app.StartAsync();
+        BaseUrl = app.Urls.First();
     }
 
-    [After(HookType.TestSession)]
+    [After(TestSession)]
     public static async Task StopServer()
     {
-        if (_app is not null)
-            await _app.DisposeAsync();
+        if (app is not null)
+            await app.DisposeAsync();
     }
 }

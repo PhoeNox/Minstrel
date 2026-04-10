@@ -1,8 +1,8 @@
+namespace App.Tests;
+
 using Microsoft.Playwright;
-using TUnit.Core;
 using TUnit.Playwright;
 
-namespace App.Tests;
 
 public class PlayerPageTests : PageTest
 {
@@ -15,7 +15,7 @@ public class PlayerPageTests : PageTest
         await Page.ScreenshotAsync(new PageScreenshotOptions
         {
             Path = Path.Combine(AppFixture.ScreenshotsDir, "player-desktop.png"),
-            FullPage = true
+            FullPage = true,
         });
     }
 }
