@@ -23,8 +23,6 @@
 
 		PlaybackService.SongEnded += OnSongEnded;
 		PlaybackService.SongRepository.SongLoaded += OnSongLoaded;
-
-		Dispatcher.Dispatch(new Features.Playlists.LoadPlaylistsAction());
 	}
 
 	private void OnSongEnded(Song song) => Dispatcher.Dispatch(new SongEndedSignal(song));

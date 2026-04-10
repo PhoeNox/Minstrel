@@ -33,6 +33,9 @@ public class AppContext : IAsyncInitializer
 		serviceCollection.AddSingleton(new ConnectionOptions("5000"));
 		serviceCollection.AddSingleton<TimeProvider, FakeTimeProvider>();
 
+		FileSystemProvider.LoadSongs().Returns([]);
+		FileSystemProvider.LoadPlaylists().Returns(([], []));
+
 		Services = serviceCollection.BuildServiceProvider();
 	}
 

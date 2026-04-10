@@ -21,6 +21,7 @@ public class Effects(
 	{
 		var songs = fileSystemProvider.LoadSongs();
 		dispatcher.Dispatch(new SetDatabaseAction(songs));
+		dispatcher.Dispatch(new LoadPlaylistsAction());
 		return Task.CompletedTask;
 	}
 
