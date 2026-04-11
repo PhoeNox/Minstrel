@@ -4,14 +4,18 @@ using Fluxor;
 using Infrastructure.FileSystem;
 using Infrastructure.Network;
 using Infrastructure.Playback;
+using VerifyTests;
 
 public static class AppFixture
 {
     public static string BaseUrl { get; private set; } = "";
     private static WebApplication? app;
 
-    public static readonly string ScreenshotsDir = Path.GetFullPath(
-        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "screenshots"));
+    [Before(TestSession)]
+    public static void InitializeVerify()
+    {
+        VerifyPlaywright.Initialize();
+    }
 
     [Before(TestSession)]
     public static void InstallPlaywright()
@@ -22,8 +26,6 @@ public static class AppFixture
     [Before(TestSession)]
     public static async Task StartServer()
     {
-        Directory.CreateDirectory(ScreenshotsDir);
-
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions
         {
             EnvironmentName = "Development",

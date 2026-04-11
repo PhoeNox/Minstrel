@@ -3,7 +3,6 @@ namespace App.Tests;
 using Microsoft.Playwright;
 using TUnit.Playwright;
 
-
 public class PlayerPageTests : PageTest
 {
     [Test]
@@ -15,10 +14,7 @@ public class PlayerPageTests : PageTest
         });
         await Expect(Page.Locator(".full-page-container")).ToBeVisibleAsync();
 
-        await Page.ScreenshotAsync(new PageScreenshotOptions
-        {
-            Path = Path.Combine(AppFixture.ScreenshotsDir, "player-desktop.png"),
-            FullPage = true,
-        });
+        var screenshot = await Page.ScreenshotAsync(new PageScreenshotOptions { FullPage = true });
+        await Verify(screenshot, "png");
     }
 }

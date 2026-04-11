@@ -3,6 +3,7 @@ namespace App.Tests;
 using Microsoft.Playwright;
 using TUnit.Playwright;
 
+[DependsOn<PlayerPageTests>]
 public class PlaylistsPageTests : PageTest
 {
     public override BrowserNewContextOptions ContextOptions(TestContext testContext)
@@ -23,10 +24,7 @@ public class PlaylistsPageTests : PageTest
         });
         await Expect(Page.Locator("#day-playlist")).ToBeVisibleAsync();
 
-        await Page.ScreenshotAsync(new PageScreenshotOptions
-        {
-            Path = Path.Combine(AppFixture.ScreenshotsDir, "playlists-mobile.png"),
-            FullPage = true,
-        });
+        var screenshot = await Page.ScreenshotAsync(new PageScreenshotOptions { FullPage = true });
+        await Verify(screenshot, "png");
     }
 }

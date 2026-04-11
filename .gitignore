@@ -8,3 +8,5 @@ riderModule.iml
 *.DotSettings.user
 
 .serena/
+
+*.received.*
