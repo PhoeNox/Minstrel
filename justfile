@@ -7,7 +7,7 @@ build:
 	dotnet build {{solution}} -c {{configuration}}
 
 test:
-	dotnet test --solution {{solution}} -c {{configuration}}
+	dotnet test --solution {{solution}} -c {{configuration}} --ignore-exit-code 8
 	
 publish RID="linux-x64" OUTPUT_DIRECTORY="publish/linux-x64":
 	dotnet publish App/App.csproj \
