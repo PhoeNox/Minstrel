@@ -6,8 +6,12 @@ using VerifyTests;
 
 public static class PngComparer
 {
-    private const double MaxDifferentPixelsFraction = 0.03; // 3.0%
+    private const double LocalMaxDifferentPixelsFraction = 0.001;  // 0.1% locally
+    private const double CiMaxDifferentPixelsFraction = 0.03;      // 3.0% on CI
     private const int ChannelTolerance = 10; // per R/G/B channel, out of 255
+
+    private static bool IsRunningOnCi
+	    => Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
 
     public static void Register()
     {
@@ -47,11 +51,12 @@ public static class PngComparer
             }
         }
 
+        var maxFraction = IsRunningOnCi ? CiMaxDifferentPixelsFraction : LocalMaxDifferentPixelsFraction;
         var fraction = (double)differentPixels / totalPixels;
-        if (fraction > MaxDifferentPixelsFraction)
+        if (fraction > maxFraction)
         {
             var percent = fraction * 100;
-            var message = $"{percent:F2}% of pixels differ beyond tolerance (threshold: {MaxDifferentPixelsFraction * 100:F1}%)";
+            var message = $"{percent:F2}% of pixels differ beyond tolerance (threshold: {maxFraction * 100:F1}%)";
             return CompareResult.NotEqual(message);
         }
 
