@@ -17,8 +17,11 @@ public class RemotePageTests : PageTest
     [Test]
     public async Task CaptureRemotePage()
     {
-        await Page.GotoAsync($"{AppFixture.BaseUrl}/Remote");
-        await Page.WaitForSelectorAsync("#remote-container");
+        await Page.GotoAsync($"{AppFixture.BaseUrl}/Remote", new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.NetworkIdle,
+        });
+        await Expect(Page.Locator("#remote-container")).ToBeVisibleAsync();
 
         await Page.ScreenshotAsync(new PageScreenshotOptions
         {

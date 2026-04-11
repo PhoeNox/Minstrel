@@ -17,8 +17,11 @@ public class PlaylistsPageTests : PageTest
     [Test]
     public async Task CapturePlaylistsPage()
     {
-        await Page.GotoAsync($"{AppFixture.BaseUrl}/playlists");
-        await Page.WaitForSelectorAsync("#day-playlist");
+        await Page.GotoAsync($"{AppFixture.BaseUrl}/playlists", new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.NetworkIdle,
+        });
+        await Expect(Page.Locator("#day-playlist")).ToBeVisibleAsync();
 
         await Page.ScreenshotAsync(new PageScreenshotOptions
         {
