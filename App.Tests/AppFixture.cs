@@ -15,6 +15,7 @@ public static class AppFixture
     public static void InitializeVerify()
     {
         VerifyPlaywright.Initialize();
+        PngComparer.Register();
     }
 
     [Before(TestSession)]
