@@ -1,11 +1,48 @@
+#day-playlist,
+#night-playlist {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+#night-playlist,
+#other-songs {
+	margin-top: 2rem;
+}
+
+#other-songs .playlist-header {
+	margin-bottom: 0.75rem;
+}
+
 .playlist-header {
 	display: flex;
 	align-items: center;
 	gap: 1rem;
+	justify-content: space-between;
 }
 
 .playlist-header h2 {
 	margin: 0;
+}
+
+.playlist-header button {
+	padding: 0.25rem 0.5rem;
+}
+
+input[type="search"] {
+	flex: 1;
+	min-width: 0;
+	max-width: 20rem;
+	padding: 0.4rem 0.75rem;
+	border: 1px solid #d1d5db;
+	border-radius: 2rem;
+	font-family: inherit;
+	font-size: inherit;
+	outline: none;
+}
+
+input[type="search"]:focus {
+	border-color: var(--primary-color);
 }
 
 table {
@@ -37,8 +74,12 @@ table td:last-child {
 	font-size: 1.1rem;
 }
 
+.shuffle {
+	margin-right: 1rem;
+}
+
 @media (max-width: 600px) {
-	.col-album {
+	.col-album, .col-length {
 		display: none;
 	}
 }
