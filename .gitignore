@@ -10,3 +10,4 @@ riderModule.iml
 .serena/
 
 *.received.*
+*-report.html
