@@ -1,9 +1,11 @@
 @using Features.Playback
+@using Features.Playlists
 @using Infrastructure.Playback
 
 @inherits Fluxor.Blazor.Web.Components.FluxorComponent
 
 @inject PlaybackService PlaybackService
+@inject IState<Features.Playlists.State> PlaylistState
 @inject IDispatcher Dispatcher
 
 @code {
@@ -12,6 +14,8 @@
 	{
 		await base.OnInitializedAsync();
 		await PlaybackService.Initialize();
+
+		SubscribeToAction<PlaylistsLoadedAction>(_ => PreloadFirstSongsFromPlaylist());
 
 		SubscribeToAction<LoadSongSignal>(s => _ = PlaybackService.SongRepository.Load(s.Song));
 
@@ -23,6 +27,16 @@
 
 		PlaybackService.SongEnded += OnSongEnded;
 		PlaybackService.SongRepository.SongLoaded += OnSongLoaded;
+		
+		PreloadFirstSongsFromPlaylist();
+	}
+
+	private void PreloadFirstSongsFromPlaylist()
+	{
+		if (PlaylistState.Value.DayPlaylist.CurrentSong is not null)
+			_ = PlaybackService.SongRepository.Load(PlaylistState.Value.DayPlaylist.CurrentSong);
+		if (PlaylistState.Value.NightPlaylist.CurrentSong is not null)
+			_ = PlaybackService.SongRepository.Load(PlaylistState.Value.NightPlaylist.CurrentSong);
 	}
 
 	private void OnSongEnded(Song song) => Dispatcher.Dispatch(new SongEndedSignal(song));

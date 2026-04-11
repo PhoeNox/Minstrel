@@ -8,20 +8,6 @@ public class Effects(
 		IState<GamePhases.State> gamePhaseState)
 {
 	[EffectMethod]
-	public Task OnPlaylistsLoaded(PlaylistsLoadedAction action, IDispatcher dispatcher)
-	{
-		var firstDaySong = playlistState.Value.DayPlaylist.Songs.FirstOrDefault();
-		if (firstDaySong is not null)
-			dispatcher.Dispatch(new LoadSongSignal(firstDaySong));
-
-		var firstNightSong = playlistState.Value.NightPlaylist.Songs.FirstOrDefault();
-		if (firstNightSong is not null)
-			dispatcher.Dispatch(new LoadSongSignal(firstNightSong));
-
-		return Task.CompletedTask;
-	}
-
-	[EffectMethod]
 	public Task Play(PlayAction action, IDispatcher dispatcher)
 	{
 		var (_, currentSong, gain, nextSong) = GetSongsAndGainForCurrentGamePhase();
