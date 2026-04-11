@@ -37,6 +37,7 @@
 	}
 	else
 	{
+		<input type="search" placeholder="Search…" @bind="search" @bind:event="oninput" />
 		<table class="song-table">
 			<thead>
 			<tr>
@@ -48,7 +49,7 @@
 			</tr>
 			</thead>
 			<tbody>
-			@foreach (var song in Database)
+			@foreach (var song in FilteredDatabase)
 			{
 				<tr>
 					<td>@song.Artist</td>
@@ -67,7 +68,14 @@
 </div>
 
 @code {
+	string search = "";
+
 	List<Song>? Database => State.Value.Database?.ToList();
+
+	IEnumerable<Song> FilteredDatabase => Database!.Where(s =>
+			s.Artist.Contains(search, StringComparison.OrdinalIgnoreCase) 
+			|| s.Title.Contains(search, StringComparison.OrdinalIgnoreCase) 
+			|| s.Album.Contains(search, StringComparison.OrdinalIgnoreCase));
 
 	void AddSongToPlaylist(GamePhase gamePhase, Song song)
 		=> Dispatcher.Dispatch(new AddSongAction(gamePhase, song));
