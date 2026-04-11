@@ -24,7 +24,7 @@ public class RemotePageTests : PageTest
         });
         await Expect(Page.Locator("#remote-container")).ToBeVisibleAsync();
 
-        var screenshot = await Page.ScreenshotAsync(new PageScreenshotOptions { FullPage = true });
+        var screenshot = await Page.ScreenshotAsync();
         await Verify(screenshot, "png");
     }
 }

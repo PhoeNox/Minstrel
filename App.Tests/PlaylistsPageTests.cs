@@ -24,7 +24,7 @@ public class PlaylistsPageTests : PageTest
         });
         await Expect(Page.Locator("#day-playlist")).ToBeVisibleAsync();
 
-        var screenshot = await Page.ScreenshotAsync(new PageScreenshotOptions { FullPage = true });
+        var screenshot = await Page.ScreenshotAsync();
         await Verify(screenshot, "png");
     }
 }
