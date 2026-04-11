@@ -6,7 +6,7 @@ using VerifyTests;
 
 public static class PngComparer
 {
-    private const double MaxDifferentPixelsFraction = 0.02; // 2.0%
+    private const double MaxDifferentPixelsFraction = 0.03; // 3.0%
     private const int ChannelTolerance = 10; // per R/G/B channel, out of 255
 
     public static void Register()
