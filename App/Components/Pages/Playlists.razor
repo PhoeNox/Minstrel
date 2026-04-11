@@ -39,9 +39,9 @@
 		SongRemoved="e => RemoveSong(GamePhase.Night, e.Song)"/>
 </div>
 
-<div id="other-songs">
+<div id="song-library">
 	<div class="playlist-header">
-		<h2>Other Songs</h2>
+		<h2>Song Library</h2>
 		@if (Database is not null)
 		{
 			<input type="search" placeholder="Search…" @bind="search" @bind:event="oninput"/>

@@ -6,11 +6,11 @@
 }
 
 #night-playlist,
-#other-songs {
+#song-library {
 	margin-top: 2rem;
 }
 
-#other-songs .playlist-header {
+#song-library .playlist-header {
 	margin-bottom: 0.75rem;
 }
 
