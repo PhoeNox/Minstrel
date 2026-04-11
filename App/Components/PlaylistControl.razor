@@ -12,12 +12,8 @@
 						{
 							<span> - @context.Artist</span>
 						}
-						@if (!string.IsNullOrEmpty(context.Album))
-						{
-							<span> - @context.Album</span>
-						}
+
 					</div>
-					<div class="song-length">@context.Length.ToSongLength()</div>
 				</div>
 				<button class="remove" @onclick="() => OnSongRemoved(context)">-</button>
 			</div>
