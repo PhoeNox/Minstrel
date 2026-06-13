@@ -65,3 +65,17 @@ The global rule against inline construction/function calls in arguments has the 
 ### Configuration
 
 The app reads `Music:Directory` from `appsettings.json` (wrapped in `MusicOptions`). The HTTP port defaults to 5000.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live as local markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical triage roles, recorded as a `Status:` line per issue file. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
