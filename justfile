@@ -28,6 +28,10 @@ next-test:
 next-run: next-player
 	dotnet run --project Backend/Backend.csproj -c {{configuration}}
 
+# Orchestrate Backend + Player (SvelteKit dev server) via the Aspire AppHost.
+aspire:
+	dotnet run --project Aspire/AppHost/AppHost.csproj
+
 publish RID="linux-x64" OUTPUT_DIRECTORY="publish/linux-x64":
 	dotnet publish App/App.csproj \
 		-c {{configuration}} \

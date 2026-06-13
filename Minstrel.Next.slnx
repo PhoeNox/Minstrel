@@ -1,7 +1,9 @@
 <Solution>
+  <Project Path="Aspire/AppHost/AppHost.csproj" />
   <Project Path="Backend/Backend.csproj" />
   <Project Path="Backend.Tests/Backend.Tests.csproj" />
   <Project Path="Core/Core.csproj" />
   <Project Path="Infrastructure.FileSystem/Infrastructure.FileSystem.csproj" />
   <Project Path="Infrastructure.Network/Infrastructure.Network.csproj" />
+  <Project Path="Aspire/ServiceDefaults/ServiceDefaults.csproj" />
 </Solution>
