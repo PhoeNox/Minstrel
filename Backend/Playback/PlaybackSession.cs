@@ -14,8 +14,37 @@ public sealed class PlaybackSession(SongLibrary library)
 	{
 		lock (gate)
 		{
-			state = PlaybackTimeline.Play(state, songId);
+			state = PlaybackTimeline.Play(state, songId, Now());
 			Broadcast(CurrentSnapshot());
+		}
+	}
+
+	public void Resume()
+	{
+		lock (gate)
+		{
+			state = PlaybackTimeline.Resume(state, Now());
+			Broadcast(CurrentSnapshot());
+		}
+	}
+
+	public void Pause()
+	{
+		lock (gate)
+		{
+			state = PlaybackTimeline.Pause(state, Now());
+			Broadcast(CurrentSnapshot());
+		}
+	}
+
+	public bool HasCurrentSong
+	{
+		get
+		{
+			lock (gate)
+			{
+				return state.CurrentSongId is not null;
+			}
 		}
 	}
 
@@ -40,6 +69,8 @@ public sealed class PlaybackSession(SongLibrary library)
 
 		channel.Writer.TryComplete();
 	}
+
+	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
 	private void Broadcast(StateSnapshot snapshot)
 	{

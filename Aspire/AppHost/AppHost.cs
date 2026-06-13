@@ -9,4 +9,10 @@ builder.AddNpmApp("player", "../../Player", "dev")
 	.WithHttpEndpoint(env: "PORT")
 	.WithExternalHttpEndpoints();
 
+builder.AddNpmApp("remote", "../../Remote", "dev")
+	.WithReference(backend)
+	.WaitFor(backend)
+	.WithHttpEndpoint(env: "PORT")
+	.WithExternalHttpEndpoints();
+
 builder.Build().Run();

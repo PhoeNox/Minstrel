@@ -22,7 +22,7 @@
 			return;
 		}
 
-		const operations = reconcile(snapshot, { playingSongId: engine.playingSongId });
+		const operations = reconcile(snapshot, { playingSongId: engine.playingSongId }, Date.now());
 		await engine.apply(operations);
 	}
 

@@ -12,7 +12,8 @@ riderModule.iml
 *.received.*
 *-report.html
 
-# New solution (Backend + Player) build artifacts
+# New solution (Backend + Player + Remote) build artifacts
 node_modules/
 Player/.svelte-kit/
+Remote/.svelte-kit/
 Backend/wwwroot/

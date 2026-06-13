@@ -15,8 +15,12 @@ next-solution := "Minstrel.Next.slnx"
 next-player:
 	cd Player && npm install && npm run build
 
-# Build the new Backend + Player.
-next-build: next-player
+# Build the SvelteKit Remote bundle into Backend/wwwroot/remote (served under /remote).
+next-remote:
+	cd Remote && npm install && BASE_PATH=/remote npm run build
+
+# Build the new Backend + Player + Remote.
+next-build: next-player next-remote
 	dotnet build {{next-solution}} -c {{configuration}}
 
 # Test the new solution: Backend (.NET) and Player (Vitest).
@@ -24,11 +28,11 @@ next-test:
 	dotnet test --solution {{next-solution}} -c {{configuration}} --ignore-exit-code 8
 	cd Player && npm test
 
-# Build the Player bundle then run the Backend (serves the Player, auto-opens it).
-next-run: next-player
+# Build the Player + Remote bundles then run the Backend (serves both, auto-opens the Player).
+next-run: next-player next-remote
 	dotnet run --project Backend/Backend.csproj -c {{configuration}}
 
-# Orchestrate Backend + Player (SvelteKit dev server) via the Aspire AppHost.
+# Orchestrate Backend + Player + Remote (SvelteKit dev servers) via the Aspire AppHost.
 aspire:
 	dotnet run --project Aspire/AppHost/AppHost.csproj
 

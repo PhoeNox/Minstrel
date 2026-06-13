@@ -31,6 +31,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapPlaybackEndpoints();
+app.MapFallbackToFile("remote/{*path}", "remote/index.html");
 app.MapFallbackToFile("index.html");
 
 var playerUrl = $"http://localhost:{port}";

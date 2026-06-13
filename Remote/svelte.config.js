@@ -6,10 +6,13 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter({
-			pages: '../Backend/wwwroot',
-			assets: '../Backend/wwwroot',
+			pages: '../Backend/wwwroot/remote',
+			assets: '../Backend/wwwroot/remote',
 			fallback: 'index.html'
 		}),
+		paths: {
+			base: process.env.BASE_PATH ?? ''
+		},
 		alias: {
 			$shared: '../shared'
 		}

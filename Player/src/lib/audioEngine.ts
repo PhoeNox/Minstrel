@@ -12,20 +12,20 @@ export class AudioEngine {
 	async apply(operations: AudioOperation[]): Promise<void> {
 		for (const operation of operations) {
 			if (operation.type === 'start') {
-				await this.start(operation.songId);
+				await this.start(operation.songId, operation.offset);
 			} else {
 				this.stop(operation.songId);
 			}
 		}
 	}
 
-	private async start(songId: string): Promise<void> {
+	private async start(songId: string, offset: number): Promise<void> {
 		await this.context.resume();
 		const buffer = await this.load(songId);
 		const source = this.context.createBufferSource();
 		source.buffer = buffer;
 		source.connect(this.context.destination);
-		source.start();
+		source.start(0, offset);
 		this.current = { songId, source };
 	}
 

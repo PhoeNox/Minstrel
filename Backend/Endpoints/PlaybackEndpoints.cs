@@ -16,6 +16,7 @@ public static class PlaybackEndpoints
 		app.MapGet("/sse", StreamState);
 		app.MapGet("/audio/{songId}", StreamAudio);
 		app.MapPost("/commands/play", Play);
+		app.MapPost("/commands/pause", Pause);
 	}
 
 	private static async Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
@@ -57,13 +58,31 @@ public static class PlaybackEndpoints
 
 	private static IResult Play(PlayCommand? command, PlaybackSession session, SongLibrary library)
 	{
-		var songId = command?.SongId ?? library.Entries.FirstOrDefault()?.Id;
-		if (songId is null)
+		if (command?.SongId is { } songId)
+		{
+			session.Play(songId);
+			return Results.NoContent();
+		}
+
+		if (session.HasCurrentSong)
+		{
+			session.Resume();
+			return Results.NoContent();
+		}
+
+		var first = library.Entries.FirstOrDefault()?.Id;
+		if (first is null)
 		{
 			return Results.BadRequest("The song library is empty.");
 		}
 
-		session.Play(songId);
+		session.Play(first);
+		return Results.NoContent();
+	}
+
+	private static IResult Pause(PlaybackSession session)
+	{
+		session.Pause();
 		return Results.NoContent();
 	}
 }
