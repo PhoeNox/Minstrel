@@ -8,6 +8,9 @@ export default defineConfig({
 	server: {
 		port,
 		strictPort: !!process.env.PORT,
+		// Under Aspire (PORT set) bind every interface so a phone can reach the
+		// Remote by LAN IP; Aspire's proxy only listens on localhost.
+		host: process.env.PORT ? true : undefined,
 		fs: { allow: ['..'] },
 		proxy: {
 			'/sse': { target: backend, changeOrigin: true },
