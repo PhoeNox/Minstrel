@@ -86,6 +86,13 @@ public static class PlaybackTimeline
 			CurrentIndex = RemapCurrentIndex(playlist, oldIndex, newIndex),
 		});
 
+	public static TimelineState AddSong(TimelineState state, GamePhase phase, string songId, double length) =>
+		WithPlaylist(state, phase, playlist => playlist with
+		{
+			Songs = [..playlist.Songs, new TimelineSong(songId, length)],
+			CurrentIndex = playlist.CurrentIndex ?? 0,
+		});
+
 	public static TimelineState SetGain(TimelineState state, GamePhase phase, double gain) =>
 		WithPlaylist(state, phase, playlist => playlist with { Gain = gain });
 

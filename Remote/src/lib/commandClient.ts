@@ -16,6 +16,10 @@ export async function selectSong(phase: Phase, index: number): Promise<void> {
 	await post('/commands/select', { phase, index });
 }
 
+export async function addSong(phase: Phase, songId: string): Promise<void> {
+	await post('/commands/add', { phase, songId });
+}
+
 export async function moveSong(phase: Phase, oldIndex: number, newIndex: number): Promise<void> {
 	await post('/commands/move', { phase, oldIndex, newIndex });
 }

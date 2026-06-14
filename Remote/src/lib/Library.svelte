@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { addSong } from './commandClient';
 	import type { SongDto } from './state';
 
 	let { songs }: { songs: SongDto[] } = $props();
@@ -32,6 +33,10 @@
 					<span class="artist">{song.artist}</span>
 				</span>
 				<span class="length">{formatLength(song.length)}</span>
+				<span class="add">
+					<button title="Add to Day playlist" onclick={() => addSong('Day', song.id)}>☀</button>
+					<button title="Add to Night playlist" onclick={() => addSong('Night', song.id)}>☾</button>
+				</span>
 			</li>
 		{/each}
 	</ul>
@@ -91,5 +96,16 @@
 	.length {
 		font-variant-numeric: tabular-nums;
 		color: #999;
+	}
+
+	.add {
+		display: flex;
+		gap: 0.25rem;
+	}
+
+	.add button {
+		font-size: 1rem;
+		padding: 0.25rem 0.5rem;
+		cursor: pointer;
 	}
 </style>

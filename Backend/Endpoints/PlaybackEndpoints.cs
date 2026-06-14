@@ -28,6 +28,7 @@ public static class PlaybackEndpoints
 		app.MapPost("/commands/pause", Pause);
 		app.MapPost("/commands/switch-phase", SwitchPhase);
 		app.MapPost("/commands/select", Select);
+		app.MapPost("/commands/add", Add);
 		app.MapPost("/commands/move", Move);
 		app.MapPost("/commands/set-gain", SetGain);
 		app.MapPost("/commands/timer-start", StartTimer);
@@ -131,6 +132,15 @@ public static class PlaybackEndpoints
 			return Results.BadRequest("A phase and index are required.");
 
 		session.SelectSong(command.Phase, command.Index);
+		return Results.NoContent();
+	}
+
+	private static IResult Add(AddCommand? command, PlaybackSession session)
+	{
+		if (command is null)
+			return Results.BadRequest("A phase and song id are required.");
+
+		session.AddSong(command.Phase, command.SongId);
 		return Results.NoContent();
 	}
 

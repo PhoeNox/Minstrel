@@ -43,6 +43,8 @@ public sealed class SongLibrary
 		return false;
 	}
 
+	public double Length(string songId) => songsById[songId].Length.TotalSeconds;
+
 	public SongDto ToSongDto(string songId)
 	{
 		var song = songsById[songId];

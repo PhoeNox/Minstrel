@@ -106,6 +106,17 @@ public sealed class PlaybackSession
 		}
 	}
 
+	public void AddSong(GamePhase phase, string songId)
+	{
+		lock (gate)
+		{
+			state = PlaybackTimeline.AddSong(state, phase, songId, library.Length(songId));
+			var playlist = phase == GamePhase.Day ? state.Day : state.Night;
+			library.SaveOrder(phase, playlist.Songs.Select(song => song.Id).ToArray());
+			Broadcast(CurrentSnapshot());
+		}
+	}
+
 	public void MoveSong(GamePhase phase, int oldIndex, int newIndex)
 	{
 		lock (gate)
