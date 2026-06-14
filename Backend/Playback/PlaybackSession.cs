@@ -39,7 +39,11 @@ public sealed class PlaybackSession
 	{
 		lock (gate)
 		{
-			state = PlaybackTimeline.SelectSong(state, state.ActivePhase, songId, Now());
+			var index = Array.FindIndex(state.ActivePlaylist.Songs, song => song.Id == songId);
+			if (index < 0)
+				return;
+
+			state = PlaybackTimeline.SelectSong(state, state.ActivePhase, index, Now());
 			Broadcast(CurrentSnapshot());
 		}
 	}
@@ -48,10 +52,10 @@ public sealed class PlaybackSession
 	{
 		lock (gate)
 		{
-			if (state.ActivePlaylist.CurrentSongId is not { } songId)
+			if (state.ActivePlaylist.CurrentIndex is not { } index)
 				return false;
 
-			state = PlaybackTimeline.SelectSong(state, state.ActivePhase, songId, Now());
+			state = PlaybackTimeline.SelectSong(state, state.ActivePhase, index, Now());
 			Broadcast(CurrentSnapshot());
 			return true;
 		}
@@ -75,11 +79,11 @@ public sealed class PlaybackSession
 		}
 	}
 
-	public void SelectSong(GamePhase phase, string songId)
+	public void SelectSong(GamePhase phase, int index)
 	{
 		lock (gate)
 		{
-			state = PlaybackTimeline.SelectSong(state, phase, songId, Now());
+			state = PlaybackTimeline.SelectSong(state, phase, index, Now());
 			Broadcast(CurrentSnapshot());
 		}
 	}
@@ -176,7 +180,7 @@ public sealed class PlaybackSession
 	private static TimelinePlaylist ToPlaylist(IReadOnlyList<LibraryEntry> entries) =>
 		new(
 			entries.Select(entry => new TimelineSong(entry.Id, entry.Song.Length.TotalSeconds)).ToArray(),
-			entries.FirstOrDefault()?.Id);
+			entries.Count > 0 ? 0 : null);
 
 	private void Broadcast(StateSnapshot snapshot) => Publish(new SnapshotEvent(snapshot));
 

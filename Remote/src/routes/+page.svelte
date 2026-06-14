@@ -30,7 +30,7 @@
 	const otherPlaylist = $derived(
 		snapshot.phase === 'Day' ? snapshot.playlists.night : snapshot.playlists.day
 	);
-	const canSwitch = $derived(otherPlaylist.currentSongId !== null);
+	const canSwitch = $derived(otherPlaylist.currentIndex !== null);
 </script>
 
 <main>

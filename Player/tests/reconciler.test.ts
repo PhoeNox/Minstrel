@@ -18,7 +18,10 @@ const playingDay = (currentSongId: string, songs: SongDto[], gain = 1): Playback
 	isPlaying: true,
 	currentSongId,
 	position: { songId: currentSongId, offset: 0, anchorTimestamp: 4000, isPlaying: true },
-	playlists: { ...emptyState.playlists, day: { songs, currentSongId, gain } }
+	playlists: {
+		...emptyState.playlists,
+		day: { songs, currentIndex: songs.findIndex((s) => s.id === currentSongId), gain }
+	}
 });
 
 describe('reconcile', () => {

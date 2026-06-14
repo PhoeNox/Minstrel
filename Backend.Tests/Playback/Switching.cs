@@ -9,10 +9,10 @@ public class Switching
 	{
 		var day = new TimelinePlaylist(
 			[new TimelineSong("day-1", 10), new TimelineSong("day-2", 10)],
-			CurrentSongId: "day-1");
+			CurrentIndex: 0);
 		var night = new TimelinePlaylist(
 			[new TimelineSong("night-1", 10), new TimelineSong("night-2", 10)],
-			CurrentSongId: "night-1");
+			CurrentIndex: 0);
 		return TimelineState.Idle with { Day = day, Night = night };
 	}
 
@@ -73,7 +73,7 @@ public class Switching
 		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
 
 		var switched = PlaybackTimeline.SwitchPhase(state, now: 4000);
-		var reselected = PlaybackTimeline.SelectSong(switched, GamePhase.Day, "day-2", now: 6000);
+		var reselected = PlaybackTimeline.SelectSong(switched, GamePhase.Day, index: 1, now: 6000);
 		var back = PlaybackTimeline.SwitchPhase(reselected, now: 9000);
 
 		await Assert.That(back.CurrentSongId).IsEqualTo("day-2");

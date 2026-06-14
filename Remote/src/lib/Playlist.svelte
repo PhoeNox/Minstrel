@@ -34,16 +34,16 @@
 		/>
 	</label>
 	<ul>
-		{#each playlist.songs as song, index (song.id)}
+		{#each playlist.songs as song, index (index)}
 			<li
-				class:current={song.id === playlist.currentSongId}
+				class:current={index === playlist.currentIndex}
 				draggable="true"
 				ondragstart={() => (dragIndex = index)}
 				ondragover={(event) => event.preventDefault()}
 				ondrop={() => onDrop(index)}
 				ondragend={() => (dragIndex = null)}
 			>
-				<button class="select" onclick={() => selectSong(phase, song.id)}>
+				<button class="select" onclick={() => selectSong(phase, index)}>
 					<span class="title">{song.title}</span>
 					<span class="artist">{song.artist}</span>
 				</button>

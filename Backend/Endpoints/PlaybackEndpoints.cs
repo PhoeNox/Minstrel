@@ -124,9 +124,9 @@ public static class PlaybackEndpoints
 	private static IResult Select(SelectCommand? command, PlaybackSession session)
 	{
 		if (command is null)
-			return Results.BadRequest("A phase and song id are required.");
+			return Results.BadRequest("A phase and index are required.");
 
-		session.SelectSong(command.Phase, command.SongId);
+		session.SelectSong(command.Phase, command.Index);
 		return Results.NoContent();
 	}
 

@@ -9,9 +9,12 @@ public sealed record PositionAnchor(string? SongId, double Offset, long AnchorTi
 
 public sealed record TimelineSong(string Id, double Length);
 
-public sealed record TimelinePlaylist(TimelineSong[] Songs, string? CurrentSongId, double Gain = 1.0, double ResumeOffset = 0)
+public sealed record TimelinePlaylist(TimelineSong[] Songs, int? CurrentIndex, double Gain = 1.0, double ResumeOffset = 0)
 {
-	public static TimelinePlaylist Empty { get; } = new([], CurrentSongId: null);
+	public static TimelinePlaylist Empty { get; } = new([], CurrentIndex: null);
+
+	public TimelineSong? CurrentSong =>
+		CurrentIndex is { } index && index >= 0 && index < Songs.Length ? Songs[index] : null;
 }
 
 public sealed record TimelineState(
@@ -56,25 +59,32 @@ public static class PlaybackTimeline
 			? state
 			: state with { Position = state.Position with { AnchorTimestamp = now, IsPlaying = true } };
 
-	public static TimelineState SelectSong(TimelineState state, GamePhase phase, string songId, long now)
+	public static TimelineState SelectSong(TimelineState state, GamePhase phase, int index, long now)
 	{
-		var selected = WithCurrentSong(state, phase, songId);
-		return phase == state.ActivePhase ? Play(selected, songId, now) : selected;
+		var selected = WithCurrentSong(state, phase, index);
+		if (phase != state.ActivePhase)
+			return selected;
+
+		return selected.ActivePlaylist.CurrentSong is { } song ? Play(selected, song.Id, now) : selected;
 	}
 
 	public static TimelineState SwitchPhase(TimelineState state, long now)
 	{
 		var target = state.ActivePhase == GamePhase.Day ? GamePhase.Night : GamePhase.Day;
 		var targetPlaylist = target == GamePhase.Day ? state.Day : state.Night;
-		if (targetPlaylist.CurrentSongId is not { } songId)
+		if (targetPlaylist.CurrentSong is not { } song)
 			return state;
 
 		var remembered = RememberResumeOffset(state, now) with { ActivePhase = target };
-		return PlayAt(remembered, songId, targetPlaylist.ResumeOffset, now);
+		return PlayAt(remembered, song.Id, targetPlaylist.ResumeOffset, now);
 	}
 
 	public static TimelineState MoveSong(TimelineState state, GamePhase phase, int oldIndex, int newIndex) =>
-		WithPlaylist(state, phase, playlist => playlist with { Songs = Reordered(playlist.Songs, oldIndex, newIndex) });
+		WithPlaylist(state, phase, playlist => playlist with
+		{
+			Songs = Reordered(playlist.Songs, oldIndex, newIndex),
+			CurrentIndex = RemapCurrentIndex(playlist, oldIndex, newIndex),
+		});
 
 	public static TimelineState SetGain(TimelineState state, GamePhase phase, double gain) =>
 		WithPlaylist(state, phase, playlist => playlist with { Gain = gain });
@@ -85,7 +95,7 @@ public static class PlaybackTimeline
 			return state;
 
 		var elapsed = DerivePosition(state.Position, now);
-		var current = FindSong(state.ActivePlaylist, state.Position.SongId);
+		var current = state.ActivePlaylist.CurrentSong;
 		return current is not null && elapsed >= current.Length
 			? Advance(state, now)
 			: state with { Position = state.Position with { Offset = elapsed, AnchorTimestamp = now } };
@@ -98,8 +108,12 @@ public static class PlaybackTimeline
 
 	private static TimelineState Advance(TimelineState state, long now)
 	{
-		var next = NextSong(state.ActivePlaylist, state.Position.SongId);
-		return next is null ? state : SelectSong(state, state.ActivePhase, next.Id, now);
+		var playlist = state.ActivePlaylist;
+		if (playlist.CurrentIndex is not { } index || playlist.Songs.Length == 0)
+			return state;
+
+		var nextIndex = (index + 1) % playlist.Songs.Length;
+		return SelectSong(state, state.ActivePhase, nextIndex, now);
 	}
 
 	private static TimelineState RememberResumeOffset(TimelineState state, long now)
@@ -108,13 +122,13 @@ public static class PlaybackTimeline
 			return state;
 
 		var heard = DerivePosition(state.Position, now) + (state.Position.IsPlaying ? FadeSeconds : 0);
-		var song = FindSong(state.ActivePlaylist, state.Position.SongId);
+		var song = state.ActivePlaylist.CurrentSong;
 		var offset = song is null ? heard : Math.Min(heard, song.Length);
 		return WithPlaylist(state, state.ActivePhase, playlist => playlist with { ResumeOffset = offset });
 	}
 
-	private static TimelineState WithCurrentSong(TimelineState state, GamePhase phase, string songId) =>
-		WithPlaylist(state, phase, playlist => playlist with { CurrentSongId = songId, ResumeOffset = 0 });
+	private static TimelineState WithCurrentSong(TimelineState state, GamePhase phase, int index) =>
+		WithPlaylist(state, phase, playlist => playlist with { CurrentIndex = index, ResumeOffset = 0 });
 
 	private static TimelineState WithPlaylist(
 		TimelineState state,
@@ -124,13 +138,17 @@ public static class PlaybackTimeline
 			? state with { Day = transform(state.Day) }
 			: state with { Night = transform(state.Night) };
 
-	private static TimelineSong? FindSong(TimelinePlaylist playlist, string? songId) =>
-		Array.Find(playlist.Songs, song => song.Id == songId);
-
-	private static TimelineSong? NextSong(TimelinePlaylist playlist, string? songId)
+	private static int? RemapCurrentIndex(TimelinePlaylist playlist, int oldIndex, int newIndex)
 	{
-		var index = Array.FindIndex(playlist.Songs, song => song.Id == songId);
-		return index < 0 ? null : playlist.Songs[(index + 1) % playlist.Songs.Length];
+		if (playlist.CurrentIndex is not { } current || oldIndex < 0 || oldIndex >= playlist.Songs.Length)
+			return playlist.CurrentIndex;
+
+		var target = Math.Clamp(newIndex, 0, playlist.Songs.Length - 1);
+		if (current == oldIndex)
+			return target;
+
+		var withoutMoved = current < oldIndex ? current : current - 1;
+		return withoutMoved >= target ? withoutMoved + 1 : withoutMoved;
 	}
 
 	private static TimelineSong[] Reordered(TimelineSong[] songs, int oldIndex, int newIndex)

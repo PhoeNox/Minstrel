@@ -12,8 +12,8 @@ export async function switchPhase(): Promise<void> {
 	await fetch('/commands/switch-phase', { method: 'POST' });
 }
 
-export async function selectSong(phase: Phase, songId: string): Promise<void> {
-	await post('/commands/select', { phase, songId });
+export async function selectSong(phase: Phase, index: number): Promise<void> {
+	await post('/commands/select', { phase, index });
 }
 
 export async function moveSong(phase: Phase, oldIndex: number, newIndex: number): Promise<void> {

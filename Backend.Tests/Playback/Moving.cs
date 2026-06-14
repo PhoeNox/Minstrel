@@ -9,7 +9,7 @@ public class Moving
 	{
 		var playlist = new TimelinePlaylist(
 			ids.Select(id => new TimelineSong(id, 10)).ToArray(),
-			CurrentSongId: ids[0]);
+			CurrentIndex: 0);
 		return TimelineState.Idle with { Day = playlist };
 	}
 
@@ -33,7 +33,19 @@ public class Moving
 
 		var moved = PlaybackTimeline.MoveSong(state, GamePhase.Day, oldIndex: 1, newIndex: 0);
 
-		await Assert.That(moved.Day.CurrentSongId).IsEqualTo("a");
+		await Assert.That(moved.Day.CurrentIndex).IsEqualTo(1);
+		await Assert.That(moved.Day.CurrentSong?.Id).IsEqualTo("a");
+	}
+
+	[Test]
+	public async Task TracksTheCurrentSongWhenItIsTheOneMoved()
+	{
+		var state = WithDaySongs("a", "b", "c");
+
+		var moved = PlaybackTimeline.MoveSong(state, GamePhase.Day, oldIndex: 0, newIndex: 2);
+
+		await Assert.That(moved.Day.CurrentIndex).IsEqualTo(2);
+		await Assert.That(moved.Day.CurrentSong?.Id).IsEqualTo("a");
 	}
 
 	[Test]

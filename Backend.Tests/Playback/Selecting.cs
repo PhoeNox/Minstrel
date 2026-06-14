@@ -9,10 +9,10 @@ public class Selecting
 	{
 		var day = new TimelinePlaylist(
 			[new TimelineSong("day-1", 10), new TimelineSong("day-2", 10)],
-			CurrentSongId: "day-1");
+			CurrentIndex: 0);
 		var night = new TimelinePlaylist(
 			[new TimelineSong("night-1", 10), new TimelineSong("night-2", 10)],
-			CurrentSongId: "night-1");
+			CurrentIndex: 0);
 		return TimelineState.Idle with { Day = day, Night = night };
 	}
 
@@ -21,10 +21,10 @@ public class Selecting
 	{
 		var state = WithPlaylists();
 
-		var result = PlaybackTimeline.SelectSong(state, GamePhase.Day, "day-2", now: 1000);
+		var result = PlaybackTimeline.SelectSong(state, GamePhase.Day, index: 1, now: 1000);
 
 		await Assert.That(result.CurrentSongId).IsEqualTo("day-2");
-		await Assert.That(result.Day.CurrentSongId).IsEqualTo("day-2");
+		await Assert.That(result.Day.CurrentIndex).IsEqualTo(1);
 		await Assert.That(result.IsPlaying).IsTrue();
 		await Assert.That(result.Position.Offset).IsEqualTo(0);
 	}
@@ -34,9 +34,9 @@ public class Selecting
 	{
 		var state = WithPlaylists();
 
-		var result = PlaybackTimeline.SelectSong(state, GamePhase.Night, "night-2", now: 1000);
+		var result = PlaybackTimeline.SelectSong(state, GamePhase.Night, index: 1, now: 1000);
 
-		await Assert.That(result.Night.CurrentSongId).IsEqualTo("night-2");
+		await Assert.That(result.Night.CurrentIndex).IsEqualTo(1);
 		await Assert.That(result.CurrentSongId).IsNull();
 		await Assert.That(result.IsPlaying).IsFalse();
 	}
