@@ -1,15 +1,25 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { playbackStore } from '$lib/sseStore';
-	import { play, pause, switchPhase } from '$lib/commandClient';
+	import { play, pause, switchPhase, startTimer, stopTimer } from '$lib/commandClient';
 	import Playlist from '$lib/Playlist.svelte';
 	import { emptyState, type PlaybackState } from '$lib/state';
+	import { deriveTimeLeft, formatTimeLeft } from '$shared/timer';
 
 	const playback = playbackStore();
 
 	let snapshot: PlaybackState = $state(emptyState);
+	let now = $state(Date.now());
+	let durationMinutes = $state(5);
+
 	const unsubscribe = playback.subscribe((next) => (snapshot = next));
-	onDestroy(unsubscribe);
+	const ticker = setInterval(() => (now = Date.now()), 250);
+	onDestroy(() => {
+		unsubscribe();
+		clearInterval(ticker);
+	});
+
+	const timeLeft = $derived(snapshot.timer ? deriveTimeLeft(snapshot.timer, now) : null);
 
 	const currentSong = $derived(
 		[...snapshot.playlists.day.songs, ...snapshot.playlists.night.songs].find(
@@ -40,6 +50,19 @@
 		<button onclick={() => switchPhase()} disabled={!canSwitch}>
 			Switch to {snapshot.phase === 'Day' ? 'Night' : 'Day'}
 		</button>
+	</div>
+
+	<div class="timer">
+		{#if timeLeft !== null}
+			<p class="countdown">{formatTimeLeft(timeLeft)}</p>
+			<button onclick={() => stopTimer()}>Stop timer</button>
+		{:else}
+			<label>
+				<input type="number" min="1" bind:value={durationMinutes} />
+				min
+			</label>
+			<button onclick={() => startTimer(durationMinutes * 60)}>Start timer</button>
+		{/if}
 	</div>
 
 	<div class="playlists">
@@ -82,6 +105,27 @@
 	button:disabled {
 		cursor: default;
 		opacity: 0.5;
+	}
+
+	.timer {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		justify-content: center;
+		margin-top: 1.5rem;
+	}
+
+	.countdown {
+		font-size: 2rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		margin: 0;
+	}
+
+	.timer input {
+		width: 4rem;
+		font-size: 1rem;
+		padding: 0.5rem;
 	}
 
 	.playlists {

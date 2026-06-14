@@ -3,14 +3,16 @@ namespace Backend.Playback;
 using System.Threading.Channels;
 using Backend.Contracts;
 using Backend.Library;
+using Backend.Timer;
 using Core;
 
 public sealed class PlaybackSession
 {
 	private readonly SongLibrary library;
 	private readonly Lock gate = new();
-	private readonly List<Channel<StateSnapshot>> subscribers = [];
+	private readonly List<Channel<SessionEvent>> subscribers = [];
 	private TimelineState state;
+	private TimerAnchor timer = TimerAnchor.Idle;
 
 	public PlaybackSession(SongLibrary library)
 	{
@@ -111,30 +113,55 @@ public sealed class PlaybackSession
 		}
 	}
 
+	public void StartTimer(double durationSeconds)
+	{
+		lock (gate)
+		{
+			timer = CountdownTimer.Start(durationSeconds, Now());
+			Broadcast(CurrentSnapshot());
+		}
+	}
+
+	public void StopTimer()
+	{
+		lock (gate)
+		{
+			timer = TimerAnchor.Idle;
+			Broadcast(CurrentSnapshot());
+		}
+	}
+
 	public void Tick()
 	{
 		lock (gate)
 		{
+			var now = Now();
 			var previous = state;
-			state = PlaybackTimeline.Tick(state, Now());
-			if (state.CurrentSongId != previous.CurrentSongId)
+			state = PlaybackTimeline.Tick(state, now);
+			var expired = CountdownTimer.HasExpired(timer, now);
+			if (expired)
+				timer = TimerAnchor.Idle;
+
+			if (state.CurrentSongId != previous.CurrentSongId || expired)
 				Broadcast(CurrentSnapshot());
+			if (expired)
+				Publish(new GongEvent());
 		}
 	}
 
-	public Channel<StateSnapshot> Subscribe()
+	public Channel<SessionEvent> Subscribe()
 	{
-		var channel = Channel.CreateUnbounded<StateSnapshot>();
+		var channel = Channel.CreateUnbounded<SessionEvent>();
 		lock (gate)
 		{
 			subscribers.Add(channel);
-			channel.Writer.TryWrite(CurrentSnapshot());
+			channel.Writer.TryWrite(new SnapshotEvent(CurrentSnapshot()));
 		}
 
 		return channel;
 	}
 
-	public void Unsubscribe(Channel<StateSnapshot> channel)
+	public void Unsubscribe(Channel<SessionEvent> channel)
 	{
 		lock (gate)
 		{
@@ -151,13 +178,15 @@ public sealed class PlaybackSession
 			entries.Select(entry => new TimelineSong(entry.Id, entry.Song.Length.TotalSeconds)).ToArray(),
 			entries.FirstOrDefault()?.Id);
 
-	private void Broadcast(StateSnapshot snapshot)
+	private void Broadcast(StateSnapshot snapshot) => Publish(new SnapshotEvent(snapshot));
+
+	private void Publish(SessionEvent message)
 	{
 		foreach (var subscriber in subscribers)
 		{
-			subscriber.Writer.TryWrite(snapshot);
+			subscriber.Writer.TryWrite(message);
 		}
 	}
 
-	private StateSnapshot CurrentSnapshot() => SnapshotMapper.ToSnapshot(state, library);
+	private StateSnapshot CurrentSnapshot() => SnapshotMapper.ToSnapshot(state, timer, library);
 }

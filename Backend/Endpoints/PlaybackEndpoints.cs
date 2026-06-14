@@ -3,6 +3,7 @@ namespace Backend.Endpoints;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Backend.Commands;
+using Backend.Contracts;
 using Backend.Library;
 using Backend.Playback;
 using Microsoft.AspNetCore.StaticFiles;
@@ -26,6 +27,8 @@ public static class PlaybackEndpoints
 		app.MapPost("/commands/select", Select);
 		app.MapPost("/commands/move", Move);
 		app.MapPost("/commands/set-gain", SetGain);
+		app.MapPost("/commands/timer-start", StartTimer);
+		app.MapPost("/commands/timer-stop", StopTimer);
 	}
 
 	private static async Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
@@ -36,10 +39,9 @@ public static class PlaybackEndpoints
 		var channel = session.Subscribe();
 		try
 		{
-			await foreach (var snapshot in channel.Reader.ReadAllAsync(cancellation))
+			await foreach (var message in channel.Reader.ReadAllAsync(cancellation))
 			{
-				var json = JsonSerializer.Serialize(snapshot, JsonOptions);
-				await context.Response.WriteAsync($"data: {json}\n\n", cancellation);
+				await WriteEvent(context, message, cancellation);
 				await context.Response.Body.FlushAsync(cancellation);
 			}
 		}
@@ -51,6 +53,16 @@ public static class PlaybackEndpoints
 			session.Unsubscribe(channel);
 		}
 	}
+
+	private static Task WriteEvent(HttpContext context, SessionEvent message, CancellationToken cancellation) =>
+		message switch
+		{
+			GongEvent => context.Response.WriteAsync("event: gong\ndata: {}\n\n", cancellation),
+			SnapshotEvent snapshot => context.Response.WriteAsync(
+				$"data: {JsonSerializer.Serialize(snapshot.Snapshot, JsonOptions)}\n\n",
+				cancellation),
+			_ => Task.CompletedTask,
+		};
 
 	private static IResult StreamAudio(string songId, SongLibrary library)
 	{
@@ -120,6 +132,21 @@ public static class PlaybackEndpoints
 			return Results.BadRequest("A phase and gain value are required.");
 
 		session.SetGain(command.Phase, command.Value);
+		return Results.NoContent();
+	}
+
+	private static IResult StartTimer(TimerStartCommand? command, PlaybackSession session)
+	{
+		if (command is null || command.Duration <= 0)
+			return Results.BadRequest("A positive duration is required.");
+
+		session.StartTimer(command.Duration);
+		return Results.NoContent();
+	}
+
+	private static IResult StopTimer(PlaybackSession session)
+	{
+		session.StopTimer();
 		return Results.NoContent();
 	}
 }

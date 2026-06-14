@@ -8,10 +8,13 @@ interface Voice {
 	gain: GainNode;
 }
 
+const GONG_URL = '/gong.mp3';
+
 export class AudioEngine {
 	private readonly context = new AudioContext();
 	private readonly buffers = new Map<string, AudioBuffer>();
 	private readonly voices = new Map<string, Voice>();
+	private gongBuffer: AudioBuffer | null = null;
 	private currentSongId: string | null = null;
 	private currentGain = 1;
 
@@ -39,6 +42,26 @@ export class AudioEngine {
 				this.fadeOut(operation.songId);
 			}
 		}
+	}
+
+	async playGong(): Promise<void> {
+		await this.context.resume();
+		const buffer = await this.loadGong();
+		const source = this.context.createBufferSource();
+		source.buffer = buffer;
+		source.connect(this.context.destination);
+		source.start();
+	}
+
+	private async loadGong(): Promise<AudioBuffer> {
+		if (this.gongBuffer) {
+			return this.gongBuffer;
+		}
+
+		const response = await fetch(GONG_URL);
+		const encoded = await response.arrayBuffer();
+		this.gongBuffer = await this.context.decodeAudioData(encoded);
+		return this.gongBuffer;
 	}
 
 	private async fadeIn(songId: string, offset: number, target: number): Promise<void> {

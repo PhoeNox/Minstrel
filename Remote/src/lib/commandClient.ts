@@ -24,6 +24,14 @@ export async function setGain(phase: Phase, value: number): Promise<void> {
 	await post('/commands/set-gain', { phase, value });
 }
 
+export async function startTimer(duration: number): Promise<void> {
+	await post('/commands/timer-start', { duration });
+}
+
+export async function stopTimer(): Promise<void> {
+	await fetch('/commands/timer-stop', { method: 'POST' });
+}
+
 async function post(url: string, body: unknown): Promise<void> {
 	await fetch(url, {
 		method: 'POST',

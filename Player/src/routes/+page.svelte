@@ -4,18 +4,27 @@
 	import { reconcile } from '$lib/reconciler';
 	import { AudioEngine } from '$lib/audioEngine';
 	import { activePlaylist, emptyState, type PlaybackState } from '$lib/state';
+	import { deriveTimeLeft, formatTimeLeft } from '$shared/timer';
 
-	const playback = playbackStore();
+	const playback = playbackStore(() => void engine?.playGong());
 
 	let engine: AudioEngine | null = null;
 	let snapshot: PlaybackState = $state(emptyState);
+	let now = $state(Date.now());
 
 	const unsubscribe = playback.subscribe((next) => {
 		snapshot = next;
 		void sync();
 	});
 
-	onDestroy(unsubscribe);
+	const ticker = setInterval(() => (now = Date.now()), 250);
+
+	onDestroy(() => {
+		unsubscribe();
+		clearInterval(ticker);
+	});
+
+	const timeLeft = $derived(snapshot.timer ? deriveTimeLeft(snapshot.timer, now) : null);
 
 	async function sync(): Promise<void> {
 		if (!engine) {
@@ -53,6 +62,10 @@
 
 	<p>State: {snapshot.isPlaying ? 'Playing' : 'Idle'}</p>
 
+	{#if timeLeft !== null}
+		<p class="timer">{formatTimeLeft(timeLeft)}</p>
+	{/if}
+
 	{#if currentSong}
 		<p>Now playing: {currentSong.title} — {currentSong.artist}</p>
 	{:else}
@@ -83,5 +96,12 @@
 		font-size: 1rem;
 		padding: 0.5rem 1rem;
 		cursor: pointer;
+	}
+
+	.timer {
+		font-size: 3rem;
+		font-variant-numeric: tabular-nums;
+		font-weight: 700;
+		margin: 1rem 0;
 	}
 </style>
