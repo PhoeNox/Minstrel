@@ -20,6 +20,10 @@ export async function moveSong(phase: Phase, oldIndex: number, newIndex: number)
 	await post('/commands/move', { phase, oldIndex, newIndex });
 }
 
+export async function setGain(phase: Phase, value: number): Promise<void> {
+	await post('/commands/set-gain', { phase, value });
+}
+
 async function post(url: string, body: unknown): Promise<void> {
 	await fetch(url, {
 		method: 'POST',

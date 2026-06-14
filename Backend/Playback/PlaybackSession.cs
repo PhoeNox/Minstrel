@@ -82,6 +82,15 @@ public sealed class PlaybackSession
 		}
 	}
 
+	public void SetGain(GamePhase phase, double value)
+	{
+		lock (gate)
+		{
+			state = PlaybackTimeline.SetGain(state, phase, value);
+			Broadcast(CurrentSnapshot());
+		}
+	}
+
 	public void SwitchPhase()
 	{
 		lock (gate)

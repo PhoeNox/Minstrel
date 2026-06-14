@@ -7,3 +7,5 @@ public sealed record PlayCommand(string? SongId);
 public sealed record SelectCommand(GamePhase Phase, string SongId);
 
 public sealed record MoveCommand(GamePhase Phase, int OldIndex, int NewIndex);
+
+public sealed record SetGainCommand(GamePhase Phase, double Value);

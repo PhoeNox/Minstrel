@@ -12,6 +12,7 @@ export interface SongDto {
 export interface PlaylistDto {
 	songs: SongDto[];
 	currentSongId: string | null;
+	gain: number;
 }
 
 export interface PlaylistsDto {
@@ -27,7 +28,7 @@ export interface PlaybackState {
 	position: PositionAnchor;
 }
 
-const emptyPlaylist: PlaylistDto = { songs: [], currentSongId: null };
+const emptyPlaylist: PlaylistDto = { songs: [], currentSongId: null, gain: 1 };
 
 export const emptyState: PlaybackState = {
 	phase: 'Day',

@@ -1,6 +1,7 @@
 import type { AudioOperation } from './reconciler';
 
 const FADE_SECONDS = 5;
+const GAIN_RAMP_SECONDS = 0.3;
 
 interface Voice {
 	source: AudioBufferSourceNode;
@@ -12,6 +13,7 @@ export class AudioEngine {
 	private readonly buffers = new Map<string, AudioBuffer>();
 	private readonly voices = new Map<string, Voice>();
 	private currentSongId: string | null = null;
+	private currentGain = 1;
 
 	get playingSongId(): string | null {
 		return this.currentSongId;
@@ -21,10 +23,16 @@ export class AudioEngine {
 		return [...this.buffers.keys()];
 	}
 
+	get gain(): number {
+		return this.currentGain;
+	}
+
 	async apply(operations: AudioOperation[]): Promise<void> {
 		for (const operation of operations) {
 			if (operation.type === 'fade-in') {
-				await this.fadeIn(operation.songId, operation.offset);
+				await this.fadeIn(operation.songId, operation.offset, operation.gain);
+			} else if (operation.type === 'set-gain') {
+				this.setGain(operation.songId, operation.gain);
 			} else if (operation.type === 'prefetch') {
 				await this.load(operation.songId);
 			} else {
@@ -33,13 +41,13 @@ export class AudioEngine {
 		}
 	}
 
-	private async fadeIn(songId: string, offset: number): Promise<void> {
+	private async fadeIn(songId: string, offset: number, target: number): Promise<void> {
 		await this.context.resume();
 		const buffer = await this.load(songId);
 		const gain = this.context.createGain();
 		const now = this.context.currentTime;
 		gain.gain.setValueAtTime(0, now);
-		gain.gain.linearRampToValueAtTime(1, now + FADE_SECONDS);
+		gain.gain.linearRampToValueAtTime(target, now + FADE_SECONDS);
 		gain.connect(this.context.destination);
 
 		const source = this.context.createBufferSource();
@@ -49,6 +57,20 @@ export class AudioEngine {
 
 		this.voices.set(songId, { source, gain });
 		this.currentSongId = songId;
+		this.currentGain = target;
+	}
+
+	private setGain(songId: string, target: number): void {
+		const voice = this.voices.get(songId);
+		if (!voice) {
+			return;
+		}
+
+		const now = this.context.currentTime;
+		voice.gain.gain.cancelScheduledValues(now);
+		voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+		voice.gain.gain.linearRampToValueAtTime(target, now + GAIN_RAMP_SECONDS);
+		this.currentGain = target;
 	}
 
 	private fadeOut(songId: string): void {

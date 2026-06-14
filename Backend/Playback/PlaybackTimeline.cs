@@ -9,7 +9,7 @@ public sealed record PositionAnchor(string? SongId, double Offset, long AnchorTi
 
 public sealed record TimelineSong(string Id, double Length);
 
-public sealed record TimelinePlaylist(TimelineSong[] Songs, string? CurrentSongId)
+public sealed record TimelinePlaylist(TimelineSong[] Songs, string? CurrentSongId, double Gain = 1.0)
 {
 	public static TimelinePlaylist Empty { get; } = new([], CurrentSongId: null);
 }
@@ -68,6 +68,9 @@ public static class PlaybackTimeline
 
 	public static TimelineState MoveSong(TimelineState state, GamePhase phase, int oldIndex, int newIndex) =>
 		WithPlaylist(state, phase, playlist => playlist with { Songs = Reordered(playlist.Songs, oldIndex, newIndex) });
+
+	public static TimelineState SetGain(TimelineState state, GamePhase phase, double gain) =>
+		WithPlaylist(state, phase, playlist => playlist with { Gain = gain });
 
 	public static TimelineState Tick(TimelineState state, long now)
 	{

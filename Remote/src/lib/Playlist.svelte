@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { moveSong, selectSong } from './commandClient';
+	import { moveSong, selectSong, setGain } from './commandClient';
 	import type { Phase, PlaylistDto } from './state';
 
 	let { phase, playlist }: { phase: Phase; playlist: PlaylistDto } = $props();
@@ -22,6 +22,17 @@
 
 <section>
 	<h2>{phase}</h2>
+	<label class="volume">
+		Volume
+		<input
+			type="range"
+			min="0"
+			max="1"
+			step="0.01"
+			value={playlist.gain}
+			oninput={(event) => setGain(phase, event.currentTarget.valueAsNumber)}
+		/>
+	</label>
 	<ul>
 		{#each playlist.songs as song, index (song.id)}
 			<li
@@ -52,6 +63,19 @@
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: #777;
+	}
+
+	.volume {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.85rem;
+		color: #777;
+		margin-bottom: 0.5rem;
+	}
+
+	.volume input {
+		flex: 1;
 	}
 
 	ul {

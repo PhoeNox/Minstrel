@@ -25,6 +25,7 @@ public static class PlaybackEndpoints
 		app.MapPost("/commands/switch-phase", SwitchPhase);
 		app.MapPost("/commands/select", Select);
 		app.MapPost("/commands/move", Move);
+		app.MapPost("/commands/set-gain", SetGain);
 	}
 
 	private static async Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
@@ -110,6 +111,15 @@ public static class PlaybackEndpoints
 			return Results.BadRequest("A phase and indices are required.");
 
 		session.MoveSong(command.Phase, command.OldIndex, command.NewIndex);
+		return Results.NoContent();
+	}
+
+	private static IResult SetGain(SetGainCommand? command, PlaybackSession session)
+	{
+		if (command is null)
+			return Results.BadRequest("A phase and gain value are required.");
+
+		session.SetGain(command.Phase, command.Value);
 		return Results.NoContent();
 	}
 }
