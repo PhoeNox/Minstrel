@@ -6,19 +6,22 @@ using Infrastructure.FileSystem;
 public sealed class FakeFileSystem : IFileSystemProvider
 {
 	private readonly Dictionary<GamePhase, Song[]> playlists;
+	private readonly Song[] alsoOnDisk;
 
-	public FakeFileSystem(Song[] day, Song[] night)
+	public FakeFileSystem(Song[] day, Song[] night, Song[]? alsoOnDisk = null)
 	{
 		playlists = new Dictionary<GamePhase, Song[]>
 		{
 			[GamePhase.Day] = day,
 			[GamePhase.Night] = night,
 		};
+		this.alsoOnDisk = alsoOnDisk ?? [];
 	}
 
 	public Song[] Saved(GamePhase phase) => playlists[phase];
 
-	public Song[] LoadSongs() => playlists.Values.SelectMany(songs => songs).ToArray();
+	public Song[] LoadSongs() =>
+		playlists.Values.SelectMany(songs => songs).Concat(alsoOnDisk).ToArray();
 
 	public (Song[] DayPlaylist, Song[] NightPlaylist) LoadPlaylists() =>
 		(playlists[GamePhase.Day], playlists[GamePhase.Night]);

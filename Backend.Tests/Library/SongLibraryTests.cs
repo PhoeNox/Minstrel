@@ -53,6 +53,22 @@ public class SongLibraryTests
 	}
 
 	[Test]
+	public async Task IndexesSongsOnDiskAbsentFromBothPlaylists()
+	{
+		var fileSystem = new FakeFileSystem(
+			day: [TestSongs.At("a.mp3")],
+			night: [],
+			alsoOnDisk: [TestSongs.At("orphan.mp3")]);
+		var library = Build(fileSystem);
+
+		var orphan = library.All.Single(entry => entry.Song.Path == "orphan.mp3");
+		var ok = library.TryGetPath(orphan.Id, out var path);
+
+		await Assert.That(ok).IsTrue();
+		await Assert.That(path).IsEqualTo("orphan.mp3");
+	}
+
+	[Test]
 	public async Task RoundTripsSongIdToPath()
 	{
 		var library = Build(new FakeFileSystem([TestSongs.At("a.mp3")], [TestSongs.At("b.mp3")]));

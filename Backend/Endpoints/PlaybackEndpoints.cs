@@ -22,6 +22,7 @@ public static class PlaybackEndpoints
 	{
 		app.MapGet("/sse", StreamState);
 		app.MapGet("/connection", GetConnection);
+		app.MapGet("/library", GetLibrary);
 		app.MapGet("/audio/{songId}", StreamAudio);
 		app.MapPost("/commands/play", Play);
 		app.MapPost("/commands/pause", Pause);
@@ -76,6 +77,9 @@ public static class PlaybackEndpoints
 		string.IsNullOrWhiteSpace(configuredHost)
 			? network.GetLocalIpAddress()
 			: configuredHost.Trim();
+
+	private static IResult GetLibrary(SongLibrary library) =>
+		Results.Ok(library.All.Select(entry => library.ToSongDto(entry.Id)).ToArray());
 
 	private static IResult StreamAudio(string songId, SongLibrary library)
 	{

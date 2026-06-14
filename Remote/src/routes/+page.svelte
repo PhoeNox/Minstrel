@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { playbackStore } from '$lib/sseStore';
 	import { play, pause, switchPhase, startTimer, stopTimer } from '$lib/commandClient';
+	import { fetchLibrary } from '$lib/libraryClient';
 	import Playlist from '$lib/Playlist.svelte';
-	import { emptyState, type PlaybackState } from '$lib/state';
+	import Library from '$lib/Library.svelte';
+	import { emptyState, type PlaybackState, type SongDto } from '$lib/state';
 	import { deriveTimeLeft, formatTimeLeft } from '$shared/timer';
 
 	const playback = playbackStore();
@@ -11,6 +13,11 @@
 	let snapshot: PlaybackState = $state(emptyState);
 	let now = $state(Date.now());
 	let durationMinutes = $state(5);
+	let library: SongDto[] = $state([]);
+
+	onMount(async () => {
+		library = await fetchLibrary();
+	});
 
 	const unsubscribe = playback.subscribe((next) => (snapshot = next));
 	const ticker = setInterval(() => (now = Date.now()), 250);
@@ -69,6 +76,8 @@
 		<Playlist phase="Day" playlist={snapshot.playlists.day} />
 		<Playlist phase="Night" playlist={snapshot.playlists.night} />
 	</div>
+
+	<Library songs={library} />
 </main>
 
 <style>

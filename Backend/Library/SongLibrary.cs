@@ -17,13 +17,16 @@ public sealed class SongLibrary
 
 	public IReadOnlyList<LibraryEntry> Night { get; }
 
+	public IReadOnlyList<LibraryEntry> All { get; }
+
 	public SongLibrary(IFileSystemProvider fileSystem)
 	{
 		this.fileSystem = fileSystem;
 		var (day, night) = fileSystem.LoadPlaylists();
 		Day = day.Select(ToEntry).ToArray();
 		Night = night.Select(ToEntry).ToArray();
-		songsById = Day.Concat(Night)
+		All = fileSystem.LoadSongs().Select(ToEntry).ToArray();
+		songsById = Day.Concat(Night).Concat(All)
 			.GroupBy(entry => entry.Id)
 			.ToDictionary(group => group.Key, group => group.First().Song);
 	}
