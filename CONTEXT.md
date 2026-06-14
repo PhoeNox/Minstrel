@@ -20,6 +20,14 @@ _Avoid_: Controller, control client, admin.
 Day or Night. Each phase has its own Playlist; switching phase crossfades from one Playlist's current song to the other's.
 _Avoid_: Mode, state (overloaded).
 
+**Playlist**:
+The ordered list of songs for one Game Phase, with a current entry and a per-phase gain. Mutable: songs are added from the Library, removed, reordered, or shuffled, and the result is persisted as M3U. An entry is addressed by its index, so the same song may appear more than once.
+_Avoid_: Queue, tracklist.
+
+**Library**:
+Every song available under the music directory — the pool a Playlist draws from. Static reference data, loaded once; not part of replicable playback state.
+_Avoid_: Database, catalog, song database.
+
 **Position**:
 The playback offset within the current song. Owned by the Backend, so any Player resumes at the same point.
 _Avoid_: Progress, time, offset (in user-facing language).
