@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-var port = builder.Configuration["Port"] ?? "5000";
+var port = builder.Configuration["Port"] ?? "5757";
 var urlsFromHost = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
 if (string.IsNullOrEmpty(urlsFromHost))
 	builder.WebHost.UseUrls($"http://*:{port}");

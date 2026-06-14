@@ -66,8 +66,16 @@ public static class PlaybackEndpoints
 			_ => Task.CompletedTask,
 		};
 
-	private static IResult GetConnection(INetworkProvider network, IConfiguration configuration) =>
-		Results.Ok(ConnectionInfo.For(network.GetLocalIpAddress(), configuration["Port"] ?? "5000"));
+	private static IResult GetConnection(INetworkProvider network, IConfiguration configuration)
+	{
+		var host = ResolveHost(configuration["Host"], network);
+		return Results.Ok(ConnectionInfo.For(host, configuration["Port"] ?? "5757"));
+	}
+
+	private static string ResolveHost(string? configuredHost, INetworkProvider network) =>
+		string.IsNullOrWhiteSpace(configuredHost)
+			? network.GetLocalIpAddress()
+			: configuredHost.Trim();
 
 	private static IResult StreamAudio(string songId, SongLibrary library)
 	{
