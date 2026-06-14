@@ -2,8 +2,8 @@ import { derivePosition } from '$shared/position';
 import { activePlaylist, type PlaybackState } from './state';
 
 export type AudioOperation =
-	| { type: 'start'; songId: string; offset: number }
-	| { type: 'stop'; songId: string }
+	| { type: 'fade-in'; songId: string; offset: number }
+	| { type: 'fade-out'; songId: string }
 	| { type: 'prefetch'; songId: string };
 
 export interface AudioGraph {
@@ -16,11 +16,11 @@ export function reconcile(desired: PlaybackState, current: AudioGraph, now: numb
 	const operations: AudioOperation[] = [];
 
 	if (current.playingSongId !== null && current.playingSongId !== wanted) {
-		operations.push({ type: 'stop', songId: current.playingSongId });
+		operations.push({ type: 'fade-out', songId: current.playingSongId });
 	}
 
 	if (wanted !== null && wanted !== current.playingSongId) {
-		operations.push({ type: 'start', songId: wanted, offset: derivePosition(desired.position, now) });
+		operations.push({ type: 'fade-in', songId: wanted, offset: derivePosition(desired.position, now) });
 	}
 
 	const next = nextSongId(desired);

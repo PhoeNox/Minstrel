@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { playbackStore } from '$lib/sseStore';
-	import { play, pause } from '$lib/commandClient';
+	import { play, pause, switchPhase } from '$lib/commandClient';
 	import Playlist from '$lib/Playlist.svelte';
 	import { emptyState, type PlaybackState } from '$lib/state';
 
@@ -16,6 +16,11 @@
 			(song) => song.id === snapshot.currentSongId
 		) ?? null
 	);
+
+	const otherPlaylist = $derived(
+		snapshot.phase === 'Day' ? snapshot.playlists.night : snapshot.playlists.day
+	);
+	const canSwitch = $derived(otherPlaylist.currentSongId !== null);
 </script>
 
 <main>
@@ -32,6 +37,9 @@
 	<div class="controls">
 		<button onclick={() => play()} disabled={snapshot.isPlaying}>Play</button>
 		<button onclick={() => pause()} disabled={!snapshot.isPlaying}>Pause</button>
+		<button onclick={() => switchPhase()} disabled={!canSwitch}>
+			Switch to {snapshot.phase === 'Day' ? 'Night' : 'Day'}
+		</button>
 	</div>
 
 	<div class="playlists">

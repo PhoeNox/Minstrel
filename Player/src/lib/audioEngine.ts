@@ -1,12 +1,20 @@
 import type { AudioOperation } from './reconciler';
 
+const FADE_SECONDS = 5;
+
+interface Voice {
+	source: AudioBufferSourceNode;
+	gain: GainNode;
+}
+
 export class AudioEngine {
 	private readonly context = new AudioContext();
 	private readonly buffers = new Map<string, AudioBuffer>();
-	private current: { songId: string; source: AudioBufferSourceNode } | null = null;
+	private readonly voices = new Map<string, Voice>();
+	private currentSongId: string | null = null;
 
 	get playingSongId(): string | null {
-		return this.current?.songId ?? null;
+		return this.currentSongId;
 	}
 
 	get loadedSongIds(): string[] {
@@ -15,30 +23,48 @@ export class AudioEngine {
 
 	async apply(operations: AudioOperation[]): Promise<void> {
 		for (const operation of operations) {
-			if (operation.type === 'start') {
-				await this.start(operation.songId, operation.offset);
+			if (operation.type === 'fade-in') {
+				await this.fadeIn(operation.songId, operation.offset);
 			} else if (operation.type === 'prefetch') {
 				await this.load(operation.songId);
 			} else {
-				this.stop(operation.songId);
+				this.fadeOut(operation.songId);
 			}
 		}
 	}
 
-	private async start(songId: string, offset: number): Promise<void> {
+	private async fadeIn(songId: string, offset: number): Promise<void> {
 		await this.context.resume();
 		const buffer = await this.load(songId);
+		const gain = this.context.createGain();
+		const now = this.context.currentTime;
+		gain.gain.setValueAtTime(0, now);
+		gain.gain.linearRampToValueAtTime(1, now + FADE_SECONDS);
+		gain.connect(this.context.destination);
+
 		const source = this.context.createBufferSource();
 		source.buffer = buffer;
-		source.connect(this.context.destination);
+		source.connect(gain);
 		source.start(0, offset);
-		this.current = { songId, source };
+
+		this.voices.set(songId, { source, gain });
+		this.currentSongId = songId;
 	}
 
-	private stop(songId: string): void {
-		if (this.current?.songId === songId) {
-			this.current.source.stop();
-			this.current = null;
+	private fadeOut(songId: string): void {
+		const voice = this.voices.get(songId);
+		if (!voice) {
+			return;
+		}
+
+		const now = this.context.currentTime;
+		voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+		voice.gain.gain.linearRampToValueAtTime(0, now + FADE_SECONDS);
+		voice.source.stop(now + FADE_SECONDS);
+
+		this.voices.delete(songId);
+		if (this.currentSongId === songId) {
+			this.currentSongId = null;
 		}
 	}
 

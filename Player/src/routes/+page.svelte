@@ -44,7 +44,7 @@
 	);
 </script>
 
-<main>
+<main class:night={snapshot.phase === 'Night'}>
 	<h1>Minstrel Player</h1>
 
 	{#if !engine}
@@ -63,9 +63,20 @@
 <style>
 	main {
 		font-family: system-ui, sans-serif;
-		max-width: 32rem;
-		margin: 4rem auto;
-		padding: 0 1rem;
+		min-height: 100vh;
+		margin: 0;
+		padding: 4rem 1rem;
+		text-align: center;
+		background: #fdf6e3;
+		color: #1a1a1a;
+		transition:
+			background 5s ease,
+			color 5s ease;
+	}
+
+	main.night {
+		background: #0b1026;
+		color: #e8ecff;
 	}
 
 	button {

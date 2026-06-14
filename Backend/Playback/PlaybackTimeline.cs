@@ -57,6 +57,15 @@ public static class PlaybackTimeline
 		return phase == state.ActivePhase ? Play(selected, songId, now) : selected;
 	}
 
+	public static TimelineState SwitchPhase(TimelineState state, long now)
+	{
+		var target = state.ActivePhase == GamePhase.Day ? GamePhase.Night : GamePhase.Day;
+		var targetPlaylist = target == GamePhase.Day ? state.Day : state.Night;
+		return targetPlaylist.CurrentSongId is { } songId
+			? Play(state with { ActivePhase = target }, songId, now)
+			: state;
+	}
+
 	public static TimelineState MoveSong(TimelineState state, GamePhase phase, int oldIndex, int newIndex) =>
 		WithPlaylist(state, phase, playlist => playlist with { Songs = Reordered(playlist.Songs, oldIndex, newIndex) });
 

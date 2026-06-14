@@ -22,14 +22,14 @@ const playingDay = (currentSongId: string, songs: SongDto[]): PlaybackState => (
 });
 
 describe('reconcile', () => {
-	it('starts the desired song at the derived offset against an empty graph', () => {
+	it('fades in the desired song at the derived offset against an empty graph', () => {
 		const operations = reconcile(
 			{ ...emptyState, isPlaying: true, currentSongId: 'X', position: at(10, 1000) },
 			emptyGraph,
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'start', songId: 'X', offset: 13 }]);
+		expect(operations).toEqual([{ type: 'fade-in', songId: 'X', offset: 13 }]);
 	});
 
 	it('does nothing when the graph already plays the desired song', () => {
@@ -42,17 +42,17 @@ describe('reconcile', () => {
 		expect(operations).toEqual([]);
 	});
 
-	it('stops the current song when playback is paused', () => {
+	it('fades out the current song when playback is paused', () => {
 		const operations = reconcile(
 			{ ...emptyState, isPlaying: false, currentSongId: 'X', position: at(0, 1000, false) },
 			{ playingSongId: 'X', loadedSongIds: ['X'] },
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'stop', songId: 'X' }]);
+		expect(operations).toEqual([{ type: 'fade-out', songId: 'X' }]);
 	});
 
-	it('stops the old song and starts the new one at its offset when the current song changes', () => {
+	it('crossfades the old song out and the new one in when the current song changes', () => {
 		const operations = reconcile(
 			{
 				...emptyState,
@@ -65,8 +65,8 @@ describe('reconcile', () => {
 		);
 
 		expect(operations).toEqual([
-			{ type: 'stop', songId: 'X' },
-			{ type: 'start', songId: 'Y', offset: 0 }
+			{ type: 'fade-out', songId: 'X' },
+			{ type: 'fade-in', songId: 'Y', offset: 0 }
 		]);
 	});
 

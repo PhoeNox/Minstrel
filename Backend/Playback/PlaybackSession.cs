@@ -82,6 +82,15 @@ public sealed class PlaybackSession
 		}
 	}
 
+	public void SwitchPhase()
+	{
+		lock (gate)
+		{
+			state = PlaybackTimeline.SwitchPhase(state, Now());
+			Broadcast(CurrentSnapshot());
+		}
+	}
+
 	public void MoveSong(GamePhase phase, int oldIndex, int newIndex)
 	{
 		lock (gate)

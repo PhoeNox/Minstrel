@@ -22,6 +22,7 @@ public static class PlaybackEndpoints
 		app.MapGet("/audio/{songId}", StreamAudio);
 		app.MapPost("/commands/play", Play);
 		app.MapPost("/commands/pause", Pause);
+		app.MapPost("/commands/switch-phase", SwitchPhase);
 		app.MapPost("/commands/select", Select);
 		app.MapPost("/commands/move", Move);
 	}
@@ -85,6 +86,12 @@ public static class PlaybackEndpoints
 	private static IResult Pause(PlaybackSession session)
 	{
 		session.Pause();
+		return Results.NoContent();
+	}
+
+	private static IResult SwitchPhase(PlaybackSession session)
+	{
+		session.SwitchPhase();
 		return Results.NoContent();
 	}
 
