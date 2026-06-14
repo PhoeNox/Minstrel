@@ -93,6 +93,26 @@ public static class PlaybackTimeline
 			CurrentIndex = playlist.CurrentIndex ?? 0,
 		});
 
+	public static TimelineState RemoveSong(TimelineState state, GamePhase phase, int index, long now)
+	{
+		var playlist = phase == GamePhase.Day ? state.Day : state.Night;
+		if (index < 0 || index >= playlist.Songs.Length)
+			return state;
+
+		var removed = WithPlaylist(state, phase, target => target with
+		{
+			Songs = WithoutAt(target.Songs, index),
+			CurrentIndex = CurrentIndexAfterRemoval(target, index),
+		});
+
+		if (phase != state.ActivePhase || index != playlist.CurrentIndex)
+			return removed;
+
+		return removed.ActivePlaylist.CurrentSong is { } next
+			? Play(removed, next.Id, now)
+			: removed with { Position = PositionAnchor.Idle };
+	}
+
 	public static TimelineState SetGain(TimelineState state, GamePhase phase, double gain) =>
 		WithPlaylist(state, phase, playlist => playlist with { Gain = gain });
 
@@ -156,6 +176,28 @@ public static class PlaybackTimeline
 
 		var withoutMoved = current < oldIndex ? current : current - 1;
 		return withoutMoved >= target ? withoutMoved + 1 : withoutMoved;
+	}
+
+	private static int? CurrentIndexAfterRemoval(TimelinePlaylist playlist, int index)
+	{
+		if (playlist.CurrentIndex is not { } current)
+			return null;
+
+		var remaining = playlist.Songs.Length - 1;
+		if (remaining == 0)
+			return null;
+		if (index < current)
+			return current - 1;
+		if (index > current)
+			return current;
+		return index < remaining ? index : 0;
+	}
+
+	private static TimelineSong[] WithoutAt(TimelineSong[] songs, int index)
+	{
+		var list = songs.ToList();
+		list.RemoveAt(index);
+		return list.ToArray();
 	}
 
 	private static TimelineSong[] Reordered(TimelineSong[] songs, int oldIndex, int newIndex)

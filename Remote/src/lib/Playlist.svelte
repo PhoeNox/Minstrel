@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { moveSong, selectSong, setGain } from './commandClient';
+	import { moveSong, removeSong, selectSong, setGain } from './commandClient';
 	import type { Phase, PlaylistDto } from './state';
 
 	let { phase, playlist }: { phase: Phase; playlist: PlaylistDto } = $props();
@@ -48,6 +48,9 @@
 					<span class="artist">{song.artist}</span>
 				</button>
 				<span class="length">{formatLength(song.length)}</span>
+				<button class="remove" title="Remove from playlist" onclick={() => removeSong(phase, index)}>
+					✕
+				</button>
 			</li>
 		{/each}
 	</ul>
@@ -123,5 +126,14 @@
 	.length {
 		font-variant-numeric: tabular-nums;
 		color: #999;
+	}
+
+	.remove {
+		font-size: 0.85rem;
+		padding: 0.25rem 0.5rem;
+		background: none;
+		border: none;
+		color: #999;
+		cursor: pointer;
 	}
 </style>
