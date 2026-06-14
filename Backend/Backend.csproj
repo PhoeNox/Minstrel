@@ -6,6 +6,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Backend</RootNamespace>
+		<AssemblyName>Minstrel</AssemblyName>
 	</PropertyGroup>
 
 	<ItemGroup>

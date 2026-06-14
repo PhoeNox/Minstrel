@@ -8,19 +8,34 @@ permissions:
 
 jobs:
   release:
-    name: Release (${{ matrix.kind }})
+    name: Release (${{ matrix.kind }}-${{ matrix.arch }})
     strategy:
       matrix:
         include:
           - kind: linux
+            arch: x64
             os: ubuntu-latest
             rid: linux-x64
+          - kind: linux
+            arch: arm64
+            os: ubuntu-latest
+            rid: linux-arm64
           - kind: macos
+            arch: x64
             os: macos-latest
             rid: osx-x64
+          - kind: macos
+            arch: arm64
+            os: macos-latest
+            rid: osx-arm64
           - kind: windows
+            arch: x64
             os: windows-latest
             rid: win-x64
+          - kind: windows
+            arch: arm64
+            os: windows-latest
+            rid: win-arm64
     
     runs-on: ${{ matrix.os }}
     
@@ -36,24 +51,21 @@ jobs:
         uses: extractions/setup-just@v2
 
       - name: Publish
-        run: just publish ${{ matrix.rid }} publish/${{ matrix.rid }}
+        run: just publish ${{ matrix.rid }} publish/Minstrel
 
       - name: Archive artifacts (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
           cd publish
-          tar -czf minstrel-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
+          zip -r ../minstrel-${{ matrix.kind }}-${{ matrix.arch }}.zip Minstrel
 
       - name: Archive artifacts (Windows)
         if: runner.os == 'Windows'
-        run: |
-          cd publish
-          powershell Compress-Archive -Path ${{ matrix.rid }} -DestinationPath minstrel-${{ matrix.rid }}.zip
+        run: Compress-Archive -Path publish/Minstrel -DestinationPath minstrel-${{ matrix.kind }}-${{ matrix.arch }}.zip
 
       - name: Upload release asset
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.event.release.tag_name }}
-          file: publish/minstrel-${{ matrix.rid }}.*
-          file_glob: true
+          file: minstrel-${{ matrix.kind }}-${{ matrix.arch }}.zip

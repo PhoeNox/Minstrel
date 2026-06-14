@@ -36,11 +36,14 @@ next-run: next-player next-remote
 aspire:
 	dotnet run --project Aspire/AppHost/AppHost.csproj
 
-# Publish a self-contained Backend (Player + Remote bundled into wwwroot) for one RID.
-publish RID="linux-x64" OUTPUT_DIRECTORY="publish/linux-x64": next-player next-remote
+# Publish a self-contained, shippable Backend folder (binary + wwwroot + appsettings + seeded Music + README) for one RID.
+publish RID="linux-x64" OUTPUT_DIRECTORY="publish/Minstrel": next-player next-remote
 	dotnet publish Backend/Backend.csproj \
 		-c {{configuration}} \
 		--self-contained true \
 		-r {{RID}} \
 		-o {{OUTPUT_DIRECTORY}}
-	cd {{OUTPUT_DIRECTORY}} && rm -f *.pdb
+	rm -f {{OUTPUT_DIRECTORY}}/*.pdb
+	mkdir -p {{OUTPUT_DIRECTORY}}/Music
+	cp Backend/Music/day.m3u Backend/Music/night.m3u {{OUTPUT_DIRECTORY}}/Music/
+	cp packaging/README.txt {{OUTPUT_DIRECTORY}}/README.txt
