@@ -9,7 +9,7 @@ public sealed record PositionAnchor(string? SongId, double Offset, long AnchorTi
 
 public sealed record TimelineSong(string Id, double Length);
 
-public sealed record TimelinePlaylist(TimelineSong[] Songs, string? CurrentSongId, double Gain = 1.0)
+public sealed record TimelinePlaylist(TimelineSong[] Songs, string? CurrentSongId, double Gain = 1.0, double ResumeOffset = 0)
 {
 	public static TimelinePlaylist Empty { get; } = new([], CurrentSongId: null);
 }
@@ -32,8 +32,13 @@ public sealed record TimelineState(
 
 public static class PlaybackTimeline
 {
+	public const double FadeSeconds = 5;
+
 	public static TimelineState Play(TimelineState state, string songId, long now) =>
-		state with { Position = new PositionAnchor(songId, Offset: 0, AnchorTimestamp: now, IsPlaying: true) };
+		PlayAt(state, songId, offset: 0, now);
+
+	public static TimelineState PlayAt(TimelineState state, string songId, double offset, long now) =>
+		state with { Position = new PositionAnchor(songId, offset, AnchorTimestamp: now, IsPlaying: true) };
 
 	public static TimelineState Pause(TimelineState state, long now) =>
 		state with
@@ -61,9 +66,11 @@ public static class PlaybackTimeline
 	{
 		var target = state.ActivePhase == GamePhase.Day ? GamePhase.Night : GamePhase.Day;
 		var targetPlaylist = target == GamePhase.Day ? state.Day : state.Night;
-		return targetPlaylist.CurrentSongId is { } songId
-			? Play(state with { ActivePhase = target }, songId, now)
-			: state;
+		if (targetPlaylist.CurrentSongId is not { } songId)
+			return state;
+
+		var remembered = RememberResumeOffset(state, now) with { ActivePhase = target };
+		return PlayAt(remembered, songId, targetPlaylist.ResumeOffset, now);
 	}
 
 	public static TimelineState MoveSong(TimelineState state, GamePhase phase, int oldIndex, int newIndex) =>
@@ -95,8 +102,19 @@ public static class PlaybackTimeline
 		return next is null ? state : SelectSong(state, state.ActivePhase, next.Id, now);
 	}
 
+	private static TimelineState RememberResumeOffset(TimelineState state, long now)
+	{
+		if (state.Position.SongId is null)
+			return state;
+
+		var heard = DerivePosition(state.Position, now) + (state.Position.IsPlaying ? FadeSeconds : 0);
+		var song = FindSong(state.ActivePlaylist, state.Position.SongId);
+		var offset = song is null ? heard : Math.Min(heard, song.Length);
+		return WithPlaylist(state, state.ActivePhase, playlist => playlist with { ResumeOffset = offset });
+	}
+
 	private static TimelineState WithCurrentSong(TimelineState state, GamePhase phase, string songId) =>
-		WithPlaylist(state, phase, playlist => playlist with { CurrentSongId = songId });
+		WithPlaylist(state, phase, playlist => playlist with { CurrentSongId = songId, ResumeOffset = 0 });
 
 	private static TimelineState WithPlaylist(
 		TimelineState state,

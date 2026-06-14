@@ -43,6 +43,44 @@ public class Switching
 	}
 
 	[Test]
+	public async Task SwitchingBackResumesTheSongAtThePositionLeftPlusTheFadeout()
+	{
+		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
+
+		var switched = PlaybackTimeline.SwitchPhase(state, now: 4000);
+		var back = PlaybackTimeline.SwitchPhase(switched, now: 9000);
+
+		await Assert.That(back.CurrentSongId).IsEqualTo("day-1");
+		await Assert.That(back.Position.Offset).IsEqualTo(3 + PlaybackTimeline.FadeSeconds);
+		await Assert.That(back.Position.AnchorTimestamp).IsEqualTo(9000);
+		await Assert.That(back.Position.IsPlaying).IsTrue();
+	}
+
+	[Test]
+	public async Task ResumeOffsetIsCappedAtTheSongLength()
+	{
+		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
+
+		var switched = PlaybackTimeline.SwitchPhase(state, now: 9000);
+		var back = PlaybackTimeline.SwitchPhase(switched, now: 12000);
+
+		await Assert.That(back.Position.Offset).IsEqualTo(10);
+	}
+
+	[Test]
+	public async Task SelectingAnotherSongInTheIdlePhaseResetsItsResumeOffset()
+	{
+		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
+
+		var switched = PlaybackTimeline.SwitchPhase(state, now: 4000);
+		var reselected = PlaybackTimeline.SelectSong(switched, GamePhase.Day, "day-2", now: 6000);
+		var back = PlaybackTimeline.SwitchPhase(reselected, now: 9000);
+
+		await Assert.That(back.CurrentSongId).IsEqualTo("day-2");
+		await Assert.That(back.Position.Offset).IsEqualTo(0);
+	}
+
+	[Test]
 	public async Task SwitchingIsANoOpWhenTheOtherPlaylistHasNoCurrentSong()
 	{
 		var state = PlaybackTimeline.Play(
