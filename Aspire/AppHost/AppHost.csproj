@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.0" />
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.4.3" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,8 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.0" />
-    <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.5.0" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.4.3" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.4.3" />
+    <!-- Pin past the transitive MessagePack 2.5.192 advisory (GHSA-hv8m-jj95-wg3x). -->
+    <PackageReference Include="MessagePack" Version="2.5.302" />
   </ItemGroup>
 
   <ItemGroup>
