@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 using Backend.Endpoints;
 using Backend.Library;
 using Backend.Playback;
@@ -22,6 +23,10 @@ builder.Services.AddSingleton<IFileSystemProvider, FileSystemProvider>();
 builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
 builder.Services.AddSingleton<SongLibrary>();
 builder.Services.AddSingleton<PlaybackSession>();
+builder.Services.AddHostedService<PlaybackClock>();
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+	options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 

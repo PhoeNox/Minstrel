@@ -3,7 +3,7 @@
 	import { playbackStore } from '$lib/sseStore';
 	import { reconcile } from '$lib/reconciler';
 	import { AudioEngine } from '$lib/audioEngine';
-	import { emptyState, type PlaybackState } from '$lib/state';
+	import { activePlaylist, emptyState, type PlaybackState } from '$lib/state';
 
 	const playback = playbackStore();
 
@@ -22,7 +22,11 @@
 			return;
 		}
 
-		const operations = reconcile(snapshot, { playingSongId: engine.playingSongId }, Date.now());
+		const operations = reconcile(
+			snapshot,
+			{ playingSongId: engine.playingSongId, loadedSongIds: engine.loadedSongIds },
+			Date.now()
+		);
 		await engine.apply(operations);
 	}
 
@@ -36,7 +40,7 @@
 	}
 
 	const currentSong = $derived(
-		snapshot.songs.find((song) => song.id === snapshot.currentSongId) ?? null
+		activePlaylist(snapshot).songs.find((song) => song.id === snapshot.currentSongId) ?? null
 	);
 </script>
 

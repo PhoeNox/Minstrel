@@ -9,6 +9,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="*.m3u" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Core\Core.csproj" />
 		<ProjectReference Include="..\Infrastructure.FileSystem\Infrastructure.FileSystem.csproj" />
 		<ProjectReference Include="..\Infrastructure.Network\Infrastructure.Network.csproj" />

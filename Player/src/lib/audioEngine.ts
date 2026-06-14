@@ -9,10 +9,16 @@ export class AudioEngine {
 		return this.current?.songId ?? null;
 	}
 
+	get loadedSongIds(): string[] {
+		return [...this.buffers.keys()];
+	}
+
 	async apply(operations: AudioOperation[]): Promise<void> {
 		for (const operation of operations) {
 			if (operation.type === 'start') {
 				await this.start(operation.songId, operation.offset);
+			} else if (operation.type === 'prefetch') {
+				await this.load(operation.songId);
 			} else {
 				this.stop(operation.songId);
 			}

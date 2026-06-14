@@ -1,5 +1,7 @@
 import type { PositionAnchor } from '$shared/position';
 
+export type Phase = 'Day' | 'Night';
+
 export interface SongDto {
 	id: string;
 	title: string;
@@ -7,16 +9,30 @@ export interface SongDto {
 	length: number;
 }
 
+export interface PlaylistDto {
+	songs: SongDto[];
+	currentSongId: string | null;
+}
+
+export interface PlaylistsDto {
+	day: PlaylistDto;
+	night: PlaylistDto;
+}
+
 export interface PlaybackState {
+	phase: Phase;
 	isPlaying: boolean;
 	currentSongId: string | null;
-	songs: SongDto[];
+	playlists: PlaylistsDto;
 	position: PositionAnchor;
 }
 
+const emptyPlaylist: PlaylistDto = { songs: [], currentSongId: null };
+
 export const emptyState: PlaybackState = {
+	phase: 'Day',
 	isPlaying: false,
 	currentSongId: null,
-	songs: [],
+	playlists: { day: emptyPlaylist, night: emptyPlaylist },
 	position: { songId: null, offset: 0, anchorTimestamp: 0, isPlaying: false }
 };

@@ -1,12 +1,14 @@
 import { derivePosition } from '$shared/position';
-import type { PlaybackState } from './state';
+import { activePlaylist, type PlaybackState } from './state';
 
 export type AudioOperation =
 	| { type: 'start'; songId: string; offset: number }
-	| { type: 'stop'; songId: string };
+	| { type: 'stop'; songId: string }
+	| { type: 'prefetch'; songId: string };
 
 export interface AudioGraph {
 	playingSongId: string | null;
+	loadedSongIds: string[];
 }
 
 export function reconcile(desired: PlaybackState, current: AudioGraph, now: number): AudioOperation[] {
@@ -21,5 +23,20 @@ export function reconcile(desired: PlaybackState, current: AudioGraph, now: numb
 		operations.push({ type: 'start', songId: wanted, offset: derivePosition(desired.position, now) });
 	}
 
+	const next = nextSongId(desired);
+	if (next !== null && !current.loadedSongIds.includes(next)) {
+		operations.push({ type: 'prefetch', songId: next });
+	}
+
 	return operations;
+}
+
+function nextSongId(desired: PlaybackState): string | null {
+	const songs = activePlaylist(desired).songs;
+	if (desired.currentSongId === null || songs.length === 0) {
+		return null;
+	}
+
+	const index = songs.findIndex((song) => song.id === desired.currentSongId);
+	return index < 0 ? null : songs[(index + 1) % songs.length].id;
 }

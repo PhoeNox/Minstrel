@@ -2,6 +2,7 @@ namespace Backend.Library;
 
 using System.Security.Cryptography;
 using System.Text;
+using Backend.Contracts;
 using Core;
 using Infrastructure.FileSystem;
 
@@ -9,17 +10,22 @@ public sealed record LibraryEntry(string Id, Song Song);
 
 public sealed class SongLibrary
 {
+	private readonly IFileSystemProvider fileSystem;
 	private readonly Dictionary<string, Song> songsById;
 
-	public IReadOnlyList<LibraryEntry> Entries { get; }
+	public IReadOnlyList<LibraryEntry> Day { get; }
+
+	public IReadOnlyList<LibraryEntry> Night { get; }
 
 	public SongLibrary(IFileSystemProvider fileSystem)
 	{
-		var entries = fileSystem.LoadSongs()
-			.Select(song => new LibraryEntry(SongId(song.Path), song))
-			.ToArray();
-		Entries = entries;
-		songsById = entries.ToDictionary(entry => entry.Id, entry => entry.Song);
+		this.fileSystem = fileSystem;
+		var (day, night) = fileSystem.LoadPlaylists();
+		Day = day.Select(ToEntry).ToArray();
+		Night = night.Select(ToEntry).ToArray();
+		songsById = Day.Concat(Night)
+			.GroupBy(entry => entry.Id)
+			.ToDictionary(group => group.Key, group => group.First().Song);
 	}
 
 	public bool TryGetPath(string songId, out string path)
@@ -33,6 +39,20 @@ public sealed class SongLibrary
 		path = string.Empty;
 		return false;
 	}
+
+	public SongDto ToSongDto(string songId)
+	{
+		var song = songsById[songId];
+		return new SongDto(songId, song.Title, song.Artist, song.Length.TotalSeconds);
+	}
+
+	public void SaveOrder(GamePhase phase, IReadOnlyList<string> orderedSongIds)
+	{
+		var songs = orderedSongIds.Select(id => songsById[id]).ToArray();
+		fileSystem.SavePlaylist(phase, songs);
+	}
+
+	private static LibraryEntry ToEntry(Song song) => new(SongId(song.Path), song);
 
 	private static string SongId(string path)
 	{

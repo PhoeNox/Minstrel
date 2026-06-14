@@ -2,6 +2,7 @@
 	import { onDestroy } from 'svelte';
 	import { playbackStore } from '$lib/sseStore';
 	import { play, pause } from '$lib/commandClient';
+	import Playlist from '$lib/Playlist.svelte';
 	import { emptyState, type PlaybackState } from '$lib/state';
 
 	const playback = playbackStore();
@@ -11,7 +12,9 @@
 	onDestroy(unsubscribe);
 
 	const currentSong = $derived(
-		snapshot.songs.find((song) => song.id === snapshot.currentSongId) ?? null
+		[...snapshot.playlists.day.songs, ...snapshot.playlists.night.songs].find(
+			(song) => song.id === snapshot.currentSongId
+		) ?? null
 	);
 </script>
 
@@ -30,13 +33,18 @@
 		<button onclick={() => play()} disabled={snapshot.isPlaying}>Play</button>
 		<button onclick={() => pause()} disabled={!snapshot.isPlaying}>Pause</button>
 	</div>
+
+	<div class="playlists">
+		<Playlist phase="Day" playlist={snapshot.playlists.day} />
+		<Playlist phase="Night" playlist={snapshot.playlists.night} />
+	</div>
 </main>
 
 <style>
 	main {
 		font-family: system-ui, sans-serif;
-		max-width: 32rem;
-		margin: 4rem auto;
+		max-width: 40rem;
+		margin: 2rem auto;
 		padding: 0 1rem;
 		text-align: center;
 	}
@@ -66,5 +74,18 @@
 	button:disabled {
 		cursor: default;
 		opacity: 0.5;
+	}
+
+	.playlists {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2rem;
+		margin-top: 2rem;
+	}
+
+	@media (max-width: 32rem) {
+		.playlists {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>
