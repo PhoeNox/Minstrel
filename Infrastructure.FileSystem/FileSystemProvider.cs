@@ -14,6 +14,17 @@ public interface IFileSystemProvider
 
 public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSystemProvider
 {
+	private string MusicDirectory
+	{
+		get
+		{
+			var configured = options.CurrentValue.Directory;
+			return Path.IsPathRooted(configured)
+				? configured
+				: Path.Combine(AppContext.BaseDirectory, configured);
+		}
+	}
+
 	public (Song[] DayPlaylist, Song[] NightPlaylist) LoadPlaylists()
 	{
 		var daySongs = LoadPlaylist(GamePhase.Day);
@@ -23,40 +34,39 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSy
 
 	public void SavePlaylist(GamePhase gamePhase, Song[] songs)
 	{
-		var fileName = GetPlaylistFileName(gamePhase);
-		File.WriteAllLines(fileName, songs.Select(song => song.Path));
+		var playlist = PlaylistPath(gamePhase);
+		File.WriteAllLines(playlist, songs.Select(song => Path.GetRelativePath(MusicDirectory, song.Path)));
 	}
 
-	private static Song[] LoadPlaylist(GamePhase gamePhase)
+	private Song[] LoadPlaylist(GamePhase gamePhase)
 	{
-		var playlist = GetPlaylistFileName(gamePhase);
+		var playlist = PlaylistPath(gamePhase);
 		var songPaths = File.ReadAllLines(playlist);
 		return songPaths.SelectMany(CreateSongFromFile).ToArray();
 	}
 
-	private static string GetPlaylistFileName(GamePhase gamePhase)
+	private string PlaylistPath(GamePhase gamePhase)
 	{
-		return gamePhase == GamePhase.Day ? "day.m3u" : "night.m3u";
+		var fileName = gamePhase == GamePhase.Day ? "day.m3u" : "night.m3u";
+		return Path.Combine(MusicDirectory, fileName);
 	}
 
 	public Song[] LoadSongs()
 	{
-		var files = Directory.EnumerateFiles(
-				options.CurrentValue.Directory,
-				"*",
-				SearchOption.AllDirectories);
+		var files = Directory.EnumerateFiles(MusicDirectory, "*", SearchOption.AllDirectories);
 		return files.SelectMany(CreateSongFromFile).ToArray();
 	}
 
-	private static IEnumerable<Song> CreateSongFromFile(string path)
+	private IEnumerable<Song> CreateSongFromFile(string path)
 	{
+		var fullPath = Path.IsPathRooted(path) ? path : Path.Combine(MusicDirectory, path);
 		try
 		{
-			using var tags = TagLib.File.Create(path);
+			using var tags = TagLib.File.Create(fullPath);
 			var song = new Song
 			(
-					Path: path,
-					Title: tags.Tag.Title ?? Path.GetFileNameWithoutExtension(path),
+					Path: fullPath,
+					Title: tags.Tag.Title ?? Path.GetFileNameWithoutExtension(fullPath),
 					Artist: string.Join(", ", tags.Tag.Performers),
 					Album: tags.Tag.Album ?? "Unknown Album",
 					Length: tags.Properties.Duration

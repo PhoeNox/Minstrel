@@ -30,16 +30,17 @@ next-test:
 
 # Build the Player + Remote bundles then run the Backend (serves both, auto-opens the Player).
 next-run: next-player next-remote
-	dotnet run --project Backend/Backend.csproj -c {{configuration}}
+	Music__Directory="{{justfile_directory()}}/Backend/Music" dotnet run --project Backend/Backend.csproj -c {{configuration}}
 
 # Orchestrate Backend + Player + Remote (SvelteKit dev servers) via the Aspire AppHost.
 aspire:
 	dotnet run --project Aspire/AppHost/AppHost.csproj
 
-publish RID="linux-x64" OUTPUT_DIRECTORY="publish/linux-x64":
-	dotnet publish App/App.csproj \
+# Publish a self-contained Backend (Player + Remote bundled into wwwroot) for one RID.
+publish RID="linux-x64" OUTPUT_DIRECTORY="publish/linux-x64": next-player next-remote
+	dotnet publish Backend/Backend.csproj \
 		-c {{configuration}} \
-		--self-contained true -p:PublishSingleFile=true \
+		--self-contained true \
 		-r {{RID}} \
 		-o {{OUTPUT_DIRECTORY}}
-	cd {{OUTPUT_DIRECTORY}} && rm *.pdb
+	cd {{OUTPUT_DIRECTORY}} && rm -f *.pdb

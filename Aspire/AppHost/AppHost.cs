@@ -1,7 +1,10 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+var musicDirectory = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "Backend", "Music"));
+
 var backend = builder.AddProject<Projects.Backend>("backend")
-	.WithEnvironment("OpenPlayer", "false");
+	.WithEnvironment("OpenPlayer", "false")
+	.WithEnvironment("Music__Directory", musicDirectory);
 
 builder.AddJavaScriptApp("player", "../../Player")
 	.WithRunScript("dev")
