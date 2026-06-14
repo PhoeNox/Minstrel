@@ -3,6 +3,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var musicDirectory = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "Backend", "Music"));
 
 var backend = builder.AddProject<Projects.Backend>("backend")
+	.WithHttpEndpoint(env: "PORT")
 	.WithEnvironment("OpenPlayer", "false")
 	.WithEnvironment("Music__Directory", musicDirectory);
 
