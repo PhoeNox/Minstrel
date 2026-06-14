@@ -11,6 +11,7 @@ export default defineConfig({
 		fs: { allow: ['..'] },
 		proxy: {
 			'/sse': { target: backend, changeOrigin: true },
+			'/connection': backend,
 			'/audio': backend,
 			'/commands': backend
 		}

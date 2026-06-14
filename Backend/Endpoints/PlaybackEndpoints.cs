@@ -6,6 +6,7 @@ using Backend.Commands;
 using Backend.Contracts;
 using Backend.Library;
 using Backend.Playback;
+using Infrastructure.Network;
 using Microsoft.AspNetCore.StaticFiles;
 
 public static class PlaybackEndpoints
@@ -20,6 +21,7 @@ public static class PlaybackEndpoints
 	public static void MapPlaybackEndpoints(this WebApplication app)
 	{
 		app.MapGet("/sse", StreamState);
+		app.MapGet("/connection", GetConnection);
 		app.MapGet("/audio/{songId}", StreamAudio);
 		app.MapPost("/commands/play", Play);
 		app.MapPost("/commands/pause", Pause);
@@ -63,6 +65,9 @@ public static class PlaybackEndpoints
 				cancellation),
 			_ => Task.CompletedTask,
 		};
+
+	private static IResult GetConnection(INetworkProvider network, IConfiguration configuration) =>
+		Results.Ok(ConnectionInfo.For(network.GetLocalIpAddress(), configuration["Port"] ?? "5000"));
 
 	private static IResult StreamAudio(string songId, SongLibrary library)
 	{
