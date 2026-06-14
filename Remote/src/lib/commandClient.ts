@@ -24,6 +24,10 @@ export async function removeSong(phase: Phase, index: number): Promise<void> {
 	await post('/commands/remove', { phase, index });
 }
 
+export async function shuffle(phase: Phase): Promise<void> {
+	await post('/commands/shuffle', { phase });
+}
+
 export async function moveSong(phase: Phase, oldIndex: number, newIndex: number): Promise<void> {
 	await post('/commands/move', { phase, oldIndex, newIndex });
 }

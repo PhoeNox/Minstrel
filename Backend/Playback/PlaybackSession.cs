@@ -128,6 +128,17 @@ public sealed class PlaybackSession
 		}
 	}
 
+	public void Shuffle(GamePhase phase)
+	{
+		lock (gate)
+		{
+			state = PlaybackTimeline.Shuffle(state, phase, Random.Shared);
+			var playlist = phase == GamePhase.Day ? state.Day : state.Night;
+			library.SaveOrder(phase, playlist.Songs.Select(song => song.Id).ToArray());
+			Broadcast(CurrentSnapshot());
+		}
+	}
+
 	public void MoveSong(GamePhase phase, int oldIndex, int newIndex)
 	{
 		lock (gate)

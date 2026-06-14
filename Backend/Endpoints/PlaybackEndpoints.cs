@@ -30,6 +30,7 @@ public static class PlaybackEndpoints
 		app.MapPost("/commands/select", Select);
 		app.MapPost("/commands/add", Add);
 		app.MapPost("/commands/remove", Remove);
+		app.MapPost("/commands/shuffle", Shuffle);
 		app.MapPost("/commands/move", Move);
 		app.MapPost("/commands/set-gain", SetGain);
 		app.MapPost("/commands/timer-start", StartTimer);
@@ -151,6 +152,15 @@ public static class PlaybackEndpoints
 			return Results.BadRequest("A phase and index are required.");
 
 		session.RemoveSong(command.Phase, command.Index);
+		return Results.NoContent();
+	}
+
+	private static IResult Shuffle(ShuffleCommand? command, PlaybackSession session)
+	{
+		if (command is null)
+			return Results.BadRequest("A phase is required.");
+
+		session.Shuffle(command.Phase);
 		return Results.NoContent();
 	}
 

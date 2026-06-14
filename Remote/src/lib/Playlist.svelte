@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { moveSong, removeSong, selectSong, setGain } from './commandClient';
+	import { moveSong, removeSong, selectSong, setGain, shuffle } from './commandClient';
 	import type { Phase, PlaylistDto } from './state';
 
 	let { phase, playlist }: { phase: Phase; playlist: PlaylistDto } = $props();
@@ -21,7 +21,10 @@
 </script>
 
 <section>
-	<h2>{phase}</h2>
+	<div class="header">
+		<h2>{phase}</h2>
+		<button class="shuffle" title="Shuffle {phase} playlist" onclick={() => shuffle(phase)}>⇄</button>
+	</div>
 	<label class="volume">
 		Volume
 		<input
@@ -61,11 +64,26 @@
 		text-align: left;
 	}
 
+	.header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
 	h2 {
 		font-size: 1rem;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: #777;
+	}
+
+	.shuffle {
+		font-size: 1rem;
+		padding: 0.25rem 0.5rem;
+		background: none;
+		border: none;
+		color: #777;
+		cursor: pointer;
 	}
 
 	.volume {

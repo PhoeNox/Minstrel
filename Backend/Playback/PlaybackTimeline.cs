@@ -113,6 +113,9 @@ public static class PlaybackTimeline
 			: removed with { Position = PositionAnchor.Idle };
 	}
 
+	public static TimelineState Shuffle(TimelineState state, GamePhase phase, Random random) =>
+		WithPlaylist(state, phase, playlist => Shuffled(playlist, random));
+
 	public static TimelineState SetGain(TimelineState state, GamePhase phase, double gain) =>
 		WithPlaylist(state, phase, playlist => playlist with { Gain = gain });
 
@@ -176,6 +179,22 @@ public static class PlaybackTimeline
 
 		var withoutMoved = current < oldIndex ? current : current - 1;
 		return withoutMoved >= target ? withoutMoved + 1 : withoutMoved;
+	}
+
+	private static TimelinePlaylist Shuffled(TimelinePlaylist playlist, Random random)
+	{
+		var order = Enumerable.Range(0, playlist.Songs.Length).ToArray();
+		for (var i = order.Length - 1; i > 0; i--)
+		{
+			var j = random.Next(i + 1);
+			(order[i], order[j]) = (order[j], order[i]);
+		}
+
+		return playlist with
+		{
+			Songs = order.Select(index => playlist.Songs[index]).ToArray(),
+			CurrentIndex = playlist.CurrentIndex is { } current ? Array.IndexOf(order, current) : null,
+		};
 	}
 
 	private static int? CurrentIndexAfterRemoval(TimelinePlaylist playlist, int index)

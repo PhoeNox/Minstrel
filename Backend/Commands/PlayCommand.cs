@@ -10,6 +10,8 @@ public sealed record AddCommand(GamePhase Phase, string SongId);
 
 public sealed record RemoveCommand(GamePhase Phase, int Index);
 
+public sealed record ShuffleCommand(GamePhase Phase);
+
 public sealed record MoveCommand(GamePhase Phase, int OldIndex, int NewIndex);
 
 public sealed record SetGainCommand(GamePhase Phase, double Value);
