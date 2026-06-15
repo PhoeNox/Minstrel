@@ -14,6 +14,7 @@ export interface PlaylistDto {
 	songs: SongDto[];
 	currentIndex: number | null;
 	gain: number;
+	resumeOffset: number;
 }
 
 export interface PlaylistsDto {
@@ -30,7 +31,7 @@ export interface PlaybackState {
 	timer: TimerAnchor | null;
 }
 
-const emptyPlaylist: PlaylistDto = { songs: [], currentIndex: null, gain: 1 };
+const emptyPlaylist: PlaylistDto = { songs: [], currentIndex: null, gain: 1, resumeOffset: 0 };
 
 export const emptyState: PlaybackState = {
 	phase: 'Day',

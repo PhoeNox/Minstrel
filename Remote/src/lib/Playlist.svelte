@@ -2,12 +2,34 @@
 	import { moveSong, removeSong, selectSong, setGain, shuffle } from './commandClient';
 	import type { Phase, PlaylistDto, SongDto } from './state';
 
-	let { phase, playlist }: { phase: Phase; playlist: PlaylistDto } = $props();
+	let {
+		phase,
+		playlist,
+		currentSongId,
+		progress
+	}: { phase: Phase; playlist: PlaylistDto; currentSongId: string | null; progress: number } =
+		$props();
 
 	interface Row {
 		key: string;
 		song: SongDto;
 	}
+
+	// Progress fraction for the cued row: live position when this playlist's
+	// song is the one playing, otherwise the offset it was paused at on switch.
+	const cueFraction = $derived.by(() => {
+		const index = playlist.currentIndex;
+		if (index === null) {
+			return 0;
+		}
+		const song = playlist.songs[index];
+		if (!song || song.length <= 0) {
+			return 0;
+		}
+		return song.id === currentSongId
+			? progress
+			: Math.min(1, Math.max(0, playlist.resumeOffset / song.length));
+	});
 
 	let listEl: HTMLUListElement | undefined = $state();
 	let rows: Row[] = $state([]);
@@ -123,6 +145,9 @@
 					class:lifted={dragging && index === dragIndex}
 					style={dragging && index === dragIndex ? `transform: translateY(${dragY}px)` : ''}
 				>
+					{#if index === playlist.currentIndex && cueFraction > 0}
+						<span class="fill" style="width: {cueFraction * 100}%"></span>
+					{/if}
 					<button class="select" onclick={() => selectSong(phase, index)}>
 						{#if index === playlist.currentIndex}
 							<span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -303,6 +328,8 @@
 	}
 
 	li {
+		position: relative;
+		overflow: hidden;
 		display: flex;
 		align-items: center;
 		gap: 0.3rem;
@@ -310,6 +337,28 @@
 		border: 1px solid var(--row-edge);
 		border-radius: 11px;
 		background: var(--row);
+	}
+
+	/* Playback progress fill — behind the row content */
+	.fill {
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		width: 0;
+		background: linear-gradient(
+			90deg,
+			rgba(var(--accent-rgb), 0.08),
+			rgba(var(--accent-rgb), 0.26)
+		);
+		border-right: 2px solid rgba(var(--accent-rgb), 0.7);
+		box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
+		transition: width 0.26s linear;
+		pointer-events: none;
+	}
+
+	li > :not(.fill) {
+		position: relative;
 	}
 
 	/* Rows glide into place as the lifted row passes over them */

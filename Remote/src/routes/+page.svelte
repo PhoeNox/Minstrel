@@ -7,6 +7,7 @@
 	import Library from '$lib/Library.svelte';
 	import { emptyState, type PlaybackState, type SongDto } from '$lib/state';
 	import { deriveTimeLeft, formatTimeLeft } from '$shared/timer';
+	import { derivePosition } from '$shared/position';
 
 	type Tab = 'day' | 'night' | 'library';
 
@@ -42,6 +43,12 @@
 		[...snapshot.playlists.day.songs, ...snapshot.playlists.night.songs].find(
 			(song) => song.id === snapshot.currentSongId
 		) ?? null
+	);
+
+	const playProgress = $derived(
+		currentSong && currentSong.length > 0
+			? Math.min(1, Math.max(0, derivePosition(snapshot.position, now) / currentSong.length))
+			: 0
 	);
 
 	const isNight = $derived(snapshot.phase === 'Night');
@@ -112,9 +119,19 @@
 
 	<main class="deck">
 		{#if tab === 'day'}
-			<Playlist phase="Day" playlist={snapshot.playlists.day} />
+			<Playlist
+				phase="Day"
+				playlist={snapshot.playlists.day}
+				currentSongId={snapshot.currentSongId}
+				progress={playProgress}
+			/>
 		{:else if tab === 'night'}
-			<Playlist phase="Night" playlist={snapshot.playlists.night} />
+			<Playlist
+				phase="Night"
+				playlist={snapshot.playlists.night}
+				currentSongId={snapshot.currentSongId}
+				progress={playProgress}
+			/>
 		{:else}
 			<Library songs={library} />
 		{/if}

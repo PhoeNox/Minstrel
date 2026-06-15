@@ -7,7 +7,7 @@ using Core;
 
 public sealed record SongDto(string Id, string Title, string Artist, double Length);
 
-public sealed record PlaylistDto(SongDto[] Songs, int? CurrentIndex, double Gain);
+public sealed record PlaylistDto(SongDto[] Songs, int? CurrentIndex, double Gain, double ResumeOffset);
 
 public sealed record PlaylistsDto(PlaylistDto Day, PlaylistDto Night);
 
@@ -38,7 +38,11 @@ public static class SnapshotMapper
 		timer.Running ? new TimerDto(timer.Running, timer.AnchorTimestamp, timer.DurationLeftAtAnchor) : null;
 
 	private static PlaylistDto ToPlaylistDto(TimelinePlaylist playlist, SongLibrary library) =>
-		new(playlist.Songs.Select(song => library.ToSongDto(song.Id)).ToArray(), playlist.CurrentIndex, playlist.Gain);
+		new(
+			playlist.Songs.Select(song => library.ToSongDto(song.Id)).ToArray(),
+			playlist.CurrentIndex,
+			playlist.Gain,
+			playlist.ResumeOffset);
 
 	private static PositionDto ToPositionDto(PositionAnchor anchor) =>
 		new(anchor.SongId, anchor.Offset, anchor.AnchorTimestamp, anchor.IsPlaying);
