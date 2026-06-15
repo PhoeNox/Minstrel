@@ -15,6 +15,16 @@
 		song: SongDto;
 	}
 
+	// The current song as an object, so its row markers (progress fill, highlight,
+	// equalizer) follow the song through a drag rather than sticking to a slot.
+	const currentSong = $derived(
+		playlist.currentIndex === null ? null : (playlist.songs[playlist.currentIndex] ?? null)
+	);
+
+	// Only the globally playing song's bars animate; the inactive playlist's
+	// current song still shows static bars to mark it as cued.
+	const currentPlaying = $derived(currentSong !== null && currentSong.id === currentSongId);
+
 	// Progress fraction for the cued row: live position when this playlist's
 	// song is the one playing, otherwise the offset it was paused at on switch.
 	const cueFraction = $derived.by(() => {
@@ -141,16 +151,18 @@
 		<ul bind:this={listEl} class:dragging>
 			{#each rows as row, index (row.key)}
 				<li
-					class:current={index === playlist.currentIndex}
+					class:current={row.song === currentSong}
 					class:lifted={dragging && index === dragIndex}
 					style={dragging && index === dragIndex ? `transform: translateY(${dragY}px)` : ''}
 				>
-					{#if index === playlist.currentIndex && cueFraction > 0}
+					{#if row.song === currentSong && cueFraction > 0}
 						<span class="fill" style="width: {cueFraction * 100}%"></span>
 					{/if}
 					<button class="select" onclick={() => selectSong(phase, index)}>
-						{#if index === playlist.currentIndex}
-							<span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+						{#if row.song === currentSong}
+							<span class="bars" class:playing={currentPlaying} aria-hidden="true"
+								><i></i><i></i><i></i></span
+							>
 						{/if}
 						<span class="details">
 							<span class="title">{row.song.title}</span>
@@ -437,19 +449,27 @@
 		width: 3px;
 		background: var(--accent);
 		border-radius: 1px;
-		animation: eq 0.9s ease-in-out infinite;
 	}
 
 	.bars i:nth-child(1) {
 		height: 40%;
-		animation-delay: -0.2s;
 	}
 	.bars i:nth-child(2) {
 		height: 90%;
-		animation-delay: -0.5s;
 	}
 	.bars i:nth-child(3) {
 		height: 60%;
+	}
+
+	.bars.playing i {
+		animation: eq 0.9s ease-in-out infinite;
+	}
+
+	.bars.playing i:nth-child(1) {
+		animation-delay: -0.2s;
+	}
+	.bars.playing i:nth-child(2) {
+		animation-delay: -0.5s;
 	}
 
 	@keyframes eq {
