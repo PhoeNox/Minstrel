@@ -45,5 +45,5 @@ publish RID="linux-x64" OUTPUT_DIRECTORY="publish/Minstrel": next-player next-re
 		-o {{OUTPUT_DIRECTORY}}
 	rm -f {{OUTPUT_DIRECTORY}}/*.pdb
 	mkdir -p {{OUTPUT_DIRECTORY}}/Music
-	cp Backend/Music/day.m3u Backend/Music/night.m3u {{OUTPUT_DIRECTORY}}/Music/
+	cp Backend/Music/*.m3u Backend/Music/*.mp3 {{OUTPUT_DIRECTORY}}/Music/
 	cp packaging/README.txt {{OUTPUT_DIRECTORY}}/README.txt
