@@ -1,6 +1,9 @@
 solution := "Minstrel.slnx"
 configuration := "Release"
 
+# Primary pre-push gate: full build + every test, including the local-only E2E snapshot suite.
+push-check: build test e2e
+
 ci: build test
 
 # Build the SvelteKit Player bundle into Backend/wwwroot.
@@ -15,13 +18,12 @@ remote:
 build: player remote
 	dotnet build {{solution}} -c {{configuration}}
 
-# Test the solution: Backend + Player E2E (.NET) and Player (Vitest).
-# Depends on player/remote so the Backend the E2E suite launches serves the built frontends.
-test: player remote
-	dotnet test --solution {{solution}} -c {{configuration}} --ignore-exit-code 8
+# Test the Backend (.NET) and Player (Vitest). Excludes the E2E suite, which is local-only (see `e2e`).
+test: player
+	dotnet test --project Backend.Tests/Backend.Tests.csproj -c {{configuration}} --ignore-exit-code 8
 	cd Player && npm test
 
-# Run only the Playwright E2E snapshot suite (builds the frontends first).
+# Run only the Playwright E2E snapshot suite (builds the frontends first). Local-only: too unstable for CI.
 e2e: player remote
 	dotnet test --project Player.E2E.Tests/Player.E2E.Tests.csproj -c {{configuration}} --ignore-exit-code 8
 

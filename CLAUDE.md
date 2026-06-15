@@ -14,9 +14,10 @@ This project uses `just` as a task runner:
 
 ```bash
 just build          # Build Player + Remote bundles, then the .NET solution
-just test           # Build bundles, then run Backend + E2E (.NET) and Player (Vitest) tests
-just e2e            # Run only the Playwright E2E snapshot suite
-just ci             # Build + test (Release config)
+just push-check     # Primary pre-push gate: full build + every test, including E2E
+just test           # Run Backend (.NET) and Player (Vitest) tests
+just e2e            # Run only the Playwright E2E snapshot suite (local-only; excluded from CI)
+just ci             # Build + test (Release config); does not run E2E
 just run            # Build bundles, then run the Backend (serves both frontends)
 just publish RID="linux-x64"    # Self-contained, shippable Backend folder
 just publish RID="osx-x64"
@@ -26,7 +27,7 @@ just publish RID="win-x64"
 Equivalent .NET CLI:
 ```bash
 dotnet build Minstrel.slnx -c Release
-dotnet test --solution Minstrel.slnx -c Release
+dotnet test --project Backend.Tests/Backend.Tests.csproj -c Release   # E2E suite excluded; run it via `just e2e`
 ```
 
 .NET tests use the **TUnit** framework (not xUnit/NUnit); Player tests use **Vitest**. Run a single Backend test class with:
@@ -34,7 +35,7 @@ dotnet test --solution Minstrel.slnx -c Release
 dotnet test Backend.Tests/Backend.Tests.csproj --filter "FullyQualifiedName~ClassName"
 ```
 
-**`Player.E2E.Tests`** drives the real Backend (launched out-of-process with `LaunchBrowser=false`, serving the built `wwwroot`) through headless Chromium via **Playwright**, asserting **image snapshots** with **Verify**. Because it serves built bundles, run it through `just test` / `just e2e` (which build the frontends first), not a bare `dotnet test` on a stale `wwwroot`. Baselines are `*.verified.png` committed beside the test; a mismatch writes `*.verified.png` → `*.received.png` (gitignored). To accept a new baseline, replace the `.verified.png` with the `.received.png`. Snapshots depend on web-font load at capture time and on OS font rendering, so a baseline is environment-specific.
+**`Player.E2E.Tests`** drives the real Backend (launched out-of-process with `LaunchBrowser=false`, serving the built `wwwroot`) through headless Chromium via **Playwright**, asserting **image snapshots** with **Verify**. It is **local-only** — too unstable for CI, so the GitHub pipeline never runs it; `just ci`/`just test` exclude it and only `just e2e` (or `just push-check`) runs it. Because it serves built bundles, run it through `just e2e` / `just push-check` (which build the frontends first), not a bare `dotnet test` on a stale `wwwroot`. Baselines are `*.verified.png` committed beside the test; a mismatch writes `*.verified.png` → `*.received.png` (gitignored). To accept a new baseline, replace the `.verified.png` with the `.received.png`. Snapshots depend on web-font load at capture time and on OS font rendering, so a baseline is environment-specific.
 
 ## Architecture
 
