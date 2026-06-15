@@ -12,29 +12,6 @@ It plays atmospheric music for your sessions, switches automatically between sep
 * **Song library** — browse all the music you have available, search by artist, title, or album, and add songs to either playlist with one tap.
 * **Independent volume per playlist** — set a different volume for the day and night playlists so quiet ambient tracks and louder pieces sit at the right level.
 
-## Screenshots
-
-### Player
-
-The player screen is what your group sees.
-It shows a full-screen background image, the running timer, and (optionally) a QR code that opens the remote control on a phone.
-
-<img src="App.Tests/PlayerPageTests.CapturePlayerPage.verified.png" width="600" alt="Player screen">
-
-### Remote
-
-The remote is designed for a phone.
-The day playlist is at the top, the night playlist is at the bottom, and the big button in the middle plays the current song or switches between phases.
-
-<img src="App.Tests/RemotePageTests.CaptureRemotePage.verified.png" width="300" alt="Remote screen">
-
-### Playlists
-
-The playlist management screen lets you arrange the day and night playlists, remove songs, and add new ones from the song library.
-Use the sun and moon buttons in the library to add a song to the day or night playlist.
-
-<img src="App.Tests/PlaylistsPageTests.CapturePlaylistsPage.verified.png" width="300" alt="Playlists screen">
-
 ## Setup
 
 ### 1. Get the app

@@ -1,6 +1,6 @@
 # Minstrel
 
-A music player for the Storyteller of *Blood on the Clocktower*: day/night playlists with automatic switching, volume fading, and a countdown timer. This glossary fixes the language used across the planned backend / two-frontend split.
+A music player for the Storyteller of *Blood on the Clocktower*: day/night playlists with automatic switching, volume fading, and a countdown timer. This glossary fixes the language used across the backend / two-frontend split.
 
 ## Language
 
