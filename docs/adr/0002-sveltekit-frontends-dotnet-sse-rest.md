@@ -2,6 +2,8 @@
 
 Status: accepted
 
+> **Retired 2026-06-15:** Done — the Blazor `App/`, Fluxor, and the `Infrastructure.Playback` audio interop are deleted from the tree. The SvelteKit Backend + Player + Remote stack is the only one in the repo.
+
 The Player and Remote are rewritten as **SvelteKit (TypeScript)** apps against an **ASP.NET Core** backend. Blazor and Fluxor are dropped; backend state becomes a plain C# state machine that reuses the `Core` records and the existing domain logic from `Features`. Transport is **Server-Sent Events** for Backend→frontend (full state snapshots and one-shot events such as the Gong) plus **REST** for frontend→Backend commands. There is one global session, so both frontends simply subscribe to the same SSE stream — no session correlation. Audio is delivered over HTTP by opaque id: `GET /audio/{songId}`; DTOs never expose filesystem paths.
 
 ## Considered Options

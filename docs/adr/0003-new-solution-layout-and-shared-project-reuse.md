@@ -2,6 +2,8 @@
 
 Status: accepted
 
+> **Retired 2026-06-15:** The migration is complete. The old Blazor stack has been removed and `Minstrel.Next.slnx` renamed to `Minstrel.slnx` — now the only solution in the repo. The two-solution coexistence described below is historical; the shared-project reuse (`Core`, `Infrastructure.FileSystem`, `Infrastructure.Network`) stands.
+
 The Backend + Player rewrite is built as a **second solution in the same repository, with its projects at the repo root** alongside the existing Minstrel projects. A new `Minstrel.Next.slnx` lists the new projects (`Backend`, `Backend.Tests`, plus the SvelteKit `Player` as a non-.NET sibling directory); the existing `Minstrel.slnx` is left untouched and still builds and runs. The Backend **references** `Core`, `Infrastructure.FileSystem`, and `Infrastructure.Network` via `ProjectReference` to the existing project files — they are reused in place, unmodified, not copied.
 
 This is the human call ADR-0002 deferred to the first vertical slice (`.scratch/backend-two-frontend-rewrite/issues/01-spine-play-one-song.md`).

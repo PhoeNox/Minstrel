@@ -2,6 +2,8 @@
 
 Status: accepted
 
+> **Retired 2026-06-15:** "Minstrel.Next" below is now just **Minstrel** — the old Blazor stack is removed and its solution renamed `Minstrel.slnx`. The stale `publish` target that built `App/App.csproj` has been replaced by the Backend + Player + Remote pipeline described here.
+
 Minstrel.Next ships as a **per-OS zip of a self-contained folder**, targeting Windows, Linux, and macOS. Each zip contains a self-contained Backend executable (the .NET runtime is bundled — nothing to install), `appsettings.json`, the built Player + Remote bundles under `wwwroot/`, an empty `Music/` folder seeded with sample `day.m3u` / `night.m3u`, and a README. The Storyteller unzips, sets the music folder once in `appsettings.json`, and double-clicks the executable; the Backend serves both frontends, auto-opens the Player in the default browser, and shows a QR code that a phone on the same wifi scans to reach the Remote.
 
 The music directory is **configured in `appsettings.json`**, not chosen through a UI. The default `../App/Music` (a path into the retired Blazor tree) is replaced, and a relative path is resolved against the executable's own location rather than the working directory, since a double-clicked binary's CWD is unpredictable.
