@@ -5,6 +5,7 @@
 	import { AudioEngine } from '$lib/audioEngine';
 	import { emptyState, type PlaybackState } from '$lib/state';
 	import { fetchRemoteUrl } from '$lib/connection';
+	import { fetchVersion } from '$lib/version';
 	import { qrSvg } from '$lib/qr';
 	import { deriveTimeLeft } from '$shared/timer';
 
@@ -29,6 +30,7 @@
 	let now = $state(Date.now());
 	let qr: string | null = $state(null);
 	let remoteUrl: string | null = $state(null);
+	let version: string | null = $state(null);
 	let qrVisible = $state(true);
 
 	const unsubscribe = playback.subscribe((next) => {
@@ -42,6 +44,7 @@
 		qrVisible = localStorage.getItem(QR_DISMISSED_KEY) !== '1';
 		remoteUrl = await fetchRemoteUrl();
 		qr = qrSvg(remoteUrl);
+		version = await fetchVersion();
 	});
 
 	onDestroy(() => {
@@ -142,6 +145,10 @@
 	</div>
 {/if}
 
+{#if version}
+	<span class="version">{version}</span>
+{/if}
+
 <style>
 	:global(:root) {
 		--blood: #b11616;
@@ -155,6 +162,22 @@
 		--ink: #0a0608;
 		--display: 'Cinzel', 'Times New Roman', serif;
 		--body: 'EB Garamond', Georgia, serif;
+	}
+
+	/* Unobtrusive release marker, pinned to the corner. */
+	.version {
+		position: fixed;
+		right: 0.7rem;
+		bottom: 0.5rem;
+		z-index: 10;
+		font-family: var(--body);
+		font-size: 0.72rem;
+		letter-spacing: 0.04em;
+		font-variant-numeric: tabular-nums;
+		color: var(--parchment);
+		opacity: 0.25;
+		pointer-events: none;
+		user-select: none;
 	}
 
 	/* ---------- Full-bleed atmospheric backdrop ---------- */

@@ -22,6 +22,7 @@ public static class PlaybackEndpoints
 	{
 		app.MapGet("/sse", StreamState);
 		app.MapGet("/connection", GetConnection);
+		app.MapGet("/version", GetVersion);
 		app.MapGet("/library", GetLibrary);
 		app.MapGet("/audio/{songId}", StreamAudio);
 		app.MapPost("/commands/play", Play);
@@ -79,6 +80,8 @@ public static class PlaybackEndpoints
 			: ConnectionInfo.ForDevServer(host, remotePort.Trim());
 		return Results.Ok(info);
 	}
+
+	private static IResult GetVersion() => Results.Ok(VersionInfo.Current);
 
 	private static string ResolveHost(string? configuredHost, INetworkProvider network) =>
 		string.IsNullOrWhiteSpace(configuredHost)

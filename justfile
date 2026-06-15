@@ -34,8 +34,10 @@ publish RID="linux-x64" OUTPUT_DIRECTORY="publish/Minstrel": player remote
 		-c {{configuration}} \
 		--self-contained true \
 		-r {{RID}} \
-		-o {{OUTPUT_DIRECTORY}}
+		-o {{OUTPUT_DIRECTORY}} \
+		-p:InformationalVersion="$(git describe --tags --always)"
 	rm -f {{OUTPUT_DIRECTORY}}/*.pdb
 	mkdir -p {{OUTPUT_DIRECTORY}}/Music
 	cp Backend/Music/*.m3u Backend/Music/*.mp3 {{OUTPUT_DIRECTORY}}/Music/
 	cp packaging/README.txt {{OUTPUT_DIRECTORY}}/README.txt
+	git describe --tags --always > {{OUTPUT_DIRECTORY}}/VERSION
