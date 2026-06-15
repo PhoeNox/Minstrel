@@ -35,7 +35,8 @@ app.MapFallbackToFile("index.html");
 
 var playerUrl = $"http://localhost:{port}";
 var appTask = app.RunAsync();
-OpenPlayerInBrowser(playerUrl);
+if (builder.Configuration.GetValue("LaunchBrowser", true))
+	OpenPlayerInBrowser(playerUrl);
 await appTask;
 
 return;
@@ -47,5 +48,12 @@ static void OpenPlayerInBrowser(string playerUrl)
 		FileName = playerUrl,
 		UseShellExecute = true,
 	};
-	Process.Start(openPlayer);
+	try
+	{
+		Process.Start(openPlayer);
+	}
+	catch
+	{
+		// Headless host (CI, server, E2E): no browser to launch.
+	}
 }

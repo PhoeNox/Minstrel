@@ -15,10 +15,15 @@ remote:
 build: player remote
 	dotnet build {{solution}} -c {{configuration}}
 
-# Test the solution: Backend (.NET) and Player (Vitest).
-test:
+# Test the solution: Backend + Player E2E (.NET) and Player (Vitest).
+# Depends on player/remote so the Backend the E2E suite launches serves the built frontends.
+test: player remote
 	dotnet test --solution {{solution}} -c {{configuration}} --ignore-exit-code 8
 	cd Player && npm test
+
+# Run only the Playwright E2E snapshot suite (builds the frontends first).
+e2e: player remote
+	dotnet test --project Player.E2E.Tests/Player.E2E.Tests.csproj -c {{configuration}} --ignore-exit-code 8
 
 # Build the Player + Remote bundles then run the Backend (serves both, auto-opens the Player).
 run: player remote

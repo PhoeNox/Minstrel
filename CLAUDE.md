@@ -14,7 +14,8 @@ This project uses `just` as a task runner:
 
 ```bash
 just build          # Build Player + Remote bundles, then the .NET solution
-just test           # Run Backend (.NET) and Player (Vitest) tests
+just test           # Build bundles, then run Backend + E2E (.NET) and Player (Vitest) tests
+just e2e            # Run only the Playwright E2E snapshot suite
 just ci             # Build + test (Release config)
 just run            # Build bundles, then run the Backend (serves both frontends)
 just publish RID="linux-x64"    # Self-contained, shippable Backend folder
@@ -33,6 +34,8 @@ dotnet test --solution Minstrel.slnx -c Release
 dotnet test Backend.Tests/Backend.Tests.csproj --filter "FullyQualifiedName~ClassName"
 ```
 
+**`Player.E2E.Tests`** drives the real Backend (launched out-of-process with `LaunchBrowser=false`, serving the built `wwwroot`) through headless Chromium via **Playwright**, asserting **image snapshots** with **Verify**. Because it serves built bundles, run it through `just test` / `just e2e` (which build the frontends first), not a bare `dotnet test` on a stale `wwwroot`. Baselines are `*.verified.png` committed beside the test; a mismatch writes `*.verified.png` → `*.received.png` (gitignored). To accept a new baseline, replace the `.verified.png` with the `.received.png`. Snapshots depend on web-font load at capture time and on OS font rendering, so a baseline is environment-specific.
+
 ## Architecture
 
 - **`Core/`** — Immutable domain records (`Song`, `Playlist`, `GamePhase` enum). No dependencies.
@@ -42,6 +45,7 @@ dotnet test Backend.Tests/Backend.Tests.csproj --filter "FullyQualifiedName~Clas
 - **`Player/`** — SvelteKit (TypeScript) frontend that renders the Backend's state into sound via native Web Audio. Disposable: it can be closed and reopened, fetching current state and resuming.
 - **`Remote/`** — SvelteKit (TypeScript) control surface. Emits commands; holds no playback state of its own.
 - **`shared/`** — TypeScript shared by both frontends (`position`, `timer`).
+- **`Player.E2E.Tests/`** — TUnit + Playwright + Verify end-to-end image-snapshot tests that exercise the shipped Backend + frontends together.
 
 The Backend reuses `Core`, `Infrastructure.FileSystem`, and `Infrastructure.Network` via `ProjectReference`.
 
