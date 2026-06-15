@@ -12,7 +12,7 @@ player:
 
 # Build the SvelteKit Remote bundle into Backend/wwwroot/remote (served under /remote).
 remote:
-	cd Remote && npm install && BASE_PATH=/remote npm run build
+	cd Remote && npm install && BASE_PATH=remote npm run build
 
 # Build the Backend + Player + Remote.
 build: player remote
