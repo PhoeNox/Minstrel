@@ -24,10 +24,6 @@ test:
 run: player remote
 	Music__Directory="{{justfile_directory()}}/Backend/Music" dotnet run --project Backend/Backend.csproj -c {{configuration}}
 
-# Orchestrate Backend + Player + Remote (SvelteKit dev servers) via the Aspire AppHost.
-aspire:
-	dotnet run --project Aspire/AppHost/AppHost.csproj
-
 # Publish a self-contained, shippable Backend folder (binary + wwwroot + appsettings + seeded Music + README) for one RID.
 publish RID="linux-x64" OUTPUT_DIRECTORY="publish/Minstrel": player remote
 	dotnet publish Backend/Backend.csproj \

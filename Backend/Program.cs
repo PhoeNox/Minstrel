@@ -8,12 +8,8 @@ using Infrastructure.Network;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
-
 var port = builder.Configuration["Port"] ?? "5757";
-var urlsFromHost = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
-if (string.IsNullOrEmpty(urlsFromHost))
-	builder.WebHost.UseUrls($"http://*:{port}");
+builder.WebHost.UseUrls($"http://*:{port}");
 
 builder.Services.AddOptions<MusicOptions>()
 	.Bind(builder.Configuration.GetSection(MusicOptions.Section))
@@ -30,8 +26,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
-app.MapDefaultEndpoints();
-
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
@@ -41,8 +35,7 @@ app.MapFallbackToFile("index.html");
 
 var playerUrl = $"http://localhost:{port}";
 var appTask = app.RunAsync();
-if (builder.Configuration.GetValue("OpenPlayer", true))
-	OpenPlayerInBrowser(playerUrl);
+OpenPlayerInBrowser(playerUrl);
 await appTask;
 
 return;

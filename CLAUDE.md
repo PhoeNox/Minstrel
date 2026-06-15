@@ -17,7 +17,6 @@ just build          # Build Player + Remote bundles, then the .NET solution
 just test           # Run Backend (.NET) and Player (Vitest) tests
 just ci             # Build + test (Release config)
 just run            # Build bundles, then run the Backend (serves both frontends)
-just aspire         # Orchestrate Backend + frontends via the Aspire AppHost (dev)
 just publish RID="linux-x64"    # Self-contained, shippable Backend folder
 just publish RID="osx-x64"
 just publish RID="win-x64"
@@ -43,7 +42,6 @@ dotnet test Backend.Tests/Backend.Tests.csproj --filter "FullyQualifiedName~Clas
 - **`Player/`** — SvelteKit (TypeScript) frontend that renders the Backend's state into sound via native Web Audio. Disposable: it can be closed and reopened, fetching current state and resuming.
 - **`Remote/`** — SvelteKit (TypeScript) control surface. Emits commands; holds no playback state of its own.
 - **`shared/`** — TypeScript shared by both frontends (`position`, `timer`).
-- **`Aspire/`** — `AppHost` orchestrates Backend + Player + Remote for development; `ServiceDefaults` holds shared service wiring.
 
 The Backend reuses `Core`, `Infrastructure.FileSystem`, and `Infrastructure.Network` via `ProjectReference`.
 

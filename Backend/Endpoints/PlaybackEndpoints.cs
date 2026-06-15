@@ -74,10 +74,7 @@ public static class PlaybackEndpoints
 	private static IResult GetConnection(INetworkProvider network, IConfiguration configuration)
 	{
 		var host = ResolveHost(configuration["Host"], network);
-		var remotePort = configuration["RemotePort"];
-		var info = string.IsNullOrWhiteSpace(remotePort)
-			? ConnectionInfo.For(host, configuration["Port"] ?? "5757")
-			: ConnectionInfo.ForDevServer(host, remotePort.Trim());
+		var info = ConnectionInfo.For(host, configuration["Port"] ?? "5757");
 		return Results.Ok(info);
 	}
 
