@@ -44,12 +44,15 @@ export class AudioEngine {
 		}
 	}
 
-	async playGong(): Promise<void> {
+	async playGong(gain: number): Promise<void> {
 		await this.context.resume();
 		const buffer = await this.loadGong();
 		const source = this.context.createBufferSource();
 		source.buffer = buffer;
-		source.connect(this.context.destination);
+		const amplifier = this.context.createGain();
+		amplifier.gain.value = gain;
+		source.connect(amplifier);
+		amplifier.connect(this.context.destination);
 		source.start();
 	}
 

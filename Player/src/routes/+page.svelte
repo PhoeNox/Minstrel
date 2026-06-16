@@ -23,7 +23,7 @@
 		return { value: String(Math.min(59, Math.ceil(seconds))), unit: 'sec' };
 	}
 
-	const playback = playbackStore(() => void engine?.playGong());
+	const playback = playbackStore((gain) => void engine?.playGong(gain));
 
 	let engine: AudioEngine | null = $state(null);
 	let snapshot: PlaybackState = $state(emptyState);

@@ -15,6 +15,9 @@ builder.Services.AddOptions<MusicOptions>()
 	.Bind(builder.Configuration.GetSection(MusicOptions.Section))
 	.ValidateOnStart();
 
+builder.Services.AddOptions<GongOptions>()
+	.Bind(builder.Configuration.GetSection(GongOptions.Section));
+
 builder.Services.AddSingleton<IFileSystemProvider, FileSystemProvider>();
 builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
 builder.Services.AddSingleton<SongLibrary>();

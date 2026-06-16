@@ -8,6 +8,7 @@ using Backend.Library;
 using Backend.Playback;
 using Infrastructure.Network;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Options;
 
 public static class PlaybackEndpoints
 {
@@ -38,7 +39,7 @@ public static class PlaybackEndpoints
 		app.MapPost("/commands/timer-stop", StopTimer);
 	}
 
-	private static async Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
+	private static async Task StreamState(HttpContext context, PlaybackSession session, IOptions<GongOptions> gong, CancellationToken cancellation)
 	{
 		context.Response.Headers.ContentType = "text/event-stream";
 		context.Response.Headers.CacheControl = "no-cache";
@@ -48,7 +49,7 @@ public static class PlaybackEndpoints
 		{
 			await foreach (var message in channel.Reader.ReadAllAsync(cancellation))
 			{
-				await WriteEvent(context, message, cancellation);
+				await WriteEvent(context, message, gong.Value.Gain, cancellation);
 				await context.Response.Body.FlushAsync(cancellation);
 			}
 		}
@@ -61,10 +62,12 @@ public static class PlaybackEndpoints
 		}
 	}
 
-	private static Task WriteEvent(HttpContext context, SessionEvent message, CancellationToken cancellation) =>
+	private static Task WriteEvent(HttpContext context, SessionEvent message, double gongGain, CancellationToken cancellation) =>
 		message switch
 		{
-			GongEvent => context.Response.WriteAsync("event: gong\ndata: {}\n\n", cancellation),
+			GongEvent => context.Response.WriteAsync(
+				$"event: gong\ndata: {JsonSerializer.Serialize(new { gain = gongGain }, JsonOptions)}\n\n",
+				cancellation),
 			SnapshotEvent snapshot => context.Response.WriteAsync(
 				$"data: {JsonSerializer.Serialize(snapshot.Snapshot, JsonOptions)}\n\n",
 				cancellation),
