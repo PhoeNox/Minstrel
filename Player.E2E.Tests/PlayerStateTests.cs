@@ -4,14 +4,14 @@ using Microsoft.Playwright;
 using static VerifyTUnit.Verifier;
 
 // Snapshots of the running Player (past the entry gate) in its main states. The
-// Backend is a single shared session, so these tests run sequentially and each
-// drives the session to an absolute state — phase and timer — before capturing,
-// rather than relying on whatever a previous test left behind.
-[NotInParallel]
+// Backend is a single shared session, so these tests run sequentially (NotInParallel)
+// and each drives the session to an absolute state — phase and timer — before
+// capturing, rather than relying on whatever a previous test left behind. The Order
+// keeps them after CrossSurfaceTests' Order 1 startup shot, which needs pristine state.
 public class PlayerStateTests
 {
 	// Day phase, no timer: the Player at rest, just its atmospheric backdrop.
-	[Test]
+	[Test, NotInParallel(Order = 4)]
 	public async Task Resting_AfterEnteringTown()
 	{
 		await using var context = await NewStageContextAsync();
@@ -26,7 +26,7 @@ public class PlayerStateTests
 	}
 
 	// Night phase: the backdrop drops to its desaturated night look.
-	[Test]
+	[Test, NotInParallel(Order = 5)]
 	public async Task Resting_AtNight()
 	{
 		await using var context = await NewStageContextAsync();
@@ -42,7 +42,7 @@ public class PlayerStateTests
 
 	// Day phase with a countdown running: the clock medallion is on screen. A
 	// 600s timer renders a stable "10 min" for the seconds the capture takes.
-	[Test]
+	[Test, NotInParallel(Order = 6)]
 	public async Task Daytime_WithTimerRunning()
 	{
 		await using var context = await NewStageContextAsync();
