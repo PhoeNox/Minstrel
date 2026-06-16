@@ -131,6 +131,10 @@ public static class PlaybackTimeline
 			: state with { Position = state.Position with { Offset = elapsed, AnchorTimestamp = now } };
 	}
 
+	public static bool PlaybackJumped(TimelineState before, TimelineState after, long now) =>
+		before.CurrentSongId != after.CurrentSongId
+		|| DerivePosition(after.Position, now) < DerivePosition(before.Position, now);
+
 	public static double DerivePosition(PositionAnchor anchor, long now) =>
 		anchor.IsPlaying
 			? anchor.Offset + ((now - anchor.AnchorTimestamp) / 1000.0)

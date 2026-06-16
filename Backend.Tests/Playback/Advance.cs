@@ -76,4 +76,24 @@ public class Advance
 		await Assert.That(ticked.CurrentSongId).IsEqualTo("song-1");
 		await Assert.That(ticked.Position.Offset).IsEqualTo(0);
 	}
+
+	[Test]
+	public async Task ReportsAJumpWhenASingleSongLoops()
+	{
+		var state = Playing(("song-1", 10));
+
+		var ticked = PlaybackTimeline.Tick(state, now: 12000);
+
+		await Assert.That(PlaybackTimeline.PlaybackJumped(state, ticked, now: 12000)).IsTrue();
+	}
+
+	[Test]
+	public async Task ReportsNoJumpWhileTheSongIsStillPlaying()
+	{
+		var state = Playing(("song-1", 10));
+
+		var ticked = PlaybackTimeline.Tick(state, now: 6000);
+
+		await Assert.That(PlaybackTimeline.PlaybackJumped(state, ticked, now: 6000)).IsFalse();
+	}
 }

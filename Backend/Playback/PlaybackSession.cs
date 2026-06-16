@@ -179,7 +179,7 @@ public sealed class PlaybackSession
 			if (expired)
 				timer = TimerAnchor.Idle;
 
-			if (state.CurrentSongId != previous.CurrentSongId || expired)
+			if (PlaybackTimeline.PlaybackJumped(previous, state, now) || expired)
 				Broadcast(CurrentSnapshot());
 			if (expired)
 				Publish(new GongEvent());
