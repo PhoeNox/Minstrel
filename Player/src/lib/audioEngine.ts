@@ -6,6 +6,8 @@ const GAIN_RAMP_SECONDS = 0.3;
 interface Voice {
 	source: AudioBufferSourceNode;
 	gain: GainNode;
+	startedAt: number;
+	startOffset: number;
 }
 
 const GONG_URL = '/gong.mp3';
@@ -20,6 +22,15 @@ export class AudioEngine {
 
 	get playingSongId(): string | null {
 		return this.currentSongId;
+	}
+
+	get playingPosition(): number | null {
+		if (this.currentSongId === null) {
+			return null;
+		}
+
+		const voice = this.voices.get(this.currentSongId);
+		return voice ? this.context.currentTime - voice.startedAt + voice.startOffset : null;
 	}
 
 	get loadedSongIds(): string[] {
@@ -81,7 +92,7 @@ export class AudioEngine {
 		source.connect(gain);
 		source.start(0, offset);
 
-		this.voices.set(songId, { source, gain });
+		this.voices.set(songId, { source, gain, startedAt: now, startOffset: offset });
 		this.currentSongId = songId;
 		this.currentGain = target;
 	}

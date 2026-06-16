@@ -9,21 +9,31 @@ export type AudioOperation =
 
 export interface AudioGraph {
 	playingSongId: string | null;
+	playingPosition: number | null;
 	loadedSongIds: string[];
 	gain: number;
 }
 
+const RESTART_THRESHOLD_SECONDS = 1;
+
 export function reconcile(desired: PlaybackState, current: AudioGraph, now: number): AudioOperation[] {
 	const wanted = desired.isPlaying ? desired.currentSongId : null;
 	const gain = activePlaylist(desired).gain;
+	const position = derivePosition(desired.position, now);
 	const operations: AudioOperation[] = [];
 
-	if (current.playingSongId !== null && current.playingSongId !== wanted) {
+	const rewound =
+		wanted !== null &&
+		wanted === current.playingSongId &&
+		current.playingPosition !== null &&
+		current.playingPosition - position > RESTART_THRESHOLD_SECONDS;
+
+	if (current.playingSongId !== null && (current.playingSongId !== wanted || rewound)) {
 		operations.push({ type: 'fade-out', songId: current.playingSongId });
 	}
 
-	if (wanted !== null && wanted !== current.playingSongId) {
-		operations.push({ type: 'fade-in', songId: wanted, offset: derivePosition(desired.position, now), gain });
+	if (wanted !== null && (wanted !== current.playingSongId || rewound)) {
+		operations.push({ type: 'fade-in', songId: wanted, offset: position, gain });
 	} else if (wanted !== null && gain !== current.gain) {
 		operations.push({ type: 'set-gain', songId: wanted, gain });
 	}

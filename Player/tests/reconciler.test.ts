@@ -11,7 +11,7 @@ const at = (offset: number, anchorTimestamp: number, isPlaying = true) => ({
 
 const song = (id: string): SongDto => ({ id, title: id, artist: id, length: 100 });
 
-const emptyGraph: AudioGraph = { playingSongId: null, loadedSongIds: [], gain: 1 };
+const emptyGraph: AudioGraph = { playingSongId: null, playingPosition: null, loadedSongIds: [], gain: 1 };
 
 const playingDay = (currentSongId: string, songs: SongDto[], gain = 1): PlaybackState => ({
 	...emptyState,
@@ -38,7 +38,7 @@ describe('reconcile', () => {
 	it('does nothing when the graph already plays the desired song', () => {
 		const operations = reconcile(
 			{ ...emptyState, isPlaying: true, currentSongId: 'X', position: at(0, 1000) },
-			{ playingSongId: 'X', loadedSongIds: ['X'], gain: 1 },
+			{ playingSongId: 'X', playingPosition: 3, loadedSongIds: ['X'], gain: 1 },
 			4000
 		);
 
@@ -48,7 +48,7 @@ describe('reconcile', () => {
 	it('fades out the current song when playback is paused', () => {
 		const operations = reconcile(
 			{ ...emptyState, isPlaying: false, currentSongId: 'X', position: at(0, 1000, false) },
-			{ playingSongId: 'X', loadedSongIds: ['X'], gain: 1 },
+			{ playingSongId: 'X', playingPosition: 3, loadedSongIds: ['X'], gain: 1 },
 			4000
 		);
 
@@ -63,7 +63,7 @@ describe('reconcile', () => {
 				currentSongId: 'Y',
 				position: { songId: 'Y', offset: 0, anchorTimestamp: 4000, isPlaying: true }
 			},
-			{ playingSongId: 'X', loadedSongIds: ['X'], gain: 1 },
+			{ playingSongId: 'X', playingPosition: 50, loadedSongIds: ['X'], gain: 1 },
 			4000
 		);
 
@@ -76,7 +76,7 @@ describe('reconcile', () => {
 	it('prefetches the next song in the active playlist', () => {
 		const operations = reconcile(
 			playingDay('a', [song('a'), song('b')]),
-			{ playingSongId: 'a', loadedSongIds: ['a'], gain: 1 },
+			{ playingSongId: 'a', playingPosition: 0, loadedSongIds: ['a'], gain: 1 },
 			4000
 		);
 
@@ -86,7 +86,7 @@ describe('reconcile', () => {
 	it('wraps the prefetch to the first song at the end of the playlist', () => {
 		const operations = reconcile(
 			playingDay('b', [song('a'), song('b')]),
-			{ playingSongId: 'b', loadedSongIds: ['b'], gain: 1 },
+			{ playingSongId: 'b', playingPosition: 0, loadedSongIds: ['b'], gain: 1 },
 			4000
 		);
 
@@ -96,7 +96,7 @@ describe('reconcile', () => {
 	it('does not prefetch a song that is already decoded', () => {
 		const operations = reconcile(
 			playingDay('a', [song('a'), song('b')]),
-			{ playingSongId: 'a', loadedSongIds: ['a', 'b'], gain: 1 },
+			{ playingSongId: 'a', playingPosition: 0, loadedSongIds: ['a', 'b'], gain: 1 },
 			4000
 		);
 
@@ -106,7 +106,7 @@ describe('reconcile', () => {
 	it('sets the gain on the sounding song when the phase gain changes', () => {
 		const operations = reconcile(
 			playingDay('a', [song('a'), song('b')], 0.4),
-			{ playingSongId: 'a', loadedSongIds: ['a', 'b'], gain: 1 },
+			{ playingSongId: 'a', playingPosition: 0, loadedSongIds: ['a', 'b'], gain: 1 },
 			4000
 		);
 
@@ -116,7 +116,7 @@ describe('reconcile', () => {
 	it('fades the new song in at the phase gain when the song changes', () => {
 		const operations = reconcile(
 			playingDay('a', [song('a'), song('b')], 0.4),
-			{ playingSongId: 'b', loadedSongIds: ['b'], gain: 0.4 },
+			{ playingSongId: 'b', playingPosition: 0, loadedSongIds: ['b'], gain: 0.4 },
 			4000
 		);
 
@@ -124,5 +124,28 @@ describe('reconcile', () => {
 			{ type: 'fade-out', songId: 'b' },
 			{ type: 'fade-in', songId: 'a', offset: 0, gain: 0.4 }
 		]);
+	});
+
+	it('restarts the song when a single-song playlist loops back to the start', () => {
+		const operations = reconcile(
+			playingDay('a', [song('a')]),
+			{ playingSongId: 'a', playingPosition: 100, loadedSongIds: ['a'], gain: 1 },
+			4000
+		);
+
+		expect(operations).toEqual([
+			{ type: 'fade-out', songId: 'a' },
+			{ type: 'fade-in', songId: 'a', offset: 0, gain: 1 }
+		]);
+	});
+
+	it('keeps playing without restarting while the voice tracks the backend position', () => {
+		const operations = reconcile(
+			playingDay('a', [song('a')]),
+			{ playingSongId: 'a', playingPosition: 0.2, loadedSongIds: ['a'], gain: 1 },
+			4000
+		);
+
+		expect(operations).toEqual([]);
 	});
 });

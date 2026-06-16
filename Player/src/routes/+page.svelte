@@ -65,7 +65,12 @@
 
 		const operations = reconcile(
 			snapshot,
-			{ playingSongId: engine.playingSongId, loadedSongIds: engine.loadedSongIds, gain: engine.gain },
+			{
+				playingSongId: engine.playingSongId,
+				playingPosition: engine.playingPosition,
+				loadedSongIds: engine.loadedSongIds,
+				gain: engine.gain
+			},
 			Date.now()
 		);
 		await engine.apply(operations);
