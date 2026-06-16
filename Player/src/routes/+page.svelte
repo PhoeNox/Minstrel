@@ -38,7 +38,10 @@
 		void sync();
 	});
 
-	const ticker = setInterval(() => (now = Date.now()), 250);
+	const ticker = setInterval(() => {
+		now = Date.now();
+		void sync();
+	}, 250);
 
 	onMount(async () => {
 		qrVisible = localStorage.getItem(QR_DISMISSED_KEY) !== '1';
@@ -58,22 +61,29 @@
 	const urgent = $derived(timeLeft !== null && timeLeft > 0 && timeLeft <= 10);
 	const countdown = $derived(timeLeft !== null ? formatCountdown(timeLeft) : null);
 
+	let syncing = false;
+
 	async function sync(): Promise<void> {
-		if (!engine) {
+		if (!engine || syncing) {
 			return;
 		}
 
-		const operations = reconcile(
-			snapshot,
-			{
-				playingSongId: engine.playingSongId,
-				playingPosition: engine.playingPosition,
-				loadedSongIds: engine.loadedSongIds,
-				gain: engine.gain
-			},
-			Date.now()
-		);
-		await engine.apply(operations);
+		syncing = true;
+		try {
+			const operations = reconcile(
+				snapshot,
+				{
+					leadSongId: engine.leadSongId,
+					leadPosition: engine.leadPosition,
+					leadGain: engine.leadGain,
+					loadedSongIds: engine.loadedSongIds
+				},
+				Date.now()
+			);
+			await engine.apply(operations);
+		} finally {
+			syncing = false;
+		}
 	}
 
 	function enableSound(): void {

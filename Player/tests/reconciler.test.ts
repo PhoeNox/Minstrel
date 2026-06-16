@@ -9,9 +9,14 @@ const at = (offset: number, anchorTimestamp: number, isPlaying = true) => ({
 	isPlaying
 });
 
-const song = (id: string): SongDto => ({ id, title: id, artist: id, length: 100 });
+const song = (id: string, length = 100): SongDto => ({ id, title: id, artist: id, length });
 
-const emptyGraph: AudioGraph = { playingSongId: null, playingPosition: null, loadedSongIds: [], gain: 1 };
+const emptyGraph: AudioGraph = {
+	leadSongId: null,
+	leadPosition: null,
+	leadGain: null,
+	loadedSongIds: []
+};
 
 const playingDay = (currentSongId: string, songs: SongDto[], gain = 1): PlaybackState => ({
 	...emptyState,
@@ -25,58 +30,100 @@ const playingDay = (currentSongId: string, songs: SongDto[], gain = 1): Playback
 });
 
 describe('reconcile', () => {
-	it('fades in the desired song at the derived offset against an empty graph', () => {
+	it('fades the desired song in at the derived offset against an empty graph', () => {
 		const operations = reconcile(
 			{ ...emptyState, isPlaying: true, currentSongId: 'X', position: at(10, 1000) },
 			emptyGraph,
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'fade-in', songId: 'X', offset: 13, gain: 1 }]);
+		expect(operations).toEqual([{ type: 'play', songId: 'X', offset: 13, gain: 1 }]);
 	});
 
-	it('does nothing when the graph already plays the desired song', () => {
+	it('does nothing when the lead already plays the desired song in step', () => {
 		const operations = reconcile(
-			{ ...emptyState, isPlaying: true, currentSongId: 'X', position: at(0, 1000) },
-			{ playingSongId: 'X', playingPosition: 3, loadedSongIds: ['X'], gain: 1 },
+			playingDay('a', [song('a'), song('b')]),
+			{ leadSongId: 'a', leadPosition: 0, leadGain: 1, loadedSongIds: ['a', 'b'] },
 			4000
 		);
 
 		expect(operations).toEqual([]);
 	});
 
-	it('fades out the current song when playback is paused', () => {
+	it('stops the lead when playback is paused', () => {
 		const operations = reconcile(
 			{ ...emptyState, isPlaying: false, currentSongId: 'X', position: at(0, 1000, false) },
-			{ playingSongId: 'X', playingPosition: 3, loadedSongIds: ['X'], gain: 1 },
+			{ leadSongId: 'X', leadPosition: 3, leadGain: 1, loadedSongIds: ['X'] },
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'fade-out', songId: 'X' }]);
+		expect(operations).toEqual([{ type: 'stop' }]);
 	});
 
-	it('crossfades the old song out and the new one in when the current song changes', () => {
+	it('crossfades to the backend song when the lead is an unrelated one', () => {
 		const operations = reconcile(
-			{
-				...emptyState,
-				isPlaying: true,
-				currentSongId: 'Y',
-				position: { songId: 'Y', offset: 0, anchorTimestamp: 4000, isPlaying: true }
-			},
-			{ playingSongId: 'X', playingPosition: 50, loadedSongIds: ['X'], gain: 1 },
+			playingDay('a', [song('a'), song('b'), song('c')]),
+			{ leadSongId: 'c', leadPosition: 50, leadGain: 1, loadedSongIds: ['a', 'b', 'c'] },
 			4000
 		);
 
-		expect(operations).toEqual([
-			{ type: 'fade-out', songId: 'X' },
-			{ type: 'fade-in', songId: 'Y', offset: 0, gain: 1 }
-		]);
+		expect(operations).toEqual([{ type: 'play', songId: 'a', offset: 0, gain: 1 }]);
 	});
 
-	it('prefetches the next song in the active playlist', () => {
+	it('crossfades into the next song as the current one nears its end', () => {
 		const operations = reconcile(
 			playingDay('a', [song('a'), song('b')]),
-			{ playingSongId: 'a', playingPosition: 0, loadedSongIds: ['a'], gain: 1 },
+			{ leadSongId: 'a', leadPosition: 96, leadGain: 1, loadedSongIds: ['a', 'b'] },
+			4000
+		);
+
+		expect(operations).toEqual([{ type: 'play', songId: 'b', offset: 0, gain: 1 }]);
+	});
+
+	it('crossfades a single-song playlist into a fresh copy of itself when it loops', () => {
+		const operations = reconcile(
+			playingDay('a', [song('a')]),
+			{ leadSongId: 'a', leadPosition: 96, leadGain: 1, loadedSongIds: ['a'] },
+			4000
+		);
+
+		expect(operations).toEqual([{ type: 'play', songId: 'a', offset: 0, gain: 1 }]);
+	});
+
+	it('does not crossfade before the current song nears its end', () => {
+		const operations = reconcile(
+			playingDay('a', [song('a'), song('b')]),
+			{ leadSongId: 'a', leadPosition: 50, leadGain: 1, loadedSongIds: ['a', 'b'] },
+			4000
+		);
+
+		expect(operations).toEqual([]);
+	});
+
+	it('does not anticipate songs shorter than the fade window', () => {
+		const operations = reconcile(
+			playingDay('a', [song('a', 3)]),
+			{ leadSongId: 'a', leadPosition: 3, leadGain: 1, loadedSongIds: ['a'] },
+			4000
+		);
+
+		expect(operations).toEqual([]);
+	});
+
+	it('holds steady while the lead has already crossfaded ahead of the backend', () => {
+		const operations = reconcile(
+			playingDay('a', [song('a'), song('b')]),
+			{ leadSongId: 'b', leadPosition: 2, leadGain: 1, loadedSongIds: ['a', 'b'] },
+			4000
+		);
+
+		expect(operations).toEqual([]);
+	});
+
+	it('prefetches the next song while the current one plays', () => {
+		const operations = reconcile(
+			playingDay('a', [song('a'), song('b')]),
+			{ leadSongId: 'a', leadPosition: 10, leadGain: 1, loadedSongIds: ['a'] },
 			4000
 		);
 
@@ -86,66 +133,30 @@ describe('reconcile', () => {
 	it('wraps the prefetch to the first song at the end of the playlist', () => {
 		const operations = reconcile(
 			playingDay('b', [song('a'), song('b')]),
-			{ playingSongId: 'b', playingPosition: 0, loadedSongIds: ['b'], gain: 1 },
+			{ leadSongId: 'b', leadPosition: 10, leadGain: 1, loadedSongIds: ['b'] },
 			4000
 		);
 
 		expect(operations).toEqual([{ type: 'prefetch', songId: 'a' }]);
 	});
 
-	it('does not prefetch a song that is already decoded', () => {
-		const operations = reconcile(
-			playingDay('a', [song('a'), song('b')]),
-			{ playingSongId: 'a', playingPosition: 0, loadedSongIds: ['a', 'b'], gain: 1 },
-			4000
-		);
-
-		expect(operations).toEqual([]);
-	});
-
-	it('sets the gain on the sounding song when the phase gain changes', () => {
+	it('sets the gain on the lead when the phase gain changes', () => {
 		const operations = reconcile(
 			playingDay('a', [song('a'), song('b')], 0.4),
-			{ playingSongId: 'a', playingPosition: 0, loadedSongIds: ['a', 'b'], gain: 1 },
+			{ leadSongId: 'a', leadPosition: 10, leadGain: 1, loadedSongIds: ['a', 'b'] },
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'set-gain', songId: 'a', gain: 0.4 }]);
+		expect(operations).toEqual([{ type: 'set-gain', gain: 0.4 }]);
 	});
 
-	it('fades the new song in at the phase gain when the song changes', () => {
+	it('crossfades the next song in at the phase gain as the current one ends', () => {
 		const operations = reconcile(
 			playingDay('a', [song('a'), song('b')], 0.4),
-			{ playingSongId: 'b', playingPosition: 0, loadedSongIds: ['b'], gain: 0.4 },
+			{ leadSongId: 'a', leadPosition: 96, leadGain: 0.4, loadedSongIds: ['a', 'b'] },
 			4000
 		);
 
-		expect(operations).toEqual([
-			{ type: 'fade-out', songId: 'b' },
-			{ type: 'fade-in', songId: 'a', offset: 0, gain: 0.4 }
-		]);
-	});
-
-	it('restarts the song when a single-song playlist loops back to the start', () => {
-		const operations = reconcile(
-			playingDay('a', [song('a')]),
-			{ playingSongId: 'a', playingPosition: 100, loadedSongIds: ['a'], gain: 1 },
-			4000
-		);
-
-		expect(operations).toEqual([
-			{ type: 'fade-out', songId: 'a' },
-			{ type: 'fade-in', songId: 'a', offset: 0, gain: 1 }
-		]);
-	});
-
-	it('keeps playing without restarting while the voice tracks the backend position', () => {
-		const operations = reconcile(
-			playingDay('a', [song('a')]),
-			{ playingSongId: 'a', playingPosition: 0.2, loadedSongIds: ['a'], gain: 1 },
-			4000
-		);
-
-		expect(operations).toEqual([]);
+		expect(operations).toEqual([{ type: 'play', songId: 'b', offset: 0, gain: 0.4 }]);
 	});
 });

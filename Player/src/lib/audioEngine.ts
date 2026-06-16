@@ -1,13 +1,14 @@
-import type { AudioOperation } from './reconciler';
+import { FADE_SECONDS, type AudioOperation } from './reconciler';
 
-const FADE_SECONDS = 5;
 const GAIN_RAMP_SECONDS = 0.3;
 
 interface Voice {
 	source: AudioBufferSourceNode;
 	gain: GainNode;
+	songId: string;
 	startedAt: number;
 	startOffset: number;
+	targetGain: number;
 }
 
 const GONG_URL = '/gong.mp3';
@@ -15,42 +16,42 @@ const GONG_URL = '/gong.mp3';
 export class AudioEngine {
 	private readonly context = new AudioContext();
 	private readonly buffers = new Map<string, AudioBuffer>();
-	private readonly voices = new Map<string, Voice>();
+	private readonly voices = new Map<number, Voice>();
 	private gongBuffer: AudioBuffer | null = null;
-	private currentSongId: string | null = null;
-	private currentGain = 1;
+	private leadHandle: number | null = null;
+	private nextHandle = 0;
 
-	get playingSongId(): string | null {
-		return this.currentSongId;
+	get leadSongId(): string | null {
+		return this.lead?.songId ?? null;
 	}
 
-	get playingPosition(): number | null {
-		if (this.currentSongId === null) {
-			return null;
-		}
-
-		const voice = this.voices.get(this.currentSongId);
+	get leadPosition(): number | null {
+		const voice = this.lead;
 		return voice ? this.context.currentTime - voice.startedAt + voice.startOffset : null;
+	}
+
+	get leadGain(): number | null {
+		return this.lead?.targetGain ?? null;
 	}
 
 	get loadedSongIds(): string[] {
 		return [...this.buffers.keys()];
 	}
 
-	get gain(): number {
-		return this.currentGain;
+	private get lead(): Voice | null {
+		return this.leadHandle === null ? null : this.voices.get(this.leadHandle) ?? null;
 	}
 
 	async apply(operations: AudioOperation[]): Promise<void> {
 		for (const operation of operations) {
-			if (operation.type === 'fade-in') {
-				await this.fadeIn(operation.songId, operation.offset, operation.gain);
+			if (operation.type === 'play') {
+				await this.play(operation.songId, operation.offset, operation.gain);
 			} else if (operation.type === 'set-gain') {
-				this.setGain(operation.songId, operation.gain);
+				this.setLeadGain(operation.gain);
 			} else if (operation.type === 'prefetch') {
 				await this.load(operation.songId);
 			} else {
-				this.fadeOut(operation.songId);
+				this.fadeOutLead();
 			}
 		}
 	}
@@ -78,11 +79,13 @@ export class AudioEngine {
 		return this.gongBuffer;
 	}
 
-	private async fadeIn(songId: string, offset: number, target: number): Promise<void> {
+	private async play(songId: string, offset: number, target: number): Promise<void> {
 		await this.context.resume();
 		const buffer = await this.load(songId);
-		const gain = this.context.createGain();
+		this.fadeOutLead();
+
 		const now = this.context.currentTime;
+		const gain = this.context.createGain();
 		gain.gain.setValueAtTime(0, now);
 		gain.gain.linearRampToValueAtTime(target, now + FADE_SECONDS);
 		gain.connect(this.context.destination);
@@ -92,13 +95,14 @@ export class AudioEngine {
 		source.connect(gain);
 		source.start(0, offset);
 
-		this.voices.set(songId, { source, gain, startedAt: now, startOffset: offset });
-		this.currentSongId = songId;
-		this.currentGain = target;
+		const handle = this.nextHandle++;
+		this.voices.set(handle, { source, gain, songId, startedAt: now, startOffset: offset, targetGain: target });
+		this.leadHandle = handle;
+		source.onended = () => this.retire(handle);
 	}
 
-	private setGain(songId: string, target: number): void {
-		const voice = this.voices.get(songId);
+	private setLeadGain(target: number): void {
+		const voice = this.lead;
 		if (!voice) {
 			return;
 		}
@@ -107,23 +111,27 @@ export class AudioEngine {
 		voice.gain.gain.cancelScheduledValues(now);
 		voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
 		voice.gain.gain.linearRampToValueAtTime(target, now + GAIN_RAMP_SECONDS);
-		this.currentGain = target;
+		voice.targetGain = target;
 	}
 
-	private fadeOut(songId: string): void {
-		const voice = this.voices.get(songId);
+	private fadeOutLead(): void {
+		const voice = this.lead;
 		if (!voice) {
 			return;
 		}
 
 		const now = this.context.currentTime;
+		voice.gain.gain.cancelScheduledValues(now);
 		voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
 		voice.gain.gain.linearRampToValueAtTime(0, now + FADE_SECONDS);
 		voice.source.stop(now + FADE_SECONDS);
+		this.leadHandle = null;
+	}
 
-		this.voices.delete(songId);
-		if (this.currentSongId === songId) {
-			this.currentSongId = null;
+	private retire(handle: number): void {
+		this.voices.delete(handle);
+		if (this.leadHandle === handle) {
+			this.leadHandle = null;
 		}
 	}
 
