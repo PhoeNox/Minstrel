@@ -27,8 +27,9 @@ public class CrossSurfaceTests
 		await Verify(await remote.ScreenshotAsync(StillFrame), "png");
 	}
 
-	// Starting the timer from the Remote: the Player raises its countdown medallion
-	// and the Remote's transport shows the running clock.
+	// Starting the timer from the Remote while a song plays: the Player raises its
+	// countdown medallion and the Remote's transport shows the running clock over a
+	// now-playing track.
 	[Test, NotInParallel(Order = 2)]
 	public async Task Timer_StartedFromRemote()
 	{
@@ -40,6 +41,12 @@ public class CrossSurfaceTests
 		await EnterTownAsync(player);
 		await EnsurePhaseAsync(player, night: false);
 		await OpenRemoteAsync(remoteContext, remote);
+
+		// Start playback so the now-playing line shows a running track. The transport
+		// button toggles, so drive the play command directly to land on "playing"
+		// regardless of the session state inherited from a prior test.
+		await PostCommandAsync(remote, "/commands/play");
+		await remote.Locator(".play.playing").WaitForAsync();
 
 		// Default stepper is 5 minutes → a 300s timer.
 		await remote.Locator(".timerbtn").ClickAsync();
