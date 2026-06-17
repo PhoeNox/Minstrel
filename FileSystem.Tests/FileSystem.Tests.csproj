@@ -13,8 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Backend\Backend.csproj" />
-        <ProjectReference Include="..\FileSystem.Tests\FileSystem.Tests.csproj" />
+        <ProjectReference Include="..\FileSystem\FileSystem.csproj" />
     </ItemGroup>
 
 </Project>

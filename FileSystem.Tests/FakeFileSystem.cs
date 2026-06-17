@@ -1,7 +1,6 @@
-namespace Backend.Tests.Library;
+namespace FileSystem.Tests;
 
 using Core;
-using FileSystem;
 
 public sealed class FakeFileSystem(Song[] day, Song[] night, Song[]? alsoOnDisk = null)
 		: IFileSystemProvider

@@ -4,7 +4,6 @@ namespace Backend.Api;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Backend.Contracts;
-using Backend.Features.Library;
 using Backend.Features.Session;
 using Core;
 using Core.Library;

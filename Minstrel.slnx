@@ -2,6 +2,7 @@
   <Project Path="Backend/Backend.csproj" />
   <Folder Name="/Providers/">
     <Project Path="FileSystem\FileSystem.csproj" />
+    <Project Path="FileSystem.Tests\FileSystem.Tests.csproj" />
     <Project Path="Network\Network.csproj" />
   </Folder>
   <Project Path="Backend.Tests/Backend.Tests.csproj" />

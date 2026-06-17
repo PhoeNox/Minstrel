@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Backend.Api;
-using Backend.Features.Library;
 using Backend.Features.Playback;
 using Backend.Features.Session;
 using Backend.Features.Timer;

@@ -1,7 +1,6 @@
-namespace Backend.Tests.Library;
+namespace FileSystem.Tests;
 
 using Core.Library;
-using Features.Library;
 
 public class SongPoolProviderTests
 {

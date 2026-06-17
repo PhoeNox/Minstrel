@@ -6,7 +6,6 @@ using Core;
 using Core.Library;
 using Core.Playlist;
 using FileSystem;
-using Library;
 using Playback;
 
 public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)

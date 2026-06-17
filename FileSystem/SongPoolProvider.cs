@@ -1,8 +1,7 @@
-namespace Backend.Features.Library;
+namespace FileSystem;
 
 using Core;
 using Core.Library;
-using FileSystem;
 
 public class SongPoolProvider
 {
@@ -17,7 +16,7 @@ public class SongPoolProvider
 				Night: night.Select(ToEntry).ToArray(),
 				All: all.Select(ToEntry).ToArray());
 	}
-	
-	private static PoolEntry ToEntry(Song song) 
+
+	private static PoolEntry ToEntry(Song song)
 		=> new(SongId.From(song.Path), song);
 }

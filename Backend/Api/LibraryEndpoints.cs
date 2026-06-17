@@ -1,6 +1,5 @@
 namespace Backend.Api;
 
-using Features.Library;
 using Contracts;
 using Core.Library;
 
