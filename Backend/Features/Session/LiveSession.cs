@@ -4,9 +4,9 @@ using System.Threading.Channels;
 using Backend.Contracts;
 using Core;
 using Core.Library;
+using Core.Playback;
 using Core.Playlist;
 using FileSystem;
-using Playback;
 
 public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 {

@@ -1,4 +1,4 @@
-namespace Backend.Features.Playback;
+namespace Core.Playback;
 
 using Core;
 

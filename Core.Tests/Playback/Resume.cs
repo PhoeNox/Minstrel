@@ -1,6 +1,6 @@
 namespace Core.Tests.Playback;
 
-using Backend.Features.Playback;
+using Core.Playback;
 
 public class Resume
 {

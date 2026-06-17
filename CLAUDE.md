@@ -39,21 +39,24 @@ dotnet test Backend.Tests/Backend.Tests.csproj --filter "FullyQualifiedName~Clas
 
 ## Architecture
 
-- **`Core/`** — Immutable domain records (`Song`, `Playlist`, `GamePhase` enum). No dependencies.
-- **`Infrastructure.FileSystem/`** — M3U playlist persistence and TagLibSharp metadata.
-- **`Infrastructure.Network/`** — local IP detection.
-- **`Backend/`** — ASP.NET Core. Independent, pure **feature modules** wired by **edge integrations** (ADR-0007). The pure modules own domain logic and reference one another not at all:
-  - **`Features/Playback/`** — `PlaybackState` (per-phase `{cursor, gain, resumeOffset}`, `ActivePhase`, `Position`) and `PlaybackTimeline`, the pure transforms (play/pause/select/switch, cursor reconciliation after structural edits, and the pure `Tick`/`Advance` auto-advance fed `Track[]`).
-  - **`Features/Playlist/`** — `PlaylistEntry` (denormalized: `Id`, `Path`, `Title`, `Artist`, `Length`), `PlaylistBook` (the two phases' ordered lists), and `Playlists`, the pure ordering transforms (add/remove/move/shuffle). Holds no cursor, gain, or position.
+- **`Core/`** — The pure, dependency-free domain: immutable records plus the **pure feature modules** (ADR-0007) that own domain logic and reference one another not at all:
+  - **`Core/Playback/`** — `PlaybackState` (per-phase `{cursor, gain, resumeOffset}`, `ActivePhase`, `Position`) and `PlaybackTimeline`, the pure transforms (play/pause/select/switch, cursor reconciliation after structural edits, and the pure `Tick`/`Advance` auto-advance fed `Track[]`).
+  - **`Core/Playlist/`** — `PlaylistEntry` (denormalized: `Id`, `Path`, `Title`, `Artist`, `Length`), `PlaylistBook` (the two phases' ordered lists), and `Playlists`, the pure ordering transforms (add/remove/move/shuffle). Holds no cursor, gain, or position.
+  - **`Core/Library/`** — `SongPool`, the shared reference data both phases draw from.
+  - Plus `Song`/`SongId`, the `GamePhase` enum, and the `Connection`/`Version` info records.
+- **`FileSystem/`** — M3U playlist persistence and TagLibSharp metadata.
+- **`Network/`** — local IP detection.
+- **`Backend/`** — ASP.NET Core. Wires the pure `Core` modules through **edge integrations** that carry no domain logic (ADR-0007):
+  - **`Features/Session/`** — `LiveSession`, the single coordinator holding `PlaybackState` + `PlaylistBook` behind one lock — every command and every `PlaybackClock` tick takes it; it resolves a `SongId` via the Pool, drives a pure Playlist/Playback op, performs M3U I/O, reconciles the index-cursor from the structural change, and broadcasts.
   - **`Features/Timer/`** — the independent countdown module with its own state, clock, `/sse/timer` stream, and Gong one-shot.
-  - **`Features/Library/`** — `SongPool`, the shared reference data both phases draw from.
-  - The **edge integrations** carry no domain logic: `Features/Session/LiveSession` is the single coordinator holding `PlaybackState` + `PlaylistBook` behind one lock — every command and every `PlaybackClock` tick takes it; it resolves a `SongId` via the Pool, drives a pure Playlist/Playback op, performs M3U I/O, reconciles the index-cursor from the structural change, and broadcasts. The command endpoints (`Features/Playback/Endpoints`, `Features/Library/Endpoints`) are thin HTTP adapters over it, and `Contracts/SnapshotMapper` assembles the `/sse` snapshot from `Playback ⨝ Playlist`.
+  - **`Api/`** — thin HTTP endpoint adapters (`PlaybackEndpoints`, `PlaylistEndpoints`, `LibraryEndpoints`, `TimerEndpoints`, `SystemEndpoints`) over the session.
+  - **`Contracts/`** — `SnapshotMapper` assembles the `/sse` snapshot from `Playback ⨝ Playlist`; `SessionEvent` carries it.
 - **`Player/`** — SvelteKit (TypeScript) frontend that renders the Backend's state into sound via native Web Audio. Disposable: it can be closed and reopened, fetching current state and resuming.
 - **`Remote/`** — SvelteKit (TypeScript) control surface. Emits commands; holds no playback state of its own.
 - **`shared/`** — TypeScript shared by both frontends (`position`, `timer`).
 - **`Player.E2E.Tests/`** — TUnit + Playwright + Verify end-to-end image-snapshot tests that exercise the shipped Backend + frontends together.
 
-The Backend reuses `Core`, `Infrastructure.FileSystem`, and `Infrastructure.Network` via `ProjectReference`.
+The Backend reuses `Core`, `FileSystem`, and `Network` via `ProjectReference`.
 
 ### State and Transport
 

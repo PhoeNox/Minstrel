@@ -1,6 +1,6 @@
 namespace Core.Tests.Playback;
 
-using Backend.Features.Playback;
+using Core.Playback;
 using Core;
 
 public class Selecting
