@@ -1,12 +1,17 @@
+// ReSharper disable ClassNeverInstantiated.Global
 namespace Backend.Api;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Backend.Contracts;
 using Backend.Features.Library;
-using Backend.Features.Playback;
 using Backend.Features.Session;
+using Core;
 using Microsoft.AspNetCore.StaticFiles;
+
+public sealed record PlayCommand(string? SongId);
+public sealed record SelectCommand(GamePhase Phase, int Index);
+public sealed record SetGainCommand(GamePhase Phase, double Value);
 
 public static class PlaybackEndpoints
 {

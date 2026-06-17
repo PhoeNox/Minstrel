@@ -1,8 +1,8 @@
 namespace Backend.Contracts;
 
 using Core;
+using Core.Playlist;
 using Features.Playback;
-using Features.Playlist;
 
 public sealed record SongDto(string Id, string Title, string Artist, double Length);
 

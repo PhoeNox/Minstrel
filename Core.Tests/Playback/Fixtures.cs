@@ -1,8 +1,8 @@
-namespace Backend.Tests.Playback;
+namespace Core.Tests.Playback;
 
+using Backend.Features.Playback;
 using Core;
-using Features.Playback;
-using Features.Playlist;
+using Playlist;
 
 internal static class Fixtures
 {

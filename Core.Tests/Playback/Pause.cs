@@ -1,6 +1,6 @@
-namespace Backend.Tests.Playback;
+namespace Core.Tests.Playback;
 
-using Features.Playback;
+using Backend.Features.Playback;
 
 public class Pause
 {

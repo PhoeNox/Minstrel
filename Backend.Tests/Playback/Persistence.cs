@@ -1,9 +1,9 @@
 namespace Backend.Tests.Playback;
 
-using Backend.Tests.Library;
 using Core;
 using Features.Library;
 using Features.Session;
+using Library;
 
 public class Persistence
 {
@@ -20,7 +20,7 @@ public class Persistence
 
 		session.Move(GamePhase.Day, oldIndex: 0, newIndex: 1);
 
-		await Assert.That(fileSystem.Saved(GamePhase.Day)).IsEquivalentTo(new[] { "b.mp3", "a.mp3" });
+		await Assert.That(fileSystem.Saved(GamePhase.Day)).IsEquivalentTo(["b.mp3", "a.mp3"]);
 	}
 
 	[Test]
@@ -36,6 +36,6 @@ public class Persistence
 
 		session.Add(GamePhase.Day, added.Id);
 
-		await Assert.That(fileSystem.Saved(GamePhase.Day)).IsEquivalentTo(new[] { "a.mp3", "c.mp3" });
+		await Assert.That(fileSystem.Saved(GamePhase.Day)).IsEquivalentTo(["a.mp3", "c.mp3"]);
 	}
 }

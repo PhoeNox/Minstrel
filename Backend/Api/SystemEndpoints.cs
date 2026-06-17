@@ -1,6 +1,7 @@
 namespace Backend.Api;
 
-using Backend.Contracts;
+using Core.Connection;
+using Core.Version;
 using Infrastructure.Network;
 
 public static class SystemEndpoints
@@ -14,11 +15,11 @@ public static class SystemEndpoints
 	private static IResult GetConnection(INetworkProvider network, IConfiguration configuration)
 	{
 		var host = ResolveHost(configuration["Host"], network);
-		var info = ConnectionInfo.For(host, configuration["Port"] ?? "5757");
+		var info = ConnectionInfoFactory.Create(host, configuration["Port"] ?? "5757");
 		return Results.Ok(info);
 	}
 
-	private static IResult GetVersion() => Results.Ok(VersionInfo.Current);
+	private static IResult GetVersion() => Results.Ok(VersionReader.Current());
 
 	private static string ResolveHost(string? configuredHost, INetworkProvider network) =>
 		string.IsNullOrWhiteSpace(configuredHost)

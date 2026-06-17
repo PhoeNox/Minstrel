@@ -1,8 +1,8 @@
-namespace Backend.Tests.Playback;
+namespace Core.Tests.Playback;
 
+using Backend.Features.Playback;
 using Core;
-using Features.Playback;
-using Features.Playlist;
+using Playlist;
 
 public class Shuffling
 {
@@ -37,8 +37,13 @@ public class Shuffling
 
 		var (shuffled, _) = Playlists.Shuffle(entries, new Random(1));
 
-		await Assert.That(shuffled.Select(entry => entry.Id))
-			.IsEquivalentTo(new[] { "a", "b", "c", "d", "e" });
+		var entryIds = shuffled.Select(entry => entry.Id).ToArray();
+		await Assert.That(entryIds).HasCount(5)
+				.And.Contains("a")
+				.And.Contains("b")
+				.And.Contains("c")
+				.And.Contains("d")
+				.And.Contains("e");
 	}
 
 	[Test]

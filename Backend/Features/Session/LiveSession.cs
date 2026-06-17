@@ -3,16 +3,16 @@ namespace Backend.Features.Session;
 using System.Threading.Channels;
 using Backend.Contracts;
 using Core;
+using Core.Playlist;
 using Infrastructure.FileSystem;
 using Library;
 using Playback;
-using Playlist;
 
 public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 {
 	private readonly Lock gate = new();
 	private readonly List<Channel<SessionEvent>> subscribers = [];
-	private PlaylistBook playlists = new(ToEntries(pool.Day), ToEntries(pool.Night));
+	private PlaylistBook playlists = new((PlaylistEntry[]) ToEntries(pool.Day), (PlaylistEntry[]) ToEntries(pool.Night));
 	private PlaybackState playback = PlaybackState.Idle with
 	{
 		Day = InitialPhase(pool.Day.Length),

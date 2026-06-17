@@ -1,7 +1,7 @@
-namespace Backend.Tests.Playback;
+namespace Core.Tests.Playback;
 
+using Backend.Features.Playback;
 using Core;
-using Features.Playback;
 
 public class Advance
 {

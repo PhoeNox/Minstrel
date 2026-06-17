@@ -1,4 +1,4 @@
-namespace Backend.Features.Playlist;
+namespace Core.Playlist;
 
 public static class Playlists
 {

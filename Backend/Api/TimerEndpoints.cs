@@ -1,9 +1,12 @@
+// ReSharper disable ClassNeverInstantiated.Global
 namespace Backend.Api;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Backend.Features.Timer;
 using Microsoft.Extensions.Options;
+
+public sealed record TimerStartCommand(double Duration);
 
 public static class TimerEndpoints
 {
