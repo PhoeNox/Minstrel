@@ -24,6 +24,7 @@ public class LibraryProviderTests
 
 		var library = new LibraryProvider(fileSystem).LoadLibrary();
 
-		await Assert.That(library.Select(song => song.Path)).Contains("/music/orphan.mp3");
+		var loadedSongPaths = library.Select(song => song.Path);
+		await Assert.That(loadedSongPaths).Contains("/music/orphan.mp3");
 	}
 }

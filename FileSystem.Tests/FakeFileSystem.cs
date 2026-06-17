@@ -23,16 +23,25 @@ public sealed class FakeFileSystem(Song[] day, Song[] night, Song[]? alsoOnDisk 
 		=> onDisk.Select(song => song.Path);
 
 	public string[] ReadLines(string path)
-		=> playlists[PhaseOf(path)].Select(song => song.Path).ToArray();
+	{
+		var gamePhase = PhaseOf(path);
+		return playlists[gamePhase].Select(song => song.Path).ToArray();
+	}
 
 	public Song[] ReadSongs(IEnumerable<string> paths)
 	{
 		var byPath = onDisk.ToDictionary(song => song.Path);
-		return paths.Where(byPath.ContainsKey).Select(path => byPath[path]).ToArray();
+		return paths
+				.Where(byPath.ContainsKey)
+				.Select(path => byPath[path])
+				.ToArray();
 	}
 
 	public void WriteLines(string path, IEnumerable<string> lines)
-		=> saved[PhaseOf(path)] = lines.ToArray();
+	{
+		var gamePhase = PhaseOf(path);
+		saved[gamePhase] = lines.ToArray();
+	}
 
 	private static GamePhase PhaseOf(string path)
 		=> path.EndsWith("day.m3u") ? GamePhase.Day : GamePhase.Night;

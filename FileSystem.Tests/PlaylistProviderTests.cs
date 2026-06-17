@@ -24,9 +24,10 @@ public class PlaylistProviderTests
 			day: [TestSongs.At("a.mp3"), TestSongs.At("b.mp3")],
 			night: []);
 
-		new PlaylistProvider(fileSystem)
-			.Save(GamePhase.Day, ["/music/b.mp3", "/music/a.mp3"]);
+		var playlistProvider = new PlaylistProvider(fileSystem);
+		playlistProvider.Save(GamePhase.Day, ["/music/b.mp3", "/music/a.mp3"]);
 
-		await Assert.That(fileSystem.Saved(GamePhase.Day)).IsEquivalentTo(["b.mp3", "a.mp3"]);
+		var savedPaths = fileSystem.Saved(GamePhase.Day);
+		await Assert.That(savedPaths).IsEquivalentTo(["b.mp3", "a.mp3"]);
 	}
 }
