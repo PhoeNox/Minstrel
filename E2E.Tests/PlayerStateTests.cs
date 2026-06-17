@@ -1,4 +1,4 @@
-namespace Player.E2E.Tests;
+namespace E2E.Tests;
 
 using Microsoft.Playwright;
 using static VerifyTUnit.Verifier;

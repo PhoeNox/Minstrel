@@ -1,4 +1,4 @@
-namespace Player.E2E.Tests;
+namespace E2E.Tests;
 
 using System.Collections.Concurrent;
 using System.Diagnostics;

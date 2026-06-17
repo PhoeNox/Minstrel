@@ -1,4 +1,4 @@
-namespace Player.E2E.Tests;
+namespace E2E.Tests;
 
 using System.Text.Json;
 using Microsoft.Playwright;

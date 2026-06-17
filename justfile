@@ -28,7 +28,7 @@ test: player
 
 # Run only the Playwright E2E snapshot suite (builds the frontends first). Local-only: too unstable for CI.
 e2e: player remote
-	dotnet test --project Player.E2E.Tests/Player.E2E.Tests.csproj -c {{configuration}} --ignore-exit-code 8
+	dotnet test --project E2E.Tests/E2E.Tests.csproj -c {{configuration}} --ignore-exit-code 8
 
 # Build the Player + Remote bundles then run the Backend (serves both, auto-opens the Player).
 run: player remote
