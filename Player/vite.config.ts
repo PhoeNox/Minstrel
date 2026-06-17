@@ -10,10 +10,9 @@ export default defineConfig({
 		strictPort: !!process.env.PORT,
 		fs: { allow: ['..'] },
 		proxy: {
-			'/sse': { target: backend, changeOrigin: true },
-			'/connection': backend,
-			'/audio': backend,
-			'/commands': backend
+			'/playback': { target: backend, changeOrigin: true },
+			'/timer': { target: backend, changeOrigin: true },
+			'/system': backend
 		}
 	},
 	plugins: [sveltekit()]

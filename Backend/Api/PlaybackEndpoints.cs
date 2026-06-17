@@ -1,14 +1,14 @@
-namespace Backend.Features.Playback;
+namespace Backend.Api;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Backend.Contracts;
-using Infrastructure.Network;
-using Library;
+using Backend.Features.Library;
+using Backend.Features.Playback;
+using Backend.Features.Session;
 using Microsoft.AspNetCore.StaticFiles;
-using Session;
 
-public static class Endpoints
+public static class PlaybackEndpoints
 {
 	private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
 	{
@@ -19,17 +19,15 @@ public static class Endpoints
 
 	public static void MapPlaybackEndpoints(this WebApplication app)
 	{
-		app.MapGet("/sse", StreamState);
-		app.MapGet("/connection", GetConnection);
-		app.MapGet("/version", GetVersion);
-		app.MapGet("/audio/{songId}", StreamAudio);
-		
-		app.MapPost("/commands/play", Play);
-		app.MapPost("/commands/pause", Pause);
-		app.MapPost("/commands/switch-phase", SwitchPhase);
-		app.MapPost("/commands/select", Select);
-		
-		app.MapPost("/commands/set-gain", SetGain);
+		app.MapGet("/playback/sse", StreamState);
+		app.MapGet("/playback/audio/{songId}", StreamAudio);
+
+		app.MapPost("/playback/play", Play);
+		app.MapPost("/playback/pause", Pause);
+		app.MapPost("/playback/switch-phase", SwitchPhase);
+		app.MapPost("/playback/select", Select);
+
+		app.MapPost("/playback/set-gain", SetGain);
 	}
 
 	private static async Task StreamState(HttpContext context, LiveSession session, CancellationToken cancellation)
@@ -63,20 +61,6 @@ public static class Endpoints
 				cancellation),
 			_ => Task.CompletedTask,
 		};
-
-	private static IResult GetConnection(INetworkProvider network, IConfiguration configuration)
-	{
-		var host = ResolveHost(configuration["Host"], network);
-		var info = ConnectionInfo.For(host, configuration["Port"] ?? "5757");
-		return Results.Ok(info);
-	}
-
-	private static IResult GetVersion() => Results.Ok(VersionInfo.Current);
-
-	private static string ResolveHost(string? configuredHost, INetworkProvider network) =>
-		string.IsNullOrWhiteSpace(configuredHost)
-			? network.GetLocalIpAddress()
-			: configuredHost.Trim();
 
 	private static IResult StreamAudio(string songId, SongPool pool)
 	{

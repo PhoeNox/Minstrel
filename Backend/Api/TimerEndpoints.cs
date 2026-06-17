@@ -1,10 +1,11 @@
-namespace Backend.Features.Timer;
+namespace Backend.Api;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Backend.Features.Timer;
 using Microsoft.Extensions.Options;
 
-public static class Endpoints
+public static class TimerEndpoints
 {
 	private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
 	{
@@ -13,9 +14,9 @@ public static class Endpoints
 
 	public static void MapTimerEndpoints(this WebApplication app)
 	{
-		app.MapGet("/sse/timer", StreamTimer);
-		app.MapPost("/commands/timer-start", StartTimer);
-		app.MapPost("/commands/timer-stop", StopTimer);
+		app.MapGet("/timer/sse", StreamTimer);
+		app.MapPost("/timer/start", StartTimer);
+		app.MapPost("/timer/stop", StopTimer);
 	}
 
 	private static async Task StreamTimer(HttpContext context, TimerSession session, IOptions<GongOptions> gong, CancellationToken cancellation)

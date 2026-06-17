@@ -141,7 +141,7 @@ export class AudioEngine {
 			return cached;
 		}
 
-		const response = await fetch(`/audio/${songId}`);
+		const response = await fetch(`/playback/audio/${songId}`);
 		const encoded = await response.arrayBuffer();
 		const decoded = await this.context.decodeAudioData(encoded);
 		this.buffers.set(songId, decoded);

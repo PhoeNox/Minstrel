@@ -45,7 +45,7 @@ public class CrossSurfaceTests
 		// Start playback so the now-playing line shows a running track. The transport
 		// button toggles, so drive the play command directly to land on "playing"
 		// regardless of the session state inherited from a prior test.
-		await PostCommandAsync(remote, "/commands/play");
+		await PostCommandAsync(remote, "/playback/play");
 		await remote.Locator(".play.playing").WaitForAsync();
 
 		// Default stepper is 5 minutes → a 300s timer.
@@ -63,7 +63,7 @@ public class CrossSurfaceTests
 		await StabilizeRemoteAsync(remote);
 		await Verify(await remote.ScreenshotAsync(StillFrame), "png").UseTextForParameters("remote");
 
-		await PostCommandAsync(remote, "/commands/timer-stop");
+		await PostCommandAsync(remote, "/timer/stop");
 	}
 
 	// Switching to Night from the Remote and opening the Night playlist: the Remote
@@ -136,23 +136,23 @@ public class CrossSurfaceTests
 		var snapshot = await ReadSnapshotAsync(player);
 		var isNight = snapshot.GetProperty("phase").GetString() == "Night";
 		if (isNight != night)
-			await PostCommandAsync(player, "/commands/switch-phase");
+			await PostCommandAsync(player, "/playback/switch-phase");
 		await player.Locator(night ? "main.night" : "main:not(.night)").WaitForAsync();
 	}
 
 	private static async Task EnsureNoTimerAsync(IPage player)
 	{
-		await PostCommandAsync(player, "/commands/timer-stop");
+		await PostCommandAsync(player, "/timer/stop");
 		await player.Locator(".clock").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Detached });
 	}
 
 	private static async Task<DateTime> TimerAnchorAsync(IPage page)
 	{
-		var anchor = (await ReadSnapshotAsync(page, "/sse/timer")).GetProperty("anchorTimestamp").GetInt64();
+		var anchor = (await ReadSnapshotAsync(page, "/timer/sse")).GetProperty("anchorTimestamp").GetInt64();
 		return DateTimeOffset.FromUnixTimeMilliseconds(anchor).UtcDateTime;
 	}
 
-	private static async Task<JsonElement> ReadSnapshotAsync(IPage page, string stream = "/sse")
+	private static async Task<JsonElement> ReadSnapshotAsync(IPage page, string stream = "/playback/sse")
 	{
 		var json = await page.EvaluateAsync<string>(ReadSnapshotJson(stream));
 		return JsonDocument.Parse(json).RootElement;

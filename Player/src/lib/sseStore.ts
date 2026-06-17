@@ -3,7 +3,7 @@ import { emptyState, type PlaybackState } from './state';
 
 export function playbackStore(): Readable<PlaybackState> {
 	return readable<PlaybackState>(emptyState, (set) => {
-		const source = new EventSource('/sse');
+		const source = new EventSource('/playback/sse');
 		source.onmessage = (event) => set(JSON.parse(event.data) as PlaybackState);
 		return () => source.close();
 	});

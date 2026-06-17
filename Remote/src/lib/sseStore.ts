@@ -11,7 +11,7 @@ const initial: Connection = { state: emptyState, connected: false };
 export function playbackStore(): Readable<Connection> {
 	return readable<Connection>(initial, (set) => {
 		let state = emptyState;
-		const source = new EventSource('/sse');
+		const source = new EventSource('/playback/sse');
 		source.onopen = () => set({ state, connected: true });
 		source.onmessage = (event) => {
 			state = JSON.parse(event.data) as PlaybackState;

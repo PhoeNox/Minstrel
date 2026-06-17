@@ -8,7 +8,7 @@ export interface TimerAnchor {
 
 export function timerStore(onGong?: (gain: number) => void): Readable<TimerAnchor | null> {
 	return readable<TimerAnchor | null>(null, (set) => {
-		const source = new EventSource('/sse/timer');
+		const source = new EventSource('/timer/sse');
 		source.onmessage = (event) => set(JSON.parse(event.data) as TimerAnchor | null);
 		if (onGong) {
 			source.addEventListener('gong', (event) => onGong(JSON.parse(event.data).gain as number));

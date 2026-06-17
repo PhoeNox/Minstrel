@@ -1,5 +1,5 @@
 // ReSharper disable ClassNeverInstantiated.Global
-namespace Backend.Features.Library;
+namespace Backend.Features.Playlist;
 
 using Core;
 

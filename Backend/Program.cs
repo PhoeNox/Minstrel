@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json.Serialization;
+using Backend.Api;
 using Backend.Features.Library;
 using Backend.Features.Playback;
 using Backend.Features.Session;
@@ -35,7 +36,9 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+app.MapSystemEndpoints();
 app.MapLibraryEndpoints();
+app.MapPlaylistEndpoints();
 app.MapPlaybackEndpoints();
 app.MapTimerEndpoints();
 app.MapFallbackToFile("remote/{*path:nonfile}", "remote/index.html");

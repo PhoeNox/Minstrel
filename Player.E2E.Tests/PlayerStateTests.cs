@@ -80,7 +80,7 @@ public class PlayerStateTests
 	{
 		var isNight = await CurrentPhaseAsync(page) == "Night";
 		if (isNight != night)
-			await PostCommandAsync(page, "/commands/switch-phase");
+			await PostCommandAsync(page, "/playback/switch-phase");
 		await page.Locator(night ? "main.night" : "main:not(.night)").WaitForAsync();
 	}
 
@@ -88,14 +88,14 @@ public class PlayerStateTests
 
 	private static async Task StopTimerAsync(IPage page)
 	{
-		await PostCommandAsync(page, "/commands/timer-stop");
+		await PostCommandAsync(page, "/timer/stop");
 		await page.Locator(".clock").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Detached });
 	}
 
 	private static async Task StartTimerAsync(IPage page, int seconds)
 	{
 		await page.EvaluateAsync(
-			"s => fetch('/commands/timer-start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ duration: s }) })",
+			"s => fetch('/timer/start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ duration: s }) })",
 			seconds);
 		await page.Locator(".clock").WaitForAsync();
 	}
@@ -122,7 +122,7 @@ public class PlayerStateTests
 	// Reads the first full state snapshot off the SSE stream and returns its phase.
 	private const string ReadSnapshotPhase = """
 		async () => {
-			const reader = (await fetch('/sse')).body.getReader();
+			const reader = (await fetch('/playback/sse')).body.getReader();
 			const decoder = new TextDecoder();
 			let buffer = '';
 			try {

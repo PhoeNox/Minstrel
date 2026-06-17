@@ -1,27 +1,18 @@
-namespace Backend.Features.Library;
+namespace Backend.Api;
 
-using Session;
+using Backend.Features.Playlist;
+using Backend.Features.Session;
 
-public static class Endpoints
+public static class PlaylistEndpoints
 {
-	public static void MapLibraryEndpoints(this WebApplication app)
+	public static void MapPlaylistEndpoints(this WebApplication app)
 	{
-		app.MapGet("/library", GetLibrary);
-		
-		app.MapPost("/commands/add", Add);
-		app.MapPost("/commands/remove", Remove);
-		app.MapPost("/commands/shuffle", Shuffle);
-		app.MapPost("/commands/move", Move);
+		app.MapPost("/playlist/add", Add);
+		app.MapPost("/playlist/remove", Remove);
+		app.MapPost("/playlist/shuffle", Shuffle);
+		app.MapPost("/playlist/move", Move);
 	}
-	
-	private static IResult GetLibrary(SongPool pool)
-	{
-		var songsInLibrary = pool.All
-				.Select(entry => pool.ToSongDto(entry.Id))
-				.ToArray();
-		return Results.Ok(songsInLibrary);
-	}
-	
+
 	private static IResult Add(AddCommand? command, LiveSession session)
 	{
 		if (command is null)

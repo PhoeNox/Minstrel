@@ -84,7 +84,7 @@ public static class BackendServer
 				throw new InvalidOperationException($"Backend exited early (code {backend.ExitCode}).\n{DrainLogs()}");
 			try
 			{
-				var response = await client.GetAsync($"{BaseUrl}/connection");
+				var response = await client.GetAsync($"{BaseUrl}/system/connection");
 				if (response.IsSuccessStatusCode)
 					return;
 			}

@@ -13,10 +13,10 @@ export default defineConfig({
 		host: process.env.PORT ? true : undefined,
 		fs: { allow: ['..'] },
 		proxy: {
-			'/sse': { target: backend, changeOrigin: true },
+			'/playback': { target: backend, changeOrigin: true },
+			'/timer': { target: backend, changeOrigin: true },
 			'/library': backend,
-			'/audio': backend,
-			'/commands': backend
+			'/playlist': backend
 		}
 	},
 	plugins: [sveltekit()]

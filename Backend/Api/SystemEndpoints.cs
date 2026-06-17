@@ -1,0 +1,27 @@
+namespace Backend.Api;
+
+using Backend.Contracts;
+using Infrastructure.Network;
+
+public static class SystemEndpoints
+{
+	public static void MapSystemEndpoints(this WebApplication app)
+	{
+		app.MapGet("/system/connection", GetConnection);
+		app.MapGet("/system/version", GetVersion);
+	}
+
+	private static IResult GetConnection(INetworkProvider network, IConfiguration configuration)
+	{
+		var host = ResolveHost(configuration["Host"], network);
+		var info = ConnectionInfo.For(host, configuration["Port"] ?? "5757");
+		return Results.Ok(info);
+	}
+
+	private static IResult GetVersion() => Results.Ok(VersionInfo.Current);
+
+	private static string ResolveHost(string? configuredHost, INetworkProvider network) =>
+		string.IsNullOrWhiteSpace(configuredHost)
+			? network.GetLocalIpAddress()
+			: configuredHost.Trim();
+}
