@@ -10,7 +10,7 @@ using FileSystem;
 public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 {
 	private readonly Lock gate = new();
-	private readonly List<Channel<SessionEvent>> subscribers = [];
+	private readonly SseBroadcaster<SessionEvent> broadcaster = new();
 
 	private PlaylistBook playlists = new(ToEntries(pool.Day), ToEntries(pool.Night));
 
@@ -176,24 +176,20 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 
 	public Channel<SessionEvent> Subscribe()
 	{
-		var channel = Channel.CreateUnbounded<SessionEvent>();
 		lock (gate)
 		{
-			subscribers.Add(channel);
+			var channel = broadcaster.Add();
 			channel.Writer.TryWrite(CurrentSnapshot());
+			return channel;
 		}
-
-		return channel;
 	}
 
 	public void Unsubscribe(Channel<SessionEvent> channel)
 	{
 		lock (gate)
 		{
-			subscribers.Remove(channel);
+			broadcaster.Remove(channel);
 		}
-
-		channel.Writer.TryComplete();
 	}
 
 	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -218,15 +214,7 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 		=> playlistStore.Save(phase, entries.Select(entry => entry.Path).ToArray());
 
 	private void Broadcast()
-		=> Publish(CurrentSnapshot());
-
-	private void Publish(SessionEvent message)
-	{
-		foreach (var subscriber in subscribers)
-		{
-			subscriber.Writer.TryWrite(message);
-		}
-	}
+		=> broadcaster.Publish(CurrentSnapshot());
 
 	private SnapshotEvent CurrentSnapshot() => new(playback, playlists);
 }

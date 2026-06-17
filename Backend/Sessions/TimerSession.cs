@@ -6,7 +6,7 @@ using Core.Timer;
 public sealed class TimerSession
 {
 	private readonly Lock gate = new();
-	private readonly List<Channel<TimerEvent>> subscribers = [];
+	private readonly SseBroadcaster<TimerEvent> broadcaster = new();
 	private TimerAnchor timer = TimerAnchor.Idle;
 
 	public void Start(TimeSpan duration)
@@ -36,43 +36,31 @@ public sealed class TimerSession
 
 			timer = TimerAnchor.Idle;
 			Broadcast();
-			Publish(new GongEvent());
+			broadcaster.Publish(new GongEvent());
 		}
 	}
 
 	public Channel<TimerEvent> Subscribe()
 	{
-		var channel = Channel.CreateUnbounded<TimerEvent>();
 		lock (gate)
 		{
-			subscribers.Add(channel);
+			var channel = broadcaster.Add();
 			channel.Writer.TryWrite(CurrentSnapshot());
+			return channel;
 		}
-
-		return channel;
 	}
 
 	public void Unsubscribe(Channel<TimerEvent> channel)
 	{
 		lock (gate)
 		{
-			subscribers.Remove(channel);
+			broadcaster.Remove(channel);
 		}
-
-		channel.Writer.TryComplete();
 	}
 
 	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-	private void Broadcast() => Publish(CurrentSnapshot());
-
-	private void Publish(TimerEvent message)
-	{
-		foreach (var subscriber in subscribers)
-		{
-			subscriber.Writer.TryWrite(message);
-		}
-	}
+	private void Broadcast() => broadcaster.Publish(CurrentSnapshot());
 
 	private TimerSnapshotEvent CurrentSnapshot() => new(timer);
 }
