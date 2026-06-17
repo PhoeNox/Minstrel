@@ -2,7 +2,7 @@ namespace Backend.Api;
 
 using Core.Connection;
 using Core.Version;
-using Infrastructure.Network;
+using Network;
 
 public static class SystemEndpoints
 {

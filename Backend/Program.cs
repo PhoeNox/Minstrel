@@ -5,8 +5,9 @@ using Backend.Features.Library;
 using Backend.Features.Playback;
 using Backend.Features.Session;
 using Backend.Features.Timer;
-using Infrastructure.FileSystem;
-using Infrastructure.Network;
+using Core.Library;
+using FileSystem;
+using Network;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -3,8 +3,9 @@ namespace Backend.Features.Session;
 using System.Threading.Channels;
 using Backend.Contracts;
 using Core;
+using Core.Library;
 using Core.Playlist;
-using Infrastructure.FileSystem;
+using FileSystem;
 using Library;
 using Playback;
 
@@ -12,11 +13,13 @@ public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 {
 	private readonly Lock gate = new();
 	private readonly List<Channel<SessionEvent>> subscribers = [];
-	private PlaylistBook playlists = new((PlaylistEntry[]) ToEntries(pool.Day), (PlaylistEntry[]) ToEntries(pool.Night));
+
+	private PlaylistBook playlists = new(ToEntries(pool.Day), ToEntries(pool.Night));
+
 	private PlaybackState playback = PlaybackState.Idle with
 	{
-		Day = InitialPhase(pool.Day.Length),
-		Night = InitialPhase(pool.Night.Length),
+			Day = InitialPhase(pool.Day.Length),
+			Night = InitialPhase(pool.Night.Length),
 	};
 
 	public bool HasCurrentSong
@@ -39,7 +42,8 @@ public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 			if (index < 0)
 				return;
 
-			playback = PlaybackTimeline.Select(playback, playback.ActivePhase, index, ToTrack(entries[index]), Now());
+			playback = PlaybackTimeline.Select(playback, playback.ActivePhase, index,
+					ToTrack(entries[index]), Now());
 			Broadcast();
 		}
 	}
@@ -111,7 +115,8 @@ public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 	{
 		lock (gate)
 		{
-			var added = Playlists.Add(playlists.Entries(phase), ToEntry(pool.Get(songId)));
+			var entry = pool.EntriesById[songId];
+			var added = Playlists.Add(playlists.Entries(phase), ToEntry(entry));
 			playlists = playlists.Replace(phase, added);
 			playback = PlaybackTimeline.ReindexAfterAdd(playback, phase);
 			Save(phase, added);
@@ -126,7 +131,8 @@ public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 			var entries = playlists.Entries(phase);
 			var removed = Playlists.RemoveAt(entries, index);
 			playlists = playlists.Replace(phase, removed);
-			playback = PlaybackTimeline.ReindexAfterRemove(playback, phase, index, entries.Length, ToTracks(removed), Now());
+			playback = PlaybackTimeline.ReindexAfterRemove(playback, phase, index, entries.Length,
+					ToTracks(removed), Now());
 			Save(phase, removed);
 			Broadcast();
 		}
@@ -151,7 +157,8 @@ public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 			var entries = playlists.Entries(phase);
 			var moved = Playlists.Move(entries, oldIndex, newIndex);
 			playlists = playlists.Replace(phase, moved);
-			playback = PlaybackTimeline.ReindexAfterMove(playback, phase, oldIndex, newIndex, entries.Length);
+			playback =
+					PlaybackTimeline.ReindexAfterMove(playback, phase, oldIndex, newIndex, entries.Length);
 			Save(phase, moved);
 			Broadcast();
 		}
@@ -163,7 +170,8 @@ public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 		{
 			var now = Now();
 			var previous = playback;
-			playback = PlaybackTimeline.Tick(playback, ToTracks(playlists.Entries(playback.ActivePhase)), now);
+			playback = PlaybackTimeline.Tick(playback, ToTracks(playlists.Entries(playback.ActivePhase)),
+					now);
 			if (PlaybackTimeline.PlaybackJumped(previous, playback, now))
 				Broadcast();
 		}
@@ -193,21 +201,27 @@ public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 
 	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-	private static PhasePlayback InitialPhase(int count) => new(Cursor: count > 0 ? 0 : null);
+	private static PhasePlayback InitialPhase(int count)
+		=> new(Cursor: count > 0 ? 0 : null);
 
-	private static PlaylistEntry[] ToEntries(IReadOnlyList<PoolEntry> entries) => entries.Select(ToEntry).ToArray();
+	private static PlaylistEntry[] ToEntries(IReadOnlyList<PoolEntry> entries)
+		=> entries.Select(ToEntry).ToArray();
 
-	private static PlaylistEntry ToEntry(PoolEntry entry) =>
-		new(entry.Id, entry.Song.Path, entry.Song.Title, entry.Song.Artist, entry.Song.Length.TotalSeconds);
+	private static PlaylistEntry ToEntry(PoolEntry entry) 
+		=> new(entry.Id, entry.Song.Path, entry.Song.Title, entry.Song.Artist,
+					entry.Song.Length.TotalSeconds);
 
-	private static Track[] ToTracks(PlaylistEntry[] entries) => entries.Select(entry => ToTrack(entry)!).ToArray();
+	private static Track[] ToTracks(PlaylistEntry[] entries)
+		=> entries.Select(entry => ToTrack(entry)!).ToArray();
 
-	private static Track? ToTrack(PlaylistEntry? entry) => entry is null ? null : new Track(entry.Id, entry.Length);
+	private static Track? ToTrack(PlaylistEntry? entry)
+		=> entry is null ? null : new Track(entry.Id, entry.Length);
 
-	private void Save(GamePhase phase, PlaylistEntry[] entries) =>
-		fileSystem.SavePlaylist(phase, entries.Select(entry => entry.Path).ToArray());
+	private void Save(GamePhase phase, PlaylistEntry[] entries) 
+		=> fileSystem.SavePlaylist(phase, entries.Select(entry => entry.Path).ToArray());
 
-	private void Broadcast() => Publish(new SnapshotEvent(CurrentSnapshot()));
+	private void Broadcast() 
+		=> Publish(new SnapshotEvent(CurrentSnapshot()));
 
 	private void Publish(SessionEvent message)
 	{

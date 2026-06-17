@@ -1,4 +1,4 @@
-namespace Infrastructure.Network;
+namespace Network;
 
 public sealed record NetworkAdapter(
 	string Name,

@@ -1,6 +1,6 @@
 namespace Backend.Tests.Network;
 
-using Infrastructure.Network;
+using global::Network;
 
 public class LocalAddressSelectorTests
 {

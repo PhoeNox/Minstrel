@@ -1,4 +1,4 @@
-namespace Infrastructure.Network;
+namespace Network;
 
 public static class LocalAddressSelector
 {

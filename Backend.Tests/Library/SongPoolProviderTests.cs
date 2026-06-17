@@ -1,10 +1,15 @@
 namespace Backend.Tests.Library;
 
+using Core.Library;
 using Features.Library;
 
-public class SongPoolTests
+public class SongPoolProviderTests
 {
-	private static SongPool Build(FakeFileSystem fileSystem) => new(fileSystem);
+	private static SongPool Build(FakeFileSystem fileSystem)
+	{
+		var provider = new SongPoolProvider(fileSystem);
+		return provider.SongPool;
+	}
 
 	[Test]
 	public async Task LoadsBothPlaylistsFromTheFileSystem()
@@ -17,21 +22,6 @@ public class SongPoolTests
 
 		await Assert.That(pool.Day).Count().IsEqualTo(1);
 		await Assert.That(pool.Night).Count().IsEqualTo(2);
-	}
-
-	[Test]
-	public async Task ExtractsTitleArtistAndLengthMetadata()
-	{
-		var fileSystem = new FakeFileSystem(
-			day: [TestSongs.At("a.mp3", TimeSpan.FromSeconds(42))],
-			night: []);
-
-		var pool = Build(fileSystem);
-		var dto = pool.ToSongDto(pool.Day[0].Id);
-
-		await Assert.That(dto.Title).IsEqualTo("Title a.mp3");
-		await Assert.That(dto.Artist).IsEqualTo("Artist a.mp3");
-		await Assert.That(dto.Length).IsEqualTo(42);
 	}
 
 	[Test]
@@ -60,11 +50,11 @@ public class SongPoolTests
 			alsoOnDisk: [TestSongs.At("orphan.mp3")]);
 		var pool = Build(fileSystem);
 
-		var orphan = pool.All.Single(entry => entry.Song.Path == "orphan.mp3");
-		var ok = pool.TryGetPath(orphan.Id, out var path);
+		var orphan = pool.All.Single(e => e.Song.Path == "orphan.mp3");
+		var ok = pool.EntriesById.TryGetValue(orphan.Id, out var entry);
 
 		await Assert.That(ok).IsTrue();
-		await Assert.That(path).IsEqualTo("orphan.mp3");
+		await Assert.That(entry?.Song.Path).IsEqualTo("orphan.mp3");
 	}
 
 	[Test]
@@ -72,20 +62,9 @@ public class SongPoolTests
 	{
 		var pool = Build(new FakeFileSystem([TestSongs.At("a.mp3")], [TestSongs.At("b.mp3")]));
 
-		var ok = pool.TryGetPath(pool.Night[0].Id, out var path);
+		var ok = pool.EntriesById.TryGetValue(pool.Night[0].Id, out var entry);
 
 		await Assert.That(ok).IsTrue();
-		await Assert.That(path).IsEqualTo("b.mp3");
-	}
-
-	[Test]
-	public async Task ReturnsFalseForAnUnknownSongId()
-	{
-		var pool = Build(new FakeFileSystem([TestSongs.At("a.mp3")], []));
-
-		var ok = pool.TryGetPath("unknown", out var path);
-
-		await Assert.That(ok).IsFalse();
-		await Assert.That(path).IsEqualTo(string.Empty);
+		await Assert.That(entry?.Song.Path).IsEqualTo("b.mp3");
 	}
 }

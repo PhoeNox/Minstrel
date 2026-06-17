@@ -1,4 +1,4 @@
-namespace Infrastructure.Network;
+namespace Network;
 
 using System.Net;
 using System.Net.NetworkInformation;

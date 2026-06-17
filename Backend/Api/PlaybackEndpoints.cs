@@ -7,6 +7,7 @@ using Backend.Contracts;
 using Backend.Features.Library;
 using Backend.Features.Session;
 using Core;
+using Core.Library;
 using Microsoft.AspNetCore.StaticFiles;
 
 public sealed record PlayCommand(string? SongId);
@@ -69,11 +70,10 @@ public static class PlaybackEndpoints
 
 	private static IResult StreamAudio(string songId, SongPool pool)
 	{
-		if (!pool.TryGetPath(songId, out var path))
-		{
+		if (!pool.EntriesById.TryGetValue(songId, out var entry))
 			return Results.NotFound();
-		}
 
+		var path = entry.Song.Path;
 		var contentType = ContentTypes.TryGetContentType(path, out var resolved)
 			? resolved
 			: "application/octet-stream";

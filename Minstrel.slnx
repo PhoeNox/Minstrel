@@ -1,9 +1,11 @@
 <Solution>
   <Project Path="Backend/Backend.csproj" />
+  <Folder Name="/Providers/">
+    <Project Path="FileSystem\FileSystem.csproj" />
+    <Project Path="Network\Network.csproj" />
+  </Folder>
   <Project Path="Backend.Tests/Backend.Tests.csproj" />
   <Project Path="Player.E2E.Tests/Player.E2E.Tests.csproj" />
   <Project Path="Core.Tests/Core.Tests.csproj" />
   <Project Path="Core/Core.csproj" />
-  <Project Path="Infrastructure.FileSystem/Infrastructure.FileSystem.csproj" />
-  <Project Path="Infrastructure.Network/Infrastructure.Network.csproj" />
 </Solution>

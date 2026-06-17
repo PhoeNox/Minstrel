@@ -1,4 +1,4 @@
-namespace Infrastructure.FileSystem;
+namespace FileSystem;
 
 using Core;
 using Microsoft.Extensions.Options;

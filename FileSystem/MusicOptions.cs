@@ -1,4 +1,4 @@
-namespace Infrastructure.FileSystem;
+namespace FileSystem;
 
 public record MusicOptions
 {
