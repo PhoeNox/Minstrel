@@ -1,14 +1,14 @@
 namespace Backend.Tests.Playback;
 
-using Backend.Playback;
 using Core;
+using Features.Playback;
 
 public class Removing
 {
 	private static TimelineState ActivePlaying(int current, params string[] ids)
 	{
 		var playlist = new TimelinePlaylist(
-			ids.Select(id => new TimelineSong(id, 100)).ToArray(),
+			ids.Select(id => TimelineFixtures.Song(id, 100)).ToArray(),
 			CurrentIndex: current);
 		var state = TimelineState.Idle with { Day = playlist };
 		return PlaybackTimeline.PlayAt(state, ids[current], offset: 30, now: 1000);
@@ -88,9 +88,9 @@ public class Removing
 	public async Task RemovingFromTheInactivePhaseRepairsItsCurrentIndexWithoutTouchingPlayback()
 	{
 		var night = new TimelinePlaylist(
-			new[] { "x", "y", "z" }.Select(id => new TimelineSong(id, 100)).ToArray(),
+			new[] { "x", "y", "z" }.Select(id => TimelineFixtures.Song(id, 100)).ToArray(),
 			CurrentIndex: 2);
-		var day = new TimelinePlaylist([new TimelineSong("a", 100)], CurrentIndex: 0);
+		var day = new TimelinePlaylist([TimelineFixtures.Song("a", 100)], CurrentIndex: 0);
 		var state = PlaybackTimeline.PlayAt(
 			TimelineState.Idle with { Day = day, Night = night }, "a", offset: 30, now: 1000);
 

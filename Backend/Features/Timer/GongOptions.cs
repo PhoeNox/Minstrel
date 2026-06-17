@@ -1,4 +1,4 @@
-namespace Backend.Playback;
+namespace Backend.Features.Timer;
 
 public record GongOptions
 {

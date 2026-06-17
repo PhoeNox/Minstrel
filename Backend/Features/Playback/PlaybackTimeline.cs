@@ -1,4 +1,4 @@
-namespace Backend.Playback;
+namespace Backend.Features.Playback;
 
 using Core;
 
@@ -7,7 +7,7 @@ public sealed record PositionAnchor(string? SongId, double Offset, long AnchorTi
 	public static PositionAnchor Idle { get; } = new(SongId: null, Offset: 0, AnchorTimestamp: 0, IsPlaying: false);
 }
 
-public sealed record TimelineSong(string Id, double Length);
+public sealed record TimelineSong(string Id, string Path, string Title, string Artist, double Length);
 
 public sealed record TimelinePlaylist(TimelineSong[] Songs, int? CurrentIndex, double Gain = 1.0, double ResumeOffset = 0)
 {
@@ -86,10 +86,10 @@ public static class PlaybackTimeline
 			CurrentIndex = RemapCurrentIndex(playlist, oldIndex, newIndex),
 		});
 
-	public static TimelineState AddSong(TimelineState state, GamePhase phase, string songId, double length) =>
+	public static TimelineState AddSong(TimelineState state, GamePhase phase, TimelineSong song) =>
 		WithPlaylist(state, phase, playlist => playlist with
 		{
-			Songs = [..playlist.Songs, new TimelineSong(songId, length)],
+			Songs = [..playlist.Songs, song],
 			CurrentIndex = playlist.CurrentIndex ?? 0,
 		});
 

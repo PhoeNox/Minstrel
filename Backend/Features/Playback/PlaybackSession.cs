@@ -1,19 +1,20 @@
-namespace Backend.Playback;
+namespace Backend.Features.Playback;
 
 using System.Threading.Channels;
 using Backend.Contracts;
-using Backend.Library;
-using Backend.Timer;
 using Core;
+using Infrastructure.FileSystem;
+using Library;
+using Timer;
 
-public sealed class PlaybackSession(SongLibrary library)
+public sealed class PlaybackSession(SongPool pool, IFileSystemProvider fileSystem)
 {
 	private readonly Lock gate = new();
 	private readonly List<Channel<SessionEvent>> subscribers = [];
 	private TimelineState state = TimelineState.Idle with
 	{
-			Day = ToPlaylist(library.Day),
-			Night = ToPlaylist(library.Night),
+			Day = ToPlaylist(pool.Day),
+			Night = ToPlaylist(pool.Night),
 	};
 	private TimerAnchor timer = TimerAnchor.Idle;
 
@@ -103,9 +104,8 @@ public sealed class PlaybackSession(SongLibrary library)
 	{
 		lock (gate)
 		{
-			state = PlaybackTimeline.AddSong(state, phase, songId, library.Length(songId));
-			var playlist = phase == GamePhase.Day ? state.Day : state.Night;
-			library.SaveOrder(phase, playlist.Songs.Select(song => song.Id).ToArray());
+			state = PlaybackTimeline.AddSong(state, phase, ToTimelineSong(pool.Get(songId)));
+			SaveOrder(phase);
 			Broadcast(CurrentSnapshot());
 		}
 	}
@@ -115,8 +115,7 @@ public sealed class PlaybackSession(SongLibrary library)
 		lock (gate)
 		{
 			state = PlaybackTimeline.RemoveSong(state, phase, index, Now());
-			var playlist = phase == GamePhase.Day ? state.Day : state.Night;
-			library.SaveOrder(phase, playlist.Songs.Select(song => song.Id).ToArray());
+			SaveOrder(phase);
 			Broadcast(CurrentSnapshot());
 		}
 	}
@@ -126,8 +125,7 @@ public sealed class PlaybackSession(SongLibrary library)
 		lock (gate)
 		{
 			state = PlaybackTimeline.Shuffle(state, phase, Random.Shared);
-			var playlist = phase == GamePhase.Day ? state.Day : state.Night;
-			library.SaveOrder(phase, playlist.Songs.Select(song => song.Id).ToArray());
+			SaveOrder(phase);
 			Broadcast(CurrentSnapshot());
 		}
 	}
@@ -137,8 +135,7 @@ public sealed class PlaybackSession(SongLibrary library)
 		lock (gate)
 		{
 			state = PlaybackTimeline.MoveSong(state, phase, oldIndex, newIndex);
-			var playlist = phase == GamePhase.Day ? state.Day : state.Night;
-			library.SaveOrder(phase, playlist.Songs.Select(song => song.Id).ToArray());
+			SaveOrder(phase);
 			Broadcast(CurrentSnapshot());
 		}
 	}
@@ -203,10 +200,19 @@ public sealed class PlaybackSession(SongLibrary library)
 
 	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-	private static TimelinePlaylist ToPlaylist(IReadOnlyList<LibraryEntry> entries) =>
+	private static TimelinePlaylist ToPlaylist(IReadOnlyList<PoolEntry> entries) =>
 		new(
-			entries.Select(entry => new TimelineSong(entry.Id, entry.Song.Length.TotalSeconds)).ToArray(),
+			entries.Select(ToTimelineSong).ToArray(),
 			entries.Count > 0 ? 0 : null);
+
+	private static TimelineSong ToTimelineSong(PoolEntry entry) =>
+		new(entry.Id, entry.Song.Path, entry.Song.Title, entry.Song.Artist, entry.Song.Length.TotalSeconds);
+
+	private void SaveOrder(GamePhase phase)
+	{
+		var playlist = phase == GamePhase.Day ? state.Day : state.Night;
+		fileSystem.SavePlaylist(phase, playlist.Songs.Select(song => song.Path).ToArray());
+	}
 
 	private void Broadcast(StateSnapshot snapshot) => Publish(new SnapshotEvent(snapshot));
 
@@ -218,5 +224,5 @@ public sealed class PlaybackSession(SongLibrary library)
 		}
 	}
 
-	private StateSnapshot CurrentSnapshot() => SnapshotMapper.ToSnapshot(state, timer, library);
+	private StateSnapshot CurrentSnapshot() => SnapshotMapper.ToSnapshot(state, timer);
 }

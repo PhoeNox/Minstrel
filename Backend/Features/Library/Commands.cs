@@ -1,5 +1,5 @@
 // ReSharper disable ClassNeverInstantiated.Global
-namespace Backend.Library;
+namespace Backend.Features.Library;
 
 using Core;
 

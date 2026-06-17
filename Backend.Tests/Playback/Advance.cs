@@ -1,14 +1,14 @@
 namespace Backend.Tests.Playback;
 
-using Backend.Playback;
 using Core;
+using Features.Playback;
 
 public class Advance
 {
 	private static TimelineState Playing(params (string Id, double Length)[] songs)
 	{
 		var playlist = new TimelinePlaylist(
-			songs.Select(song => new TimelineSong(song.Id, song.Length)).ToArray(),
+			songs.Select(song => TimelineFixtures.Song(song.Id, song.Length)).ToArray(),
 			CurrentIndex: 0);
 		var state = TimelineState.Idle with { Day = playlist };
 		return PlaybackTimeline.SelectSong(state, GamePhase.Day, index: 0, now: 1000);

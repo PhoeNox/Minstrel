@@ -9,7 +9,7 @@ public interface IFileSystemProvider
 
 	(Song[] DayPlaylist, Song[] NightPlaylist) LoadPlaylists();
 
-	void SavePlaylist(GamePhase gamePhase, Song[] songs);
+	void SavePlaylist(GamePhase gamePhase, IReadOnlyList<string> songPaths);
 }
 
 public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSystemProvider
@@ -32,10 +32,10 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSy
 		return (daySongs, nightSongs);
 	}
 
-	public void SavePlaylist(GamePhase gamePhase, Song[] songs)
+	public void SavePlaylist(GamePhase gamePhase, IReadOnlyList<string> songPaths)
 	{
 		var playlist = PlaylistPath(gamePhase);
-		File.WriteAllLines(playlist, songs.Select(song => Path.GetRelativePath(MusicDirectory, song.Path)));
+		File.WriteAllLines(playlist, songPaths.Select(path => Path.GetRelativePath(MusicDirectory, path)));
 	}
 
 	private Song[] LoadPlaylist(GamePhase gamePhase)

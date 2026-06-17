@@ -15,4 +15,8 @@
 		<ProjectReference Include="..\Infrastructure.Network\Infrastructure.Network.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Features\" />
+	</ItemGroup>
+
 </Project>

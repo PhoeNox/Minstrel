@@ -1,6 +1,6 @@
 namespace Backend.Tests.Playback;
 
-using Backend.Playback;
+using Features.Playback;
 
 public class Play
 {

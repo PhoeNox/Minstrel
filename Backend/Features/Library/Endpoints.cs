@@ -1,4 +1,4 @@
-namespace Backend.Library;
+namespace Backend.Features.Library;
 
 using Playback;
 
@@ -14,10 +14,10 @@ public static class Endpoints
 		app.MapPost("/commands/move", Move);
 	}
 	
-	private static IResult GetLibrary(SongLibrary library)
+	private static IResult GetLibrary(SongPool pool)
 	{
-		var songsInLibrary = library.All
-				.Select(entry => library.ToSongDto(entry.Id))
+		var songsInLibrary = pool.All
+				.Select(entry => pool.ToSongDto(entry.Id))
 				.ToArray();
 		return Results.Ok(songsInLibrary);
 	}

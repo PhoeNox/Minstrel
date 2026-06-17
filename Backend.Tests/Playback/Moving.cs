@@ -1,14 +1,14 @@
 namespace Backend.Tests.Playback;
 
-using Backend.Playback;
 using Core;
+using Features.Playback;
 
 public class Moving
 {
 	private static TimelineState WithDaySongs(params string[] ids)
 	{
 		var playlist = new TimelinePlaylist(
-			ids.Select(id => new TimelineSong(id, 10)).ToArray(),
+			ids.Select(id => TimelineFixtures.Song(id, 10)).ToArray(),
 			CurrentIndex: 0);
 		return TimelineState.Idle with { Day = playlist };
 	}

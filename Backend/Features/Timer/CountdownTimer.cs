@@ -1,4 +1,4 @@
-namespace Backend.Timer;
+namespace Backend.Features.Timer;
 
 public sealed record TimerAnchor(bool Running, long AnchorTimestamp, double DurationLeftAtAnchor)
 {

@@ -1,4 +1,4 @@
-namespace Backend.Playback;
+namespace Backend.Features.Playback;
 
 public sealed class PlaybackClock(PlaybackSession session) : BackgroundService
 {

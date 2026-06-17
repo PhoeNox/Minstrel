@@ -1,13 +1,13 @@
-namespace Backend.Endpoints;
+namespace Backend.Features.Playback;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Backend.Contracts;
-using Backend.Library;
-using Backend.Playback;
 using Infrastructure.Network;
+using Library;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
+using Timer;
 
 public static class Endpoints
 {
@@ -82,9 +82,9 @@ public static class Endpoints
 			? network.GetLocalIpAddress()
 			: configuredHost.Trim();
 
-	private static IResult StreamAudio(string songId, SongLibrary library)
+	private static IResult StreamAudio(string songId, SongPool pool)
 	{
-		if (!library.TryGetPath(songId, out var path))
+		if (!pool.TryGetPath(songId, out var path))
 		{
 			return Results.NotFound();
 		}

@@ -1,5 +1,5 @@
 // ReSharper disable ClassNeverInstantiated.Global
-namespace Backend.Endpoints;
+namespace Backend.Features.Playback;
 
 using Core;
 

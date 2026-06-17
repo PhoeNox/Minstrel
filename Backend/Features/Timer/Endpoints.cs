@@ -1,6 +1,6 @@
-namespace Backend.Timer;
+namespace Backend.Features.Timer;
 
-using Backend.Playback;
+using Playback;
 
 public static class Endpoints
 {

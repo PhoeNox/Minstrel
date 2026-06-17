@@ -1,17 +1,17 @@
 namespace Backend.Tests.Playback;
 
-using Backend.Playback;
 using Core;
+using Features.Playback;
 
 public class Selecting
 {
 	private static TimelineState WithPlaylists()
 	{
 		var day = new TimelinePlaylist(
-			[new TimelineSong("day-1", 10), new TimelineSong("day-2", 10)],
+			[TimelineFixtures.Song("day-1", 10), TimelineFixtures.Song("day-2", 10)],
 			CurrentIndex: 0);
 		var night = new TimelinePlaylist(
-			[new TimelineSong("night-1", 10), new TimelineSong("night-2", 10)],
+			[TimelineFixtures.Song("night-1", 10), TimelineFixtures.Song("night-2", 10)],
 			CurrentIndex: 0);
 		return TimelineState.Idle with { Day = day, Night = night };
 	}

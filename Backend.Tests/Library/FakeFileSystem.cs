@@ -7,6 +7,7 @@ public sealed class FakeFileSystem : IFileSystemProvider
 {
 	private readonly Dictionary<GamePhase, Song[]> playlists;
 	private readonly Song[] alsoOnDisk;
+	private readonly Dictionary<GamePhase, string[]> saved = new();
 
 	public FakeFileSystem(Song[] day, Song[] night, Song[]? alsoOnDisk = null)
 	{
@@ -18,7 +19,7 @@ public sealed class FakeFileSystem : IFileSystemProvider
 		this.alsoOnDisk = alsoOnDisk ?? [];
 	}
 
-	public Song[] Saved(GamePhase phase) => playlists[phase];
+	public string[] Saved(GamePhase phase) => saved[phase];
 
 	public Song[] LoadSongs() =>
 		playlists.Values.SelectMany(songs => songs).Concat(alsoOnDisk).ToArray();
@@ -26,7 +27,8 @@ public sealed class FakeFileSystem : IFileSystemProvider
 	public (Song[] DayPlaylist, Song[] NightPlaylist) LoadPlaylists() =>
 		(playlists[GamePhase.Day], playlists[GamePhase.Night]);
 
-	public void SavePlaylist(GamePhase gamePhase, Song[] songs) => playlists[gamePhase] = songs;
+	public void SavePlaylist(GamePhase gamePhase, IReadOnlyList<string> songPaths) =>
+		saved[gamePhase] = songPaths.ToArray();
 }
 
 public static class TestSongs

@@ -1,11 +1,10 @@
 namespace Backend.Tests.Library;
 
-using Backend.Library;
-using Core;
+using Features.Library;
 
-public class SongLibraryTests
+public class SongPoolTests
 {
-	private static SongLibrary Build(FakeFileSystem fileSystem) => new(fileSystem);
+	private static SongPool Build(FakeFileSystem fileSystem) => new(fileSystem);
 
 	[Test]
 	public async Task LoadsBothPlaylistsFromTheFileSystem()
@@ -14,10 +13,10 @@ public class SongLibraryTests
 			day: [TestSongs.At("a.mp3")],
 			night: [TestSongs.At("b.mp3"), TestSongs.At("c.mp3")]);
 
-		var library = Build(fileSystem);
+		var pool = Build(fileSystem);
 
-		await Assert.That(library.Day).Count().IsEqualTo(1);
-		await Assert.That(library.Night).Count().IsEqualTo(2);
+		await Assert.That(pool.Day).Count().IsEqualTo(1);
+		await Assert.That(pool.Night).Count().IsEqualTo(2);
 	}
 
 	[Test]
@@ -27,8 +26,8 @@ public class SongLibraryTests
 			day: [TestSongs.At("a.mp3", TimeSpan.FromSeconds(42))],
 			night: []);
 
-		var library = Build(fileSystem);
-		var dto = library.ToSongDto(library.Day[0].Id);
+		var pool = Build(fileSystem);
+		var dto = pool.ToSongDto(pool.Day[0].Id);
 
 		await Assert.That(dto.Title).IsEqualTo("Title a.mp3");
 		await Assert.That(dto.Artist).IsEqualTo("Artist a.mp3");
@@ -47,9 +46,9 @@ public class SongLibraryTests
 	[Test]
 	public async Task AssignsDistinctIdsToDistinctPaths()
 	{
-		var library = Build(new FakeFileSystem([TestSongs.At("a.mp3"), TestSongs.At("b.mp3")], []));
+		var pool = Build(new FakeFileSystem([TestSongs.At("a.mp3"), TestSongs.At("b.mp3")], []));
 
-		await Assert.That(library.Day[0].Id).IsNotEqualTo(library.Day[1].Id);
+		await Assert.That(pool.Day[0].Id).IsNotEqualTo(pool.Day[1].Id);
 	}
 
 	[Test]
@@ -59,10 +58,10 @@ public class SongLibraryTests
 			day: [TestSongs.At("a.mp3")],
 			night: [],
 			alsoOnDisk: [TestSongs.At("orphan.mp3")]);
-		var library = Build(fileSystem);
+		var pool = Build(fileSystem);
 
-		var orphan = library.All.Single(entry => entry.Song.Path == "orphan.mp3");
-		var ok = library.TryGetPath(orphan.Id, out var path);
+		var orphan = pool.All.Single(entry => entry.Song.Path == "orphan.mp3");
+		var ok = pool.TryGetPath(orphan.Id, out var path);
 
 		await Assert.That(ok).IsTrue();
 		await Assert.That(path).IsEqualTo("orphan.mp3");
@@ -71,9 +70,9 @@ public class SongLibraryTests
 	[Test]
 	public async Task RoundTripsSongIdToPath()
 	{
-		var library = Build(new FakeFileSystem([TestSongs.At("a.mp3")], [TestSongs.At("b.mp3")]));
+		var pool = Build(new FakeFileSystem([TestSongs.At("a.mp3")], [TestSongs.At("b.mp3")]));
 
-		var ok = library.TryGetPath(library.Night[0].Id, out var path);
+		var ok = pool.TryGetPath(pool.Night[0].Id, out var path);
 
 		await Assert.That(ok).IsTrue();
 		await Assert.That(path).IsEqualTo("b.mp3");
@@ -82,25 +81,11 @@ public class SongLibraryTests
 	[Test]
 	public async Task ReturnsFalseForAnUnknownSongId()
 	{
-		var library = Build(new FakeFileSystem([TestSongs.At("a.mp3")], []));
+		var pool = Build(new FakeFileSystem([TestSongs.At("a.mp3")], []));
 
-		var ok = library.TryGetPath("unknown", out var path);
+		var ok = pool.TryGetPath("unknown", out var path);
 
 		await Assert.That(ok).IsFalse();
 		await Assert.That(path).IsEqualTo(string.Empty);
-	}
-
-	[Test]
-	public async Task SavesPlaylistOrderAsResolvedSongPaths()
-	{
-		var fileSystem = new FakeFileSystem(
-			day: [TestSongs.At("a.mp3"), TestSongs.At("b.mp3")],
-			night: []);
-		var library = Build(fileSystem);
-
-		library.SaveOrder(GamePhase.Day, [library.Day[1].Id, library.Day[0].Id]);
-
-		var saved = fileSystem.Saved(GamePhase.Day).Select(song => song.Path).ToArray();
-		await Assert.That(saved).IsEquivalentTo(new[] { "b.mp3", "a.mp3" });
 	}
 }

@@ -1,6 +1,6 @@
 namespace Backend.Tests.Timer;
 
-using Backend.Timer;
+using Features.Timer;
 
 public class Countdown
 {
