@@ -41,6 +41,6 @@ public sealed class FakeFileSystem(Song[] day, Song[] night, Song[]? alsoOnDisk 
 public static class TestSongs
 {
 	public static Song At(string name, TimeSpan? length = null)
-		=> new($"/music/{name}", Title: $"Title {name}", Artist: $"Artist {name}", Album: "Album",
+		=> new($"/music/{name}", Title: $"Title {name}", Artist: $"Artist {name}",
 				Length: length ?? TimeSpan.FromMinutes(3));
 }

@@ -6,7 +6,7 @@ using Core.Library;
 public class SongPoolTests
 {
 	private static Song Song(string path)
-		=> new(path, Title: path, Artist: "Artist", Album: "Album", Length: TimeSpan.FromMinutes(3));
+		=> new(path, Title: path, Artist: "Artist", Length: TimeSpan.FromMinutes(3));
 
 	[Test]
 	public async Task AssignsAStableIdAcrossReloads()

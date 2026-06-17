@@ -52,7 +52,6 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSy
 					Path: fullPath,
 					Title: tags.Tag.Title ?? Path.GetFileNameWithoutExtension(fullPath),
 					Artist: string.Join(", ", tags.Tag.Performers),
-					Album: tags.Tag.Album ?? "Unknown Album",
 					Length: tags.Properties.Duration
 			);
 			return [song];
