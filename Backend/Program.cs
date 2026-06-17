@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Backend.Features.Library;
 using Backend.Features.Playback;
+using Backend.Features.Session;
 using Backend.Features.Timer;
 using Infrastructure.FileSystem;
 using Infrastructure.Network;
@@ -21,7 +22,7 @@ builder.Services.AddOptions<GongOptions>()
 builder.Services.AddSingleton<IFileSystemProvider, FileSystemProvider>();
 builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
 builder.Services.AddSingleton<SongPool>();
-builder.Services.AddSingleton<PlaybackSession>();
+builder.Services.AddSingleton<LiveSession>();
 builder.Services.AddHostedService<PlaybackClock>();
 builder.Services.AddSingleton<TimerSession>();
 builder.Services.AddHostedService<TimerClock>();

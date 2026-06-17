@@ -2,58 +2,48 @@ namespace Backend.Tests.Playback;
 
 using Core;
 using Features.Playback;
+using Features.Playlist;
 
 public class Adding
 {
-	private static TimelineState WithDaySongs(params string[] ids)
-	{
-		var playlist = new TimelinePlaylist(
-			ids.Select(id => TimelineFixtures.Song(id, 10)).ToArray(),
-			CurrentIndex: 0);
-		return TimelineState.Idle with { Day = playlist };
-	}
-
-	private static string[] DayOrder(TimelineState state) =>
-		state.Day.Songs.Select(song => song.Id).ToArray();
-
 	[Test]
-	public async Task AppendsTheSongToTheEndOfThePlaylist()
+	public async Task AppendsTheEntryToTheEndOfThePlaylist()
 	{
-		var state = WithDaySongs("a", "b");
+		var entries = new[] { Fixtures.Entry("a", 10), Fixtures.Entry("b", 10) };
 
-		var added = PlaybackTimeline.AddSong(state, GamePhase.Day, TimelineFixtures.Song("c", 20));
+		var added = Playlists.Add(entries, Fixtures.Entry("c", 20));
 
-		await Assert.That(DayOrder(added)).IsEquivalentTo(new[] { "a", "b", "c" });
-		await Assert.That(added.Day.Songs[^1].Length).IsEqualTo(20);
+		await Assert.That(added.Select(entry => entry.Id)).IsEquivalentTo(new[] { "a", "b", "c" });
+		await Assert.That(added[^1].Length).IsEqualTo(20);
 	}
 
 	[Test]
-	public async Task AllowsAddingTheSameSongTwice()
+	public async Task AllowsAddingTheSameEntryTwice()
 	{
-		var state = WithDaySongs("a");
+		var entries = new[] { Fixtures.Entry("a", 10) };
 
-		var added = PlaybackTimeline.AddSong(state, GamePhase.Day, TimelineFixtures.Song("a", 10));
+		var added = Playlists.Add(entries, Fixtures.Entry("a", 10));
 
-		await Assert.That(DayOrder(added)).IsEquivalentTo(new[] { "a", "a" });
+		await Assert.That(added.Select(entry => entry.Id)).IsEquivalentTo(new[] { "a", "a" });
 	}
 
 	[Test]
-	public async Task LeavesTheCurrentSongAndPositionUntouched()
+	public async Task LeavesTheCurrentEntryAndPositionUntouched()
 	{
-		var state = PlaybackTimeline.Play(WithDaySongs("a", "b"), "a", now: 1000);
+		var state = PlaybackTimeline.Play(PlaybackState.Idle with { Day = new PhasePlayback(Cursor: 0) }, "a", now: 1000);
 
-		var added = PlaybackTimeline.AddSong(state, GamePhase.Day, TimelineFixtures.Song("c", 30));
+		var reindexed = PlaybackTimeline.ReindexAfterAdd(state, GamePhase.Day);
 
-		await Assert.That(added.Day.CurrentIndex).IsEqualTo(0);
-		await Assert.That(added.CurrentSongId).IsEqualTo("a");
-		await Assert.That(added.Position).IsEqualTo(state.Position);
+		await Assert.That(reindexed.Day.Cursor).IsEqualTo(0);
+		await Assert.That(reindexed.CurrentSongId).IsEqualTo("a");
+		await Assert.That(reindexed.Position).IsEqualTo(state.Position);
 	}
 
 	[Test]
-	public async Task SelectsTheFirstSongWhenAddingToAnEmptyPlaylist()
+	public async Task SelectsTheFirstEntryWhenAddingToAnEmptyPlaylist()
 	{
-		var added = PlaybackTimeline.AddSong(TimelineState.Idle, GamePhase.Day, TimelineFixtures.Song("a", 10));
+		var reindexed = PlaybackTimeline.ReindexAfterAdd(PlaybackState.Idle, GamePhase.Day);
 
-		await Assert.That(added.Day.CurrentIndex).IsEqualTo(0);
+		await Assert.That(reindexed.Day.Cursor).IsEqualTo(0);
 	}
 }

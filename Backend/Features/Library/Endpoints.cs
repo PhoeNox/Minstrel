@@ -1,6 +1,6 @@
 namespace Backend.Features.Library;
 
-using Playback;
+using Session;
 
 public static class Endpoints
 {
@@ -22,25 +22,25 @@ public static class Endpoints
 		return Results.Ok(songsInLibrary);
 	}
 	
-	private static IResult Add(AddCommand? command, PlaybackSession session)
+	private static IResult Add(AddCommand? command, LiveSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and song id are required.");
 
-		session.AddSong(command.Phase, command.SongId);
+		session.Add(command.Phase, command.SongId);
 		return Results.NoContent();
 	}
 
-	private static IResult Remove(RemoveCommand? command, PlaybackSession session)
+	private static IResult Remove(RemoveCommand? command, LiveSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and index are required.");
 
-		session.RemoveSong(command.Phase, command.Index);
+		session.Remove(command.Phase, command.Index);
 		return Results.NoContent();
 	}
 
-	private static IResult Shuffle(ShuffleCommand? command, PlaybackSession session)
+	private static IResult Shuffle(ShuffleCommand? command, LiveSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase is required.");
@@ -49,12 +49,12 @@ public static class Endpoints
 		return Results.NoContent();
 	}
 
-	private static IResult Move(MoveCommand? command, PlaybackSession session)
+	private static IResult Move(MoveCommand? command, LiveSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and indices are required.");
 
-		session.MoveSong(command.Phase, command.OldIndex, command.NewIndex);
+		session.Move(command.Phase, command.OldIndex, command.NewIndex);
 		return Results.NoContent();
 	}
 }

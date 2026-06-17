@@ -2,67 +2,72 @@ namespace Backend.Tests.Playback;
 
 using Core;
 using Features.Playback;
+using Features.Playlist;
 
 public class Shuffling
 {
-	private static TimelineState ActivePlaying(int current, params string[] ids)
+	private static (PlaylistEntry[] Entries, PlaybackState State) ActivePlaying(int cursor, params string[] ids)
 	{
-		var playlist = new TimelinePlaylist(
-			ids.Select(id => TimelineFixtures.Song(id, 100)).ToArray(),
-			CurrentIndex: current);
-		var state = TimelineState.Idle with { Day = playlist };
-		return PlaybackTimeline.PlayAt(state, ids[current], offset: 30, now: 1000);
+		var entries = ids.Select(id => Fixtures.Entry(id, 100)).ToArray();
+		var state = PlaybackTimeline.PlayAt(
+			PlaybackState.Idle with { Day = new PhasePlayback(Cursor: cursor) },
+			ids[cursor],
+			offset: 30,
+			now: 1000);
+		return (entries, state);
 	}
 
 	[Test]
 	public async Task TracksTheCurrentEntryToItsNewIndexWithoutDisturbingPlayback()
 	{
-		var state = ActivePlaying(1, "a", "b", "c", "d", "e");
+		var (entries, state) = ActivePlaying(1, "a", "b", "c", "d", "e");
 
-		var shuffled = PlaybackTimeline.Shuffle(state, GamePhase.Day, new Random(12345));
+		var (shuffled, permutation) = Playlists.Shuffle(entries, new Random(12345));
+		var reindexed = PlaybackTimeline.ReindexAfterShuffle(state, GamePhase.Day, permutation);
 
-		await Assert.That(shuffled.Day.CurrentSong?.Id).IsEqualTo("b");
-		await Assert.That(shuffled.CurrentSongId).IsEqualTo("b");
-		await Assert.That(shuffled.Position).IsEqualTo(state.Position);
+		await Assert.That(shuffled[reindexed.Day.Cursor!.Value].Id).IsEqualTo("b");
+		await Assert.That(reindexed.CurrentSongId).IsEqualTo("b");
+		await Assert.That(reindexed.Position).IsEqualTo(state.Position);
 	}
 
 	[Test]
 	public async Task KeepsEveryEntry()
 	{
-		var state = ActivePlaying(0, "a", "b", "c", "d", "e");
+		var (entries, _) = ActivePlaying(0, "a", "b", "c", "d", "e");
 
-		var shuffled = PlaybackTimeline.Shuffle(state, GamePhase.Day, new Random(1));
+		var (shuffled, _) = Playlists.Shuffle(entries, new Random(1));
 
-		await Assert.That(shuffled.Day.Songs.Select(song => song.Id))
+		await Assert.That(shuffled.Select(entry => entry.Id))
 			.IsEquivalentTo(new[] { "a", "b", "c", "d", "e" });
 	}
 
 	[Test]
 	public async Task IsDeterministicForASeededRandom()
 	{
-		var state = ActivePlaying(0, "a", "b", "c", "d", "e");
+		var (entries, _) = ActivePlaying(0, "a", "b", "c", "d", "e");
 
-		var first = PlaybackTimeline.Shuffle(state, GamePhase.Day, new Random(42));
-		var second = PlaybackTimeline.Shuffle(state, GamePhase.Day, new Random(42));
+		var (first, _) = Playlists.Shuffle(entries, new Random(42));
+		var (second, _) = Playlists.Shuffle(entries, new Random(42));
 
-		var firstOrder = string.Join(",", first.Day.Songs.Select(song => song.Id));
-		var secondOrder = string.Join(",", second.Day.Songs.Select(song => song.Id));
+		var firstOrder = string.Join(",", first.Select(entry => entry.Id));
+		var secondOrder = string.Join(",", second.Select(entry => entry.Id));
 		await Assert.That(firstOrder).IsEqualTo(secondOrder);
 	}
 
 	[Test]
 	public async Task PreservesTheInactivePlaylistsCurrentEntry()
 	{
-		var night = new TimelinePlaylist(
-			new[] { "x", "y", "z", "w" }.Select(id => TimelineFixtures.Song(id, 100)).ToArray(),
-			CurrentIndex: 2);
-		var day = new TimelinePlaylist([TimelineFixtures.Song("a", 100)], CurrentIndex: 0);
+		var night = new[] { "x", "y", "z", "w" }.Select(id => Fixtures.Entry(id, 100)).ToArray();
 		var state = PlaybackTimeline.PlayAt(
-			TimelineState.Idle with { Day = day, Night = night }, "a", offset: 30, now: 1000);
+			PlaybackState.Idle with { Day = new PhasePlayback(Cursor: 0), Night = new PhasePlayback(Cursor: 2) },
+			"a",
+			offset: 30,
+			now: 1000);
 
-		var shuffled = PlaybackTimeline.Shuffle(state, GamePhase.Night, new Random(7));
+		var (shuffled, permutation) = Playlists.Shuffle(night, new Random(7));
+		var reindexed = PlaybackTimeline.ReindexAfterShuffle(state, GamePhase.Night, permutation);
 
-		await Assert.That(shuffled.Night.CurrentSong?.Id).IsEqualTo("z");
-		await Assert.That(shuffled.Position).IsEqualTo(state.Position);
+		await Assert.That(shuffled[reindexed.Night.Cursor!.Value].Id).IsEqualTo("z");
+		await Assert.That(reindexed.Position).IsEqualTo(state.Position);
 	}
 }

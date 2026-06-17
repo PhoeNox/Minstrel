@@ -1,6 +1,6 @@
-namespace Backend.Features.Playback;
+namespace Backend.Features.Session;
 
-public sealed class PlaybackClock(PlaybackSession session) : BackgroundService
+public sealed class PlaybackClock(LiveSession session) : BackgroundService
 {
 	private static readonly TimeSpan Interval = TimeSpan.FromMilliseconds(250);
 

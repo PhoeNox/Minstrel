@@ -2,59 +2,59 @@ namespace Backend.Tests.Playback;
 
 using Core;
 using Features.Playback;
+using Features.Playlist;
 
 public class Moving
 {
-	private static TimelineState WithDaySongs(params string[] ids)
-	{
-		var playlist = new TimelinePlaylist(
-			ids.Select(id => TimelineFixtures.Song(id, 10)).ToArray(),
-			CurrentIndex: 0);
-		return TimelineState.Idle with { Day = playlist };
-	}
+	private static PlaylistEntry[] DaySongs(params string[] ids) =>
+		ids.Select(id => Fixtures.Entry(id, 10)).ToArray();
 
-	private static string[] DayOrder(TimelineState state) =>
-		state.Day.Songs.Select(song => song.Id).ToArray();
+	private static PlaybackState PlayingAt(int cursor) =>
+		PlaybackState.Idle with { Day = new PhasePlayback(Cursor: cursor) };
 
 	[Test]
 	public async Task ReordersSongsWithinThePlaylist()
 	{
-		var state = WithDaySongs("a", "b", "c");
+		var entries = DaySongs("a", "b", "c");
 
-		var moved = PlaybackTimeline.MoveSong(state, GamePhase.Day, oldIndex: 0, newIndex: 2);
+		var moved = Playlists.Move(entries, oldIndex: 0, newIndex: 2);
 
-		await Assert.That(DayOrder(moved)).IsEquivalentTo(new[] { "b", "c", "a" });
+		await Assert.That(moved.Select(entry => entry.Id)).IsEquivalentTo(new[] { "b", "c", "a" });
 	}
 
 	[Test]
-	public async Task KeepsTheCurrentSongSelectionWhileReordering()
+	public async Task KeepsTheCurrentEntrySelectionWhileReordering()
 	{
-		var state = WithDaySongs("a", "b", "c");
+		var entries = DaySongs("a", "b", "c");
 
-		var moved = PlaybackTimeline.MoveSong(state, GamePhase.Day, oldIndex: 1, newIndex: 0);
+		var moved = Playlists.Move(entries, oldIndex: 1, newIndex: 0);
+		var reindexed = PlaybackTimeline.ReindexAfterMove(PlayingAt(0), GamePhase.Day, oldIndex: 1, newIndex: 0, length: entries.Length);
 
-		await Assert.That(moved.Day.CurrentIndex).IsEqualTo(1);
-		await Assert.That(moved.Day.CurrentSong?.Id).IsEqualTo("a");
+		await Assert.That(reindexed.Day.Cursor).IsEqualTo(1);
+		await Assert.That(moved[reindexed.Day.Cursor!.Value].Id).IsEqualTo("a");
 	}
 
 	[Test]
-	public async Task TracksTheCurrentSongWhenItIsTheOneMoved()
+	public async Task TracksTheCurrentEntryWhenItIsTheOneMoved()
 	{
-		var state = WithDaySongs("a", "b", "c");
+		var entries = DaySongs("a", "b", "c");
 
-		var moved = PlaybackTimeline.MoveSong(state, GamePhase.Day, oldIndex: 0, newIndex: 2);
+		var moved = Playlists.Move(entries, oldIndex: 0, newIndex: 2);
+		var reindexed = PlaybackTimeline.ReindexAfterMove(PlayingAt(0), GamePhase.Day, oldIndex: 0, newIndex: 2, length: entries.Length);
 
-		await Assert.That(moved.Day.CurrentIndex).IsEqualTo(2);
-		await Assert.That(moved.Day.CurrentSong?.Id).IsEqualTo("a");
+		await Assert.That(reindexed.Day.Cursor).IsEqualTo(2);
+		await Assert.That(moved[reindexed.Day.Cursor!.Value].Id).IsEqualTo("a");
 	}
 
 	[Test]
 	public async Task IgnoresAnOutOfRangeSourceIndex()
 	{
-		var state = WithDaySongs("a", "b");
+		var entries = DaySongs("a", "b");
 
-		var moved = PlaybackTimeline.MoveSong(state, GamePhase.Day, oldIndex: 5, newIndex: 0);
+		var moved = Playlists.Move(entries, oldIndex: 5, newIndex: 0);
+		var reindexed = PlaybackTimeline.ReindexAfterMove(PlayingAt(0), GamePhase.Day, oldIndex: 5, newIndex: 0, length: entries.Length);
 
-		await Assert.That(DayOrder(moved)).IsEquivalentTo(new[] { "a", "b" });
+		await Assert.That(moved.Select(entry => entry.Id)).IsEquivalentTo(new[] { "a", "b" });
+		await Assert.That(reindexed.Day.Cursor).IsEqualTo(0);
 	}
 }

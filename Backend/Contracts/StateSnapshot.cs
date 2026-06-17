@@ -2,6 +2,7 @@ namespace Backend.Contracts;
 
 using Core;
 using Features.Playback;
+using Features.Playlist;
 
 public sealed record SongDto(string Id, string Title, string Artist, double Length);
 
@@ -20,23 +21,25 @@ public sealed record StateSnapshot(
 
 public static class SnapshotMapper
 {
-	public static StateSnapshot ToSnapshot(TimelineState state) =>
+	public static StateSnapshot ToSnapshot(PlaybackState playback, PlaylistBook playlists) =>
 		new(
-			Phase: state.ActivePhase,
-			IsPlaying: state.IsPlaying,
-			CurrentSongId: state.CurrentSongId,
-			Playlists: new PlaylistsDto(ToPlaylistDto(state.Day), ToPlaylistDto(state.Night)),
-			Position: ToPositionDto(state.Position));
+			Phase: playback.ActivePhase,
+			IsPlaying: playback.IsPlaying,
+			CurrentSongId: playback.CurrentSongId,
+			Playlists: new PlaylistsDto(
+				ToPlaylistDto(playlists.Day, playback.Day),
+				ToPlaylistDto(playlists.Night, playback.Night)),
+			Position: ToPositionDto(playback.Position));
 
-	private static PlaylistDto ToPlaylistDto(TimelinePlaylist playlist) =>
+	private static PlaylistDto ToPlaylistDto(PlaylistEntry[] entries, PhasePlayback phase) =>
 		new(
-			playlist.Songs.Select(ToSongDto).ToArray(),
-			playlist.CurrentIndex,
-			playlist.Gain,
-			playlist.ResumeOffset);
+			entries.Select(ToSongDto).ToArray(),
+			phase.Cursor,
+			phase.Gain,
+			phase.ResumeOffset);
 
-	private static SongDto ToSongDto(TimelineSong song) =>
-		new(song.Id, song.Title, song.Artist, song.Length);
+	private static SongDto ToSongDto(PlaylistEntry entry) =>
+		new(entry.Id, entry.Title, entry.Artist, entry.Length);
 
 	private static PositionDto ToPositionDto(PositionAnchor anchor) =>
 		new(anchor.SongId, anchor.Offset, anchor.AnchorTimestamp, anchor.IsPlaying);

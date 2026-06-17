@@ -6,6 +6,7 @@ using Backend.Contracts;
 using Infrastructure.Network;
 using Library;
 using Microsoft.AspNetCore.StaticFiles;
+using Session;
 
 public static class Endpoints
 {
@@ -31,7 +32,7 @@ public static class Endpoints
 		app.MapPost("/commands/set-gain", SetGain);
 	}
 
-	private static async Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
+	private static async Task StreamState(HttpContext context, LiveSession session, CancellationToken cancellation)
 	{
 		context.Response.Headers.ContentType = "text/event-stream";
 		context.Response.Headers.CacheControl = "no-cache";
@@ -90,7 +91,7 @@ public static class Endpoints
 		return Results.File(Path.GetFullPath(path), contentType, enableRangeProcessing: true);
 	}
 
-	private static IResult Play(PlayCommand? command, PlaybackSession session)
+	private static IResult Play(PlayCommand? command, LiveSession session)
 	{
 		if (command?.SongId is { } songId)
 		{
@@ -109,28 +110,28 @@ public static class Endpoints
 			: Results.BadRequest("The active playlist is empty.");
 	}
 
-	private static IResult Pause(PlaybackSession session)
+	private static IResult Pause(LiveSession session)
 	{
 		session.Pause();
 		return Results.NoContent();
 	}
 
-	private static IResult SwitchPhase(PlaybackSession session)
+	private static IResult SwitchPhase(LiveSession session)
 	{
 		session.SwitchPhase();
 		return Results.NoContent();
 	}
 
-	private static IResult Select(SelectCommand? command, PlaybackSession session)
+	private static IResult Select(SelectCommand? command, LiveSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and index are required.");
 
-		session.SelectSong(command.Phase, command.Index);
+		session.Select(command.Phase, command.Index);
 		return Results.NoContent();
 	}
 
-	private static IResult SetGain(SetGainCommand? command, PlaybackSession session)
+	private static IResult SetGain(SetGainCommand? command, LiveSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and gain value are required.");

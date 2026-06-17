@@ -2,26 +2,25 @@ namespace Backend.Tests.Playback;
 
 using Core;
 using Features.Playback;
+using Features.Playlist;
 
 public class Switching
 {
-	private static TimelineState WithPlaylists()
-	{
-		var day = new TimelinePlaylist(
-			[TimelineFixtures.Song("day-1", 10), TimelineFixtures.Song("day-2", 10)],
-			CurrentIndex: 0);
-		var night = new TimelinePlaylist(
-			[TimelineFixtures.Song("night-1", 10), TimelineFixtures.Song("night-2", 10)],
-			CurrentIndex: 0);
-		return TimelineState.Idle with { Day = day, Night = night };
-	}
+	private static PlaylistBook WithPlaylists() =>
+		Fixtures.Book(
+			[Fixtures.Entry("day-1", 10), Fixtures.Entry("day-2", 10)],
+			[Fixtures.Entry("night-1", 10), Fixtures.Entry("night-2", 10)]);
+
+	private static PlaybackState Started() =>
+		PlaybackTimeline.Play(
+			PlaybackState.Idle with { Day = new PhasePlayback(Cursor: 0), Night = new PhasePlayback(Cursor: 0) },
+			"day-1",
+			now: 1000);
 
 	[Test]
 	public async Task SwitchingFlipsThePhaseAndPlaysTheOtherPlaylistsCurrentSong()
 	{
-		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
-
-		var result = PlaybackTimeline.SwitchPhase(state, now: 2000);
+		var result = Fixtures.Switch(WithPlaylists(), Started(), now: 2000);
 
 		await Assert.That(result.ActivePhase).IsEqualTo(GamePhase.Night);
 		await Assert.That(result.CurrentSongId).IsEqualTo("night-1");
@@ -33,10 +32,10 @@ public class Switching
 	[Test]
 	public async Task SwitchingBackReturnsToTheStartingPhasesCurrentSong()
 	{
-		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
+		var book = WithPlaylists();
 
-		var switched = PlaybackTimeline.SwitchPhase(state, now: 2000);
-		var back = PlaybackTimeline.SwitchPhase(switched, now: 3000);
+		var switched = Fixtures.Switch(book, Started(), now: 2000);
+		var back = Fixtures.Switch(book, switched, now: 3000);
 
 		await Assert.That(back.ActivePhase).IsEqualTo(GamePhase.Day);
 		await Assert.That(back.CurrentSongId).IsEqualTo("day-1");
@@ -45,10 +44,10 @@ public class Switching
 	[Test]
 	public async Task SwitchingBackResumesTheSongAtThePositionLeftPlusTheFadeout()
 	{
-		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
+		var book = WithPlaylists();
 
-		var switched = PlaybackTimeline.SwitchPhase(state, now: 4000);
-		var back = PlaybackTimeline.SwitchPhase(switched, now: 9000);
+		var switched = Fixtures.Switch(book, Started(), now: 4000);
+		var back = Fixtures.Switch(book, switched, now: 9000);
 
 		await Assert.That(back.CurrentSongId).IsEqualTo("day-1");
 		await Assert.That(back.Position.Offset).IsEqualTo(3 + PlaybackTimeline.FadeSeconds);
@@ -59,10 +58,10 @@ public class Switching
 	[Test]
 	public async Task ResumeOffsetIsCappedAtTheSongLength()
 	{
-		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
+		var book = WithPlaylists();
 
-		var switched = PlaybackTimeline.SwitchPhase(state, now: 9000);
-		var back = PlaybackTimeline.SwitchPhase(switched, now: 12000);
+		var switched = Fixtures.Switch(book, Started(), now: 9000);
+		var back = Fixtures.Switch(book, switched, now: 12000);
 
 		await Assert.That(back.Position.Offset).IsEqualTo(10);
 	}
@@ -70,11 +69,11 @@ public class Switching
 	[Test]
 	public async Task SelectingAnotherSongInTheIdlePhaseResetsItsResumeOffset()
 	{
-		var state = PlaybackTimeline.Play(WithPlaylists(), "day-1", now: 1000);
+		var book = WithPlaylists();
 
-		var switched = PlaybackTimeline.SwitchPhase(state, now: 4000);
-		var reselected = PlaybackTimeline.SelectSong(switched, GamePhase.Day, index: 1, now: 6000);
-		var back = PlaybackTimeline.SwitchPhase(reselected, now: 9000);
+		var switched = Fixtures.Switch(book, Started(), now: 4000);
+		var reselected = Fixtures.SelectIn(book, switched, GamePhase.Day, index: 1, now: 6000);
+		var back = Fixtures.Switch(book, reselected, now: 9000);
 
 		await Assert.That(back.CurrentSongId).IsEqualTo("day-2");
 		await Assert.That(back.Position.Offset).IsEqualTo(0);
@@ -83,12 +82,10 @@ public class Switching
 	[Test]
 	public async Task SwitchingIsANoOpWhenTheOtherPlaylistHasNoCurrentSong()
 	{
-		var state = PlaybackTimeline.Play(
-			WithPlaylists() with { Night = TimelinePlaylist.Empty },
-			"day-1",
-			now: 1000);
+		var book = Fixtures.Book([Fixtures.Entry("day-1", 10), Fixtures.Entry("day-2", 10)], []);
+		var state = PlaybackTimeline.Play(PlaybackState.Idle with { Day = new PhasePlayback(Cursor: 0) }, "day-1", now: 1000);
 
-		var result = PlaybackTimeline.SwitchPhase(state, now: 2000);
+		var result = Fixtures.Switch(book, state, now: 2000);
 
 		await Assert.That(result).IsEqualTo(state);
 	}

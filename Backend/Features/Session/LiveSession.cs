@@ -1,0 +1,221 @@
+namespace Backend.Features.Session;
+
+using System.Threading.Channels;
+using Backend.Contracts;
+using Core;
+using Infrastructure.FileSystem;
+using Library;
+using Playback;
+using Playlist;
+
+public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
+{
+	private readonly Lock gate = new();
+	private readonly List<Channel<SessionEvent>> subscribers = [];
+	private PlaylistBook playlists = new(ToEntries(pool.Day), ToEntries(pool.Night));
+	private PlaybackState playback = PlaybackState.Idle with
+	{
+		Day = InitialPhase(pool.Day.Length),
+		Night = InitialPhase(pool.Night.Length),
+	};
+
+	public bool HasCurrentSong
+	{
+		get
+		{
+			lock (gate)
+			{
+				return playback.CurrentSongId is not null;
+			}
+		}
+	}
+
+	public void Play(string songId)
+	{
+		lock (gate)
+		{
+			var entries = playlists.Entries(playback.ActivePhase);
+			var index = Array.FindIndex(entries, entry => entry.Id == songId);
+			if (index < 0)
+				return;
+
+			playback = PlaybackTimeline.Select(playback, playback.ActivePhase, index, ToTrack(entries[index]), Now());
+			Broadcast();
+		}
+	}
+
+	public bool PlayCurrent()
+	{
+		lock (gate)
+		{
+			if (playback.ActiveCursor is not { } index)
+				return false;
+
+			var track = ToTrack(playlists.At(playback.ActivePhase, index));
+			playback = PlaybackTimeline.Select(playback, playback.ActivePhase, index, track, Now());
+			Broadcast();
+			return true;
+		}
+	}
+
+	public void Resume()
+	{
+		lock (gate)
+		{
+			playback = PlaybackTimeline.Resume(playback, Now());
+			Broadcast();
+		}
+	}
+
+	public void Pause()
+	{
+		lock (gate)
+		{
+			playback = PlaybackTimeline.Pause(playback, Now());
+			Broadcast();
+		}
+	}
+
+	public void Select(GamePhase phase, int index)
+	{
+		lock (gate)
+		{
+			var track = ToTrack(playlists.At(phase, index));
+			playback = PlaybackTimeline.Select(playback, phase, index, track, Now());
+			Broadcast();
+		}
+	}
+
+	public void SetGain(GamePhase phase, double value)
+	{
+		lock (gate)
+		{
+			playback = PlaybackTimeline.SetGain(playback, phase, value);
+			Broadcast();
+		}
+	}
+
+	public void SwitchPhase()
+	{
+		lock (gate)
+		{
+			var target = playback.ActivePhase == GamePhase.Day ? GamePhase.Night : GamePhase.Day;
+			var activeCurrent = ToTrack(playlists.At(playback.ActivePhase, playback.ActiveCursor));
+			var targetCurrent = ToTrack(playlists.At(target, playback.Cursor(target)));
+			playback = PlaybackTimeline.SwitchPhase(playback, activeCurrent, targetCurrent, Now());
+			Broadcast();
+		}
+	}
+
+	public void Add(GamePhase phase, string songId)
+	{
+		lock (gate)
+		{
+			var added = Playlists.Add(playlists.Entries(phase), ToEntry(pool.Get(songId)));
+			playlists = playlists.Replace(phase, added);
+			playback = PlaybackTimeline.ReindexAfterAdd(playback, phase);
+			Save(phase, added);
+			Broadcast();
+		}
+	}
+
+	public void Remove(GamePhase phase, int index)
+	{
+		lock (gate)
+		{
+			var entries = playlists.Entries(phase);
+			var removed = Playlists.RemoveAt(entries, index);
+			playlists = playlists.Replace(phase, removed);
+			playback = PlaybackTimeline.ReindexAfterRemove(playback, phase, index, entries.Length, ToTracks(removed), Now());
+			Save(phase, removed);
+			Broadcast();
+		}
+	}
+
+	public void Shuffle(GamePhase phase)
+	{
+		lock (gate)
+		{
+			var (shuffled, permutation) = Playlists.Shuffle(playlists.Entries(phase), Random.Shared);
+			playlists = playlists.Replace(phase, shuffled);
+			playback = PlaybackTimeline.ReindexAfterShuffle(playback, phase, permutation);
+			Save(phase, shuffled);
+			Broadcast();
+		}
+	}
+
+	public void Move(GamePhase phase, int oldIndex, int newIndex)
+	{
+		lock (gate)
+		{
+			var entries = playlists.Entries(phase);
+			var moved = Playlists.Move(entries, oldIndex, newIndex);
+			playlists = playlists.Replace(phase, moved);
+			playback = PlaybackTimeline.ReindexAfterMove(playback, phase, oldIndex, newIndex, entries.Length);
+			Save(phase, moved);
+			Broadcast();
+		}
+	}
+
+	public void Tick()
+	{
+		lock (gate)
+		{
+			var now = Now();
+			var previous = playback;
+			playback = PlaybackTimeline.Tick(playback, ToTracks(playlists.Entries(playback.ActivePhase)), now);
+			if (PlaybackTimeline.PlaybackJumped(previous, playback, now))
+				Broadcast();
+		}
+	}
+
+	public Channel<SessionEvent> Subscribe()
+	{
+		var channel = Channel.CreateUnbounded<SessionEvent>();
+		lock (gate)
+		{
+			subscribers.Add(channel);
+			channel.Writer.TryWrite(new SnapshotEvent(CurrentSnapshot()));
+		}
+
+		return channel;
+	}
+
+	public void Unsubscribe(Channel<SessionEvent> channel)
+	{
+		lock (gate)
+		{
+			subscribers.Remove(channel);
+		}
+
+		channel.Writer.TryComplete();
+	}
+
+	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+	private static PhasePlayback InitialPhase(int count) => new(Cursor: count > 0 ? 0 : null);
+
+	private static PlaylistEntry[] ToEntries(IReadOnlyList<PoolEntry> entries) => entries.Select(ToEntry).ToArray();
+
+	private static PlaylistEntry ToEntry(PoolEntry entry) =>
+		new(entry.Id, entry.Song.Path, entry.Song.Title, entry.Song.Artist, entry.Song.Length.TotalSeconds);
+
+	private static Track[] ToTracks(PlaylistEntry[] entries) => entries.Select(entry => ToTrack(entry)!).ToArray();
+
+	private static Track? ToTrack(PlaylistEntry? entry) => entry is null ? null : new Track(entry.Id, entry.Length);
+
+	private void Save(GamePhase phase, PlaylistEntry[] entries) =>
+		fileSystem.SavePlaylist(phase, entries.Select(entry => entry.Path).ToArray());
+
+	private void Broadcast() => Publish(new SnapshotEvent(CurrentSnapshot()));
+
+	private void Publish(SessionEvent message)
+	{
+		foreach (var subscriber in subscribers)
+		{
+			subscriber.Writer.TryWrite(message);
+		}
+	}
+
+	private StateSnapshot CurrentSnapshot() => SnapshotMapper.ToSnapshot(playback, playlists);
+}

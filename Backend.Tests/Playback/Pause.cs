@@ -7,7 +7,7 @@ public class Pause
 	[Test]
 	public async Task FreezesTheAnchorAtTheElapsedOffset()
 	{
-		var playing = PlaybackTimeline.Play(TimelineState.Idle, "song-1", now: 1000);
+		var playing = PlaybackTimeline.Play(PlaybackState.Idle, "song-1", now: 1000);
 
 		var paused = PlaybackTimeline.Pause(playing, now: 4000);
 
@@ -18,7 +18,7 @@ public class Pause
 	[Test]
 	public async Task FrozenPositionDoesNotAdvanceAsTimePasses()
 	{
-		var playing = PlaybackTimeline.Play(TimelineState.Idle, "song-1", now: 1000);
+		var playing = PlaybackTimeline.Play(PlaybackState.Idle, "song-1", now: 1000);
 		var paused = PlaybackTimeline.Pause(playing, now: 4000);
 
 		var laterPosition = PlaybackTimeline.DerivePosition(paused.Position, now: 9000);
