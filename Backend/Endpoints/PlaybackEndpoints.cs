@@ -2,7 +2,6 @@ namespace Backend.Endpoints;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Backend.Commands;
 using Backend.Contracts;
 using Backend.Library;
 using Backend.Playback;

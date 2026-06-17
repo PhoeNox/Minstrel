@@ -1,4 +1,5 @@
-namespace Backend.Commands;
+// ReSharper disable ClassNeverInstantiated.Global
+namespace Backend.Endpoints;
 
 using Core;
 
