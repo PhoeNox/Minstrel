@@ -10,8 +10,8 @@ Minstrel runs as a single app on one device — your laptop or a TV-connected ma
 * the **Remote** is a phone control surface that drives the Player over your local Wi-Fi.
 
 <p align="center">
-  <img src="docs/images/player-timer.png" alt="The Player screen showing the clocktower scene with a five-minute timer counting down" width="62%">
-  <img src="docs/images/remote-timer.png" alt="The Remote screen on a phone: now playing, the day playlist, and the Switch and timer controls" width="33%">
+  <img src="E2E.Tests/CrossSurfaceTests.Timer_StartedFromRemote_player.verified.png" alt="The Player screen showing the clocktower scene with a five-minute timer counting down" width="62%">
+  <img src="E2E.Tests/CrossSurfaceTests.Timer_StartedFromRemote_remote.verified.png" alt="The Remote screen on a phone: now playing, the day playlist, and the Switch and timer controls" width="33%">
 </p>
 
 ## Features
