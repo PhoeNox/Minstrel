@@ -5,7 +5,6 @@ using Backend.Contracts;
 using Core;
 using Infrastructure.FileSystem;
 using Library;
-using Timer;
 
 public sealed class PlaybackSession(SongPool pool, IFileSystemProvider fileSystem)
 {
@@ -16,7 +15,6 @@ public sealed class PlaybackSession(SongPool pool, IFileSystemProvider fileSyste
 			Day = ToPlaylist(pool.Day),
 			Night = ToPlaylist(pool.Night),
 	};
-	private TimerAnchor timer = TimerAnchor.Idle;
 
 	public bool HasCurrentSong
 	{
@@ -140,24 +138,6 @@ public sealed class PlaybackSession(SongPool pool, IFileSystemProvider fileSyste
 		}
 	}
 
-	public void StartTimer(TimeSpan duration)
-	{
-		lock (gate)
-		{
-			timer = CountdownTimer.Start(duration, Now());
-			Broadcast(CurrentSnapshot());
-		}
-	}
-
-	public void StopTimer()
-	{
-		lock (gate)
-		{
-			timer = TimerAnchor.Idle;
-			Broadcast(CurrentSnapshot());
-		}
-	}
-
 	public void Tick()
 	{
 		lock (gate)
@@ -165,14 +145,8 @@ public sealed class PlaybackSession(SongPool pool, IFileSystemProvider fileSyste
 			var now = Now();
 			var previous = state;
 			state = PlaybackTimeline.Tick(state, now);
-			var expired = CountdownTimer.HasExpired(timer, now);
-			if (expired)
-				timer = TimerAnchor.Idle;
-
-			if (PlaybackTimeline.PlaybackJumped(previous, state, now) || expired)
+			if (PlaybackTimeline.PlaybackJumped(previous, state, now))
 				Broadcast(CurrentSnapshot());
-			if (expired)
-				Publish(new GongEvent());
 		}
 	}
 
@@ -224,5 +198,5 @@ public sealed class PlaybackSession(SongPool pool, IFileSystemProvider fileSyste
 		}
 	}
 
-	private StateSnapshot CurrentSnapshot() => SnapshotMapper.ToSnapshot(state, timer);
+	private StateSnapshot CurrentSnapshot() => SnapshotMapper.ToSnapshot(state);
 }

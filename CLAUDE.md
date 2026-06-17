@@ -58,7 +58,7 @@ The Backend holds the single source of truth (active playlist, current song, pos
 Frontend → REST command → Backend state machine → SSE state snapshot → both frontends
 ```
 
-- **Backend → frontend:** Server-Sent Events carry full state snapshots plus one-shot events (e.g. the Gong).
+- **Backend → frontend:** Server-Sent Events, one stream per concern. `/sse` carries the playback state snapshot; `/sse/timer` carries the timer snapshot plus the `gong` one-shot event. Each frontend subscribes to both.
 - **Frontend → Backend:** REST commands (play, pause, switch phase, select song, set gain, run timer).
 - **Audio:** delivered over HTTP by opaque id (`GET /audio/{songId}`). DTOs never expose filesystem paths.
 

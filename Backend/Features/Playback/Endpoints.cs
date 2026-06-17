@@ -6,8 +6,6 @@ using Backend.Contracts;
 using Infrastructure.Network;
 using Library;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.Options;
-using Timer;
 
 public static class Endpoints
 {
@@ -33,7 +31,7 @@ public static class Endpoints
 		app.MapPost("/commands/set-gain", SetGain);
 	}
 
-	private static async Task StreamState(HttpContext context, PlaybackSession session, IOptions<GongOptions> gong, CancellationToken cancellation)
+	private static async Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
 	{
 		context.Response.Headers.ContentType = "text/event-stream";
 		context.Response.Headers.CacheControl = "no-cache";
@@ -43,7 +41,7 @@ public static class Endpoints
 		{
 			await foreach (var message in channel.Reader.ReadAllAsync(cancellation))
 			{
-				await WriteEvent(context, message, gong.Value.Gain, cancellation);
+				await WriteEvent(context, message, cancellation);
 				await context.Response.Body.FlushAsync(cancellation);
 			}
 		}
@@ -56,12 +54,9 @@ public static class Endpoints
 		}
 	}
 
-	private static Task WriteEvent(HttpContext context, SessionEvent message, double gongGain, CancellationToken cancellation) =>
+	private static Task WriteEvent(HttpContext context, SessionEvent message, CancellationToken cancellation) =>
 		message switch
 		{
-			GongEvent => context.Response.WriteAsync(
-				$"event: gong\ndata: {JsonSerializer.Serialize(new { gain = gongGain }, JsonOptions)}\n\n",
-				cancellation),
 			SnapshotEvent snapshot => context.Response.WriteAsync(
 				$"data: {JsonSerializer.Serialize(snapshot.Snapshot, JsonOptions)}\n\n",
 				cancellation),

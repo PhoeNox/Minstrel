@@ -23,6 +23,8 @@ builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
 builder.Services.AddSingleton<SongPool>();
 builder.Services.AddSingleton<PlaybackSession>();
 builder.Services.AddHostedService<PlaybackClock>();
+builder.Services.AddSingleton<TimerSession>();
+builder.Services.AddHostedService<TimerClock>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 	options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));

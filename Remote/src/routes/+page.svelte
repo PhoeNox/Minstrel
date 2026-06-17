@@ -6,14 +6,16 @@
 	import Playlist from '$lib/Playlist.svelte';
 	import Library from '$lib/Library.svelte';
 	import { emptyState, type PlaybackState, type SongDto } from '$lib/state';
-	import { deriveTimeLeft, formatTimeLeft } from '$shared/timer';
+	import { deriveTimeLeft, formatTimeLeft, timerStore, type TimerAnchor } from '$shared/timer';
 	import { derivePosition } from '$shared/position';
 
 	type Tab = 'day' | 'night' | 'library';
 
 	const playback = playbackStore();
+	const timer = timerStore();
 
 	let snapshot: PlaybackState = $state(emptyState);
+	let timerAnchor: TimerAnchor | null = $state(null);
 	let connected = $state(false);
 	let now = $state(Date.now());
 	let durationMinutes = $state(5);
@@ -29,13 +31,17 @@
 		snapshot = next.state;
 		connected = next.connected;
 	});
+	const unsubscribeTimer = timer.subscribe((next) => {
+		timerAnchor = next;
+	});
 	const ticker = setInterval(() => (now = Date.now()), 250);
 	onDestroy(() => {
 		unsubscribe();
+		unsubscribeTimer();
 		clearInterval(ticker);
 	});
 
-	const timeLeft = $derived(snapshot.timer ? deriveTimeLeft(snapshot.timer, now) : null);
+	const timeLeft = $derived(timerAnchor ? deriveTimeLeft(timerAnchor, now) : null);
 	const timerRunning = $derived(timeLeft !== null);
 	const urgent = $derived(timeLeft !== null && timeLeft <= 10);
 

@@ -148,13 +148,13 @@ public class CrossSurfaceTests
 
 	private static async Task<DateTime> TimerAnchorAsync(IPage page)
 	{
-		var anchor = (await ReadSnapshotAsync(page)).GetProperty("timer").GetProperty("anchorTimestamp").GetInt64();
+		var anchor = (await ReadSnapshotAsync(page, "/sse/timer")).GetProperty("anchorTimestamp").GetInt64();
 		return DateTimeOffset.FromUnixTimeMilliseconds(anchor).UtcDateTime;
 	}
 
-	private static async Task<JsonElement> ReadSnapshotAsync(IPage page)
+	private static async Task<JsonElement> ReadSnapshotAsync(IPage page, string stream = "/sse")
 	{
-		var json = await page.EvaluateAsync<string>(ReadSnapshotJson);
+		var json = await page.EvaluateAsync<string>(ReadSnapshotJson(stream));
 		return JsonDocument.Parse(json).RootElement;
 	}
 
@@ -191,10 +191,10 @@ public class CrossSurfaceTests
 		await remote.EvaluateAsync("async () => { await document.fonts.ready; }");
 	}
 
-	// Reads the first full state snapshot off the SSE stream and returns its JSON.
-	private const string ReadSnapshotJson = """
+	// Reads the first full snapshot off the given SSE stream and returns its JSON.
+	private static string ReadSnapshotJson(string stream) => $$"""
 		async () => {
-			const reader = (await fetch('/sse')).body.getReader();
+			const reader = (await fetch('{{stream}}')).body.getReader();
 			const decoder = new TextDecoder();
 			let buffer = '';
 			try {

@@ -1,5 +1,4 @@
 import type { PositionAnchor } from '$shared/position';
-import type { TimerAnchor } from '$shared/timer';
 
 export type Phase = 'Day' | 'Night';
 
@@ -28,7 +27,6 @@ export interface PlaybackState {
 	currentSongId: string | null;
 	playlists: PlaylistsDto;
 	position: PositionAnchor;
-	timer: TimerAnchor | null;
 }
 
 const emptyPlaylist: PlaylistDto = { songs: [], currentIndex: null, gain: 1, resumeOffset: 0 };
@@ -38,6 +36,5 @@ export const emptyState: PlaybackState = {
 	isPlaying: false,
 	currentSongId: null,
 	playlists: { day: emptyPlaylist, night: emptyPlaylist },
-	position: { songId: null, offset: 0, anchorTimestamp: 0, isPlaying: false },
-	timer: null
+	position: { songId: null, offset: 0, anchorTimestamp: 0, isPlaying: false }
 };

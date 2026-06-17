@@ -2,7 +2,6 @@ namespace Backend.Contracts;
 
 using Core;
 using Features.Playback;
-using Features.Timer;
 
 public sealed record SongDto(string Id, string Title, string Artist, double Length);
 
@@ -12,29 +11,22 @@ public sealed record PlaylistsDto(PlaylistDto Day, PlaylistDto Night);
 
 public sealed record PositionDto(string? SongId, double Offset, long AnchorTimestamp, bool IsPlaying);
 
-public sealed record TimerDto(bool Running, long AnchorTimestamp, double DurationLeftAtAnchor);
-
 public sealed record StateSnapshot(
 	GamePhase Phase,
 	bool IsPlaying,
 	string? CurrentSongId,
 	PlaylistsDto Playlists,
-	PositionDto Position,
-	TimerDto? Timer);
+	PositionDto Position);
 
 public static class SnapshotMapper
 {
-	public static StateSnapshot ToSnapshot(TimelineState state, TimerAnchor timer) =>
+	public static StateSnapshot ToSnapshot(TimelineState state) =>
 		new(
 			Phase: state.ActivePhase,
 			IsPlaying: state.IsPlaying,
 			CurrentSongId: state.CurrentSongId,
 			Playlists: new PlaylistsDto(ToPlaylistDto(state.Day), ToPlaylistDto(state.Night)),
-			Position: ToPositionDto(state.Position),
-			Timer: ToTimerDto(timer));
-
-	private static TimerDto? ToTimerDto(TimerAnchor timer) =>
-		timer.Running ? new TimerDto(timer.Running, timer.AnchorTimestamp, timer.DurationLeftAtAnchor) : null;
+			Position: ToPositionDto(state.Position));
 
 	private static PlaylistDto ToPlaylistDto(TimelinePlaylist playlist) =>
 		new(

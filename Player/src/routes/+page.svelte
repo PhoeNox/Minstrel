@@ -7,7 +7,7 @@
 	import { fetchRemoteUrl } from '$lib/connection';
 	import { fetchVersion } from '$lib/version';
 	import { qrSvg } from '$lib/qr';
-	import { deriveTimeLeft } from '$shared/timer';
+	import { deriveTimeLeft, timerStore, type TimerAnchor } from '$shared/timer';
 
 	const QR_DISMISSED_KEY = 'minstrel.qrDismissed';
 
@@ -23,19 +23,24 @@
 		return { value: String(Math.min(59, Math.ceil(seconds))), unit: 'sec' };
 	}
 
-	const playback = playbackStore((gain) => void engine?.playGong(gain));
+	const playback = playbackStore();
+	const timer = timerStore((gain) => void engine?.playGong(gain));
 
 	let engine: AudioEngine | null = $state(null);
 	let snapshot: PlaybackState = $state(emptyState);
+	let timerAnchor: TimerAnchor | null = $state(null);
 	let now = $state(Date.now());
 	let qr: string | null = $state(null);
 	let remoteUrl: string | null = $state(null);
 	let version: string | null = $state(null);
 	let qrVisible = $state(true);
 
-	const unsubscribe = playback.subscribe((next) => {
+	const unsubscribePlayback = playback.subscribe((next) => {
 		snapshot = next;
 		void sync();
+	});
+	const unsubscribeTimer = timer.subscribe((next) => {
+		timerAnchor = next;
 	});
 
 	const ticker = setInterval(() => {
@@ -51,11 +56,12 @@
 	});
 
 	onDestroy(() => {
-		unsubscribe();
+		unsubscribePlayback();
+		unsubscribeTimer();
 		clearInterval(ticker);
 	});
 
-	const timeLeft = $derived(snapshot.timer ? deriveTimeLeft(snapshot.timer, now) : null);
+	const timeLeft = $derived(timerAnchor ? deriveTimeLeft(timerAnchor, now) : null);
 	const isNight = $derived(snapshot.phase === 'Night');
 	const expired = $derived(timeLeft !== null && timeLeft <= 0);
 	const urgent = $derived(timeLeft !== null && timeLeft > 0 && timeLeft <= 10);

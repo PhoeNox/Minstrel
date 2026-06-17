@@ -1,7 +1,20 @@
+import { readable, type Readable } from 'svelte/store';
+
 export interface TimerAnchor {
 	running: boolean;
 	anchorTimestamp: number;
 	durationLeftAtAnchor: number;
+}
+
+export function timerStore(onGong?: (gain: number) => void): Readable<TimerAnchor | null> {
+	return readable<TimerAnchor | null>(null, (set) => {
+		const source = new EventSource('/sse/timer');
+		source.onmessage = (event) => set(JSON.parse(event.data) as TimerAnchor | null);
+		if (onGong) {
+			source.addEventListener('gong', (event) => onGong(JSON.parse(event.data).gain as number));
+		}
+		return () => source.close();
+	});
 }
 
 export function deriveTimeLeft(anchor: TimerAnchor, now: number): number {
