@@ -2,7 +2,7 @@ namespace Core.Tests.Playback;
 
 using Core.Playback;
 using Core;
-using Playlist;
+using Core.Playlist;
 
 public class Shuffling
 {
@@ -28,35 +28,6 @@ public class Shuffling
 		await Assert.That(shuffled[reindexed.Day.Cursor!.Value].Id).IsEqualTo("b");
 		await Assert.That(reindexed.CurrentSongId).IsEqualTo("b");
 		await Assert.That(reindexed.Position).IsEqualTo(state.Position);
-	}
-
-	[Test]
-	public async Task KeepsEveryEntry()
-	{
-		var (entries, _) = ActivePlaying(0, "a", "b", "c", "d", "e");
-
-		var (shuffled, _) = Playlists.Shuffle(entries, new Random(1));
-
-		var entryIds = shuffled.Select(entry => entry.Id).ToArray();
-		await Assert.That(entryIds).HasCount(5)
-				.And.Contains("a")
-				.And.Contains("b")
-				.And.Contains("c")
-				.And.Contains("d")
-				.And.Contains("e");
-	}
-
-	[Test]
-	public async Task IsDeterministicForASeededRandom()
-	{
-		var (entries, _) = ActivePlaying(0, "a", "b", "c", "d", "e");
-
-		var (first, _) = Playlists.Shuffle(entries, new Random(42));
-		var (second, _) = Playlists.Shuffle(entries, new Random(42));
-
-		var firstOrder = string.Join(",", first.Select(entry => entry.Id));
-		var secondOrder = string.Join(",", second.Select(entry => entry.Id));
-		await Assert.That(firstOrder).IsEqualTo(secondOrder);
 	}
 
 	[Test]

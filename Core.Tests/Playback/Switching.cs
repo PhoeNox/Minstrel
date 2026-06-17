@@ -2,7 +2,7 @@ namespace Core.Tests.Playback;
 
 using Core.Playback;
 using Core;
-using Playlist;
+using Core.Playlist;
 
 public class Switching
 {
