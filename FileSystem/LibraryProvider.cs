@@ -6,7 +6,7 @@ public class LibraryProvider(IFileSystemProvider fileSystem)
 {
 	public Song[] LoadLibrary()
 	{
-		var songFilePaths = fileSystem.EnumerateFiles();
-		return fileSystem.ReadSongs(songFilePaths);
+		var songsPaths = fileSystem.EnumerateSongs();
+		return fileSystem.ReadSongs(songsPaths);
 	}
 }

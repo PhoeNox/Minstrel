@@ -9,7 +9,7 @@ public interface IFileSystemProvider
 
 	Song[] ReadSongs(IEnumerable<string> paths);
 
-	IEnumerable<string> EnumerateFiles();
+	IEnumerable<string> EnumerateSongs();
 
 	string[] ReadLines(string path);
 
@@ -29,7 +29,7 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSy
 		}
 	}
 
-	public IEnumerable<string> EnumerateFiles()
+	public IEnumerable<string> EnumerateSongs()
 		=> Directory.EnumerateFiles(MusicDirectory, "*", SearchOption.AllDirectories);
 
 	public string[] ReadLines(string path)

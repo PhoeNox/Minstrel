@@ -19,7 +19,7 @@ public sealed class FakeFileSystem(Song[] day, Song[] night, Song[]? alsoOnDisk 
 	public string[] Saved(GamePhase phase)
 		=> saved[phase];
 
-	public IEnumerable<string> EnumerateFiles()
+	public IEnumerable<string> EnumerateSongs()
 		=> onDisk.Select(song => song.Path);
 
 	public string[] ReadLines(string path)
