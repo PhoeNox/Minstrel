@@ -1,6 +1,7 @@
 namespace Backend.Features.Timer;
 
 using System.Threading.Channels;
+using Core.Timer;
 
 public sealed class TimerSession
 {

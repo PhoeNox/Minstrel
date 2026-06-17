@@ -1,4 +1,4 @@
-namespace Backend.Features.Timer;
+namespace Core.Timer;
 
 public sealed record TimerAnchor(bool Running, long AnchorTimestamp, double DurationLeftAtAnchor)
 {
@@ -8,7 +8,7 @@ public sealed record TimerAnchor(bool Running, long AnchorTimestamp, double Dura
 
 public static class CountdownTimer
 {
-	public static TimerAnchor Start(TimeSpan duration, long now) 
+	public static TimerAnchor Start(TimeSpan duration, long now)
 		=> new(Running: true, AnchorTimestamp: now, DurationLeftAtAnchor: duration.TotalSeconds);
 
 	public static double DeriveTimeLeft(TimerAnchor anchor, long now)

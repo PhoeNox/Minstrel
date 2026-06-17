@@ -43,6 +43,7 @@ dotnet test Backend.Tests/Backend.Tests.csproj --filter "FullyQualifiedName~Clas
   - **`Core/Playback/`** — `PlaybackState` (per-phase `{cursor, gain, resumeOffset}`, `ActivePhase`, `Position`) and `PlaybackTimeline`, the pure transforms (play/pause/select/switch, cursor reconciliation after structural edits, and the pure `Tick`/`Advance` auto-advance fed `Track[]`).
   - **`Core/Playlist/`** — `PlaylistEntry` (denormalized: `Id`, `Path`, `Title`, `Artist`, `Length`), `PlaylistBook` (the two phases' ordered lists), and `Playlists`, the pure ordering transforms (add/remove/move/shuffle). Holds no cursor, gain, or position.
   - **`Core/Library/`** — `SongPool`, the shared reference data both phases draw from.
+  - **`Core/Timer/`** — `TimerAnchor` (`{Running, AnchorTimestamp, DurationLeftAtAnchor}`) and `CountdownTimer`, the pure `Start`/`DeriveTimeLeft`/`HasExpired` transforms.
   - Plus `Song`/`SongId`, the `GamePhase` enum, and the `Connection`/`Version` info records.
 - **`FileSystem/`** — M3U playlist persistence and TagLibSharp metadata.
 - **`Network/`** — local IP detection.
