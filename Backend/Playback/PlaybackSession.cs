@@ -6,23 +6,16 @@ using Backend.Library;
 using Backend.Timer;
 using Core;
 
-public sealed class PlaybackSession
+public sealed class PlaybackSession(SongLibrary library)
 {
-	private readonly SongLibrary library;
 	private readonly Lock gate = new();
 	private readonly List<Channel<SessionEvent>> subscribers = [];
-	private TimelineState state;
-	private TimerAnchor timer = TimerAnchor.Idle;
-
-	public PlaybackSession(SongLibrary library)
+	private TimelineState state = TimelineState.Idle with
 	{
-		this.library = library;
-		state = TimelineState.Idle with
-		{
 			Day = ToPlaylist(library.Day),
 			Night = ToPlaylist(library.Night),
-		};
-	}
+	};
+	private TimerAnchor timer = TimerAnchor.Idle;
 
 	public bool HasCurrentSong
 	{
@@ -150,11 +143,11 @@ public sealed class PlaybackSession
 		}
 	}
 
-	public void StartTimer(double durationSeconds)
+	public void StartTimer(TimeSpan duration)
 	{
 		lock (gate)
 		{
-			timer = CountdownTimer.Start(durationSeconds, Now());
+			timer = CountdownTimer.Start(duration, Now());
 			Broadcast(CurrentSnapshot());
 		}
 	}

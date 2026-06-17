@@ -7,7 +7,7 @@ public class Countdown
 	[Test]
 	public async Task CountsDownWithElapsedTimeWhileRunning()
 	{
-		var anchor = CountdownTimer.Start(durationSeconds: 60, now: 1000);
+		var anchor = CountdownTimer.Start(duration: TimeSpan.FromSeconds(60), now: 1000);
 
 		var left = CountdownTimer.DeriveTimeLeft(anchor, now: 11_000);
 
@@ -17,7 +17,7 @@ public class Countdown
 	[Test]
 	public async Task IsExactlyTheDurationAtTheAnchorInstant()
 	{
-		var anchor = CountdownTimer.Start(durationSeconds: 60, now: 1000);
+		var anchor = CountdownTimer.Start(duration: TimeSpan.FromSeconds(60), now: 1000);
 
 		var left = CountdownTimer.DeriveTimeLeft(anchor, now: 1000);
 
@@ -27,7 +27,7 @@ public class Countdown
 	[Test]
 	public async Task NeverGoesBelowZero()
 	{
-		var anchor = CountdownTimer.Start(durationSeconds: 60, now: 1000);
+		var anchor = CountdownTimer.Start(duration: TimeSpan.FromSeconds(60), now: 1000);
 
 		var left = CountdownTimer.DeriveTimeLeft(anchor, now: 100_000);
 
@@ -45,7 +45,7 @@ public class Countdown
 	[Test]
 	public async Task HasNotExpiredBeforeTheDurationElapses()
 	{
-		var anchor = CountdownTimer.Start(durationSeconds: 60, now: 1000);
+		var anchor = CountdownTimer.Start(duration: TimeSpan.FromSeconds(60), now: 1000);
 
 		await Assert.That(CountdownTimer.HasExpired(anchor, now: 60_000)).IsFalse();
 	}
@@ -53,7 +53,7 @@ public class Countdown
 	[Test]
 	public async Task ExpiresOnceTheDurationElapses()
 	{
-		var anchor = CountdownTimer.Start(durationSeconds: 60, now: 1000);
+		var anchor = CountdownTimer.Start(duration: TimeSpan.FromSeconds(60), now: 1000);
 
 		await Assert.That(CountdownTimer.HasExpired(anchor, now: 61_000)).IsTrue();
 	}

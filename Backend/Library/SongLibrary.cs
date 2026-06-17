@@ -13,11 +13,9 @@ public sealed class SongLibrary
 	private readonly IFileSystemProvider fileSystem;
 	private readonly Dictionary<string, Song> songsById;
 
-	public IReadOnlyList<LibraryEntry> Day { get; }
-
-	public IReadOnlyList<LibraryEntry> Night { get; }
-
-	public IReadOnlyList<LibraryEntry> All { get; }
+	public LibraryEntry[] Day { get; }
+	public LibraryEntry[] Night { get; }
+	public LibraryEntry[] All { get; }
 
 	public SongLibrary(IFileSystemProvider fileSystem)
 	{
@@ -33,17 +31,18 @@ public sealed class SongLibrary
 
 	public bool TryGetPath(string songId, out string path)
 	{
-		if (songsById.TryGetValue(songId, out var song))
+		if (!songsById.TryGetValue(songId, out var song))
 		{
-			path = song.Path;
-			return true;
+			path = string.Empty;
+			return false;
 		}
 
-		path = string.Empty;
-		return false;
+		path = song.Path;
+		return true;
 	}
 
-	public double Length(string songId) => songsById[songId].Length.TotalSeconds;
+	public double Length(string songId) 
+		=> songsById[songId].Length.TotalSeconds;
 
 	public SongDto ToSongDto(string songId)
 	{

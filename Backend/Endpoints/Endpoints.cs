@@ -9,7 +9,7 @@ using Infrastructure.Network;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
 
-public static class PlaybackEndpoints
+public static class Endpoints
 {
 	private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
 	{
@@ -23,19 +23,14 @@ public static class PlaybackEndpoints
 		app.MapGet("/sse", StreamState);
 		app.MapGet("/connection", GetConnection);
 		app.MapGet("/version", GetVersion);
-		app.MapGet("/library", GetLibrary);
 		app.MapGet("/audio/{songId}", StreamAudio);
+		
 		app.MapPost("/commands/play", Play);
 		app.MapPost("/commands/pause", Pause);
 		app.MapPost("/commands/switch-phase", SwitchPhase);
 		app.MapPost("/commands/select", Select);
-		app.MapPost("/commands/add", Add);
-		app.MapPost("/commands/remove", Remove);
-		app.MapPost("/commands/shuffle", Shuffle);
-		app.MapPost("/commands/move", Move);
+		
 		app.MapPost("/commands/set-gain", SetGain);
-		app.MapPost("/commands/timer-start", StartTimer);
-		app.MapPost("/commands/timer-stop", StopTimer);
 	}
 
 	private static async Task StreamState(HttpContext context, PlaybackSession session, IOptions<GongOptions> gong, CancellationToken cancellation)
@@ -86,9 +81,6 @@ public static class PlaybackEndpoints
 		string.IsNullOrWhiteSpace(configuredHost)
 			? network.GetLocalIpAddress()
 			: configuredHost.Trim();
-
-	private static IResult GetLibrary(SongLibrary library) =>
-		Results.Ok(library.All.Select(entry => library.ToSongDto(entry.Id)).ToArray());
 
 	private static IResult StreamAudio(string songId, SongLibrary library)
 	{
@@ -143,42 +135,6 @@ public static class PlaybackEndpoints
 		return Results.NoContent();
 	}
 
-	private static IResult Add(AddCommand? command, PlaybackSession session)
-	{
-		if (command is null)
-			return Results.BadRequest("A phase and song id are required.");
-
-		session.AddSong(command.Phase, command.SongId);
-		return Results.NoContent();
-	}
-
-	private static IResult Remove(RemoveCommand? command, PlaybackSession session)
-	{
-		if (command is null)
-			return Results.BadRequest("A phase and index are required.");
-
-		session.RemoveSong(command.Phase, command.Index);
-		return Results.NoContent();
-	}
-
-	private static IResult Shuffle(ShuffleCommand? command, PlaybackSession session)
-	{
-		if (command is null)
-			return Results.BadRequest("A phase is required.");
-
-		session.Shuffle(command.Phase);
-		return Results.NoContent();
-	}
-
-	private static IResult Move(MoveCommand? command, PlaybackSession session)
-	{
-		if (command is null)
-			return Results.BadRequest("A phase and indices are required.");
-
-		session.MoveSong(command.Phase, command.OldIndex, command.NewIndex);
-		return Results.NoContent();
-	}
-
 	private static IResult SetGain(SetGainCommand? command, PlaybackSession session)
 	{
 		if (command is null)
@@ -188,18 +144,4 @@ public static class PlaybackEndpoints
 		return Results.NoContent();
 	}
 
-	private static IResult StartTimer(TimerStartCommand? command, PlaybackSession session)
-	{
-		if (command is null || command.Duration <= 0)
-			return Results.BadRequest("A positive duration is required.");
-
-		session.StartTimer(command.Duration);
-		return Results.NoContent();
-	}
-
-	private static IResult StopTimer(PlaybackSession session)
-	{
-		session.StopTimer();
-		return Results.NoContent();
-	}
 }

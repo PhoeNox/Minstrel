@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Backend.Endpoints;
 using Backend.Library;
 using Backend.Playback;
+using Backend.Timer;
 using Infrastructure.FileSystem;
 using Infrastructure.Network;
 
@@ -32,7 +33,9 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+app.MapLibraryEndpoints();
 app.MapPlaybackEndpoints();
+app.MapTimerEndpoints();
 app.MapFallbackToFile("remote/{*path:nonfile}", "remote/index.html");
 app.MapFallbackToFile("index.html");
 
