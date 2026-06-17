@@ -2,13 +2,22 @@ namespace Network;
 
 public static class LocalAddressSelector
 {
-	public static string? Select(IEnumerable<NetworkAdapter> adapters) =>
-		adapters
-			.Where(adapter => adapter.IsUp && !adapter.IsLoopback && adapter.IPv4Addresses.Count > 0)
-			.OrderByDescending(Reachability)
-			.Select(adapter => adapter.IPv4Addresses[0])
-			.FirstOrDefault();
+	public static string? Select(IEnumerable<NetworkAdapter> adapters)
+	{
+		return adapters
+				.Where(adapter => adapter is {IsUp: true, IsLoopback: false, IpV4Addresses.Length: > 0})
+				.OrderByDescending(Reachability)
+				.Select(adapter => adapter.IpV4Addresses[0])
+				.FirstOrDefault();
+	}
 
-	private static int Reachability(NetworkAdapter adapter) =>
-		(adapter.OwnsDefaultGateway ? 2 : 0) + (adapter.IsVirtual ? 0 : 1);
+	private static int Reachability(NetworkAdapter adapter)
+	{
+		var reachability = 0;
+		if (adapter.OwnsDefaultGateway)
+			reachability += 2;
+		if (adapter.IsVirtual is false)
+			reachability += 1;
+		return reachability;
+	}
 }

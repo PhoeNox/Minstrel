@@ -4,6 +4,7 @@
     <Project Path="FileSystem\FileSystem.csproj" />
     <Project Path="FileSystem.Tests\FileSystem.Tests.csproj" />
     <Project Path="Network\Network.csproj" />
+    <Project Path="Network.Tests\Network.Tests.csproj" />
   </Folder>
   <Project Path="Backend.Tests/Backend.Tests.csproj" />
   <Project Path="Player.E2E.Tests/Player.E2E.Tests.csproj" />

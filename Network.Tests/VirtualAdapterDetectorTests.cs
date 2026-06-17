@@ -1,6 +1,4 @@
-namespace Backend.Tests.Network;
-
-using global::Network;
+namespace Network.Tests;
 
 public class VirtualAdapterDetectorTests
 {

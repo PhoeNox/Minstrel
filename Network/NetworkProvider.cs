@@ -4,8 +4,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
-public record ConnectionOptions(string Port);
-
 public interface INetworkProvider
 {
 	string GetLocalIpAddress();
@@ -23,22 +21,25 @@ public class NetworkProvider : INetworkProvider
 	{
 		var properties = nic.GetIPProperties();
 		return new NetworkAdapter(
-			Name: nic.Name,
-			IsUp: nic.OperationalStatus == OperationalStatus.Up,
-			IsLoopback: nic.NetworkInterfaceType == NetworkInterfaceType.Loopback,
-			IsVirtual: VirtualAdapterDetector.IsVirtual(nic.Name, nic.Description),
-			OwnsDefaultGateway: OwnsDefaultGateway(properties),
-			IPv4Addresses: IPv4Addresses(properties));
+				IsUp: nic.OperationalStatus == OperationalStatus.Up,
+				IsLoopback: nic.NetworkInterfaceType == NetworkInterfaceType.Loopback,
+				IsVirtual: VirtualAdapterDetector.IsVirtual(nic.Name, nic.Description),
+				OwnsDefaultGateway: OwnsDefaultGateway(properties),
+				IpV4Addresses: IpV4Addresses(properties));
 	}
 
-	private static bool OwnsDefaultGateway(IPInterfaceProperties properties) =>
-		properties.GatewayAddresses.Any(gateway =>
-			gateway.Address.AddressFamily == AddressFamily.InterNetwork
-			&& !gateway.Address.Equals(IPAddress.Any));
+	private static bool OwnsDefaultGateway(IPInterfaceProperties properties)
+	{
+		return properties.GatewayAddresses
+				.Any(gateway => gateway.Address.AddressFamily == AddressFamily.InterNetwork
+				                && !gateway.Address.Equals(IPAddress.Any));
+	}
 
-	private static IReadOnlyList<string> IPv4Addresses(IPInterfaceProperties properties) =>
-		properties.UnicastAddresses
-			.Where(unicast => unicast.Address.AddressFamily == AddressFamily.InterNetwork)
-			.Select(unicast => unicast.Address.ToString())
-			.ToArray();
+	private static string[] IpV4Addresses(IPInterfaceProperties properties)
+	{
+		return properties.UnicastAddresses
+				.Where(unicast => unicast.Address.AddressFamily == AddressFamily.InterNetwork)
+				.Select(unicast => unicast.Address.ToString())
+				.ToArray();
+	}
 }

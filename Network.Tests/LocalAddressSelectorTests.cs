@@ -1,6 +1,4 @@
-namespace Backend.Tests.Network;
-
-using global::Network;
+namespace Network.Tests;
 
 public class LocalAddressSelectorTests
 {
@@ -29,10 +27,10 @@ public class LocalAddressSelectorTests
 	[Test]
 	public async Task SkipsLoopbackAndDownAdapters()
 	{
-		var loopback = new NetworkAdapter("Loopback", IsUp: true, IsLoopback: true, IsVirtual: false,
-			OwnsDefaultGateway: false, IPv4Addresses: ["127.0.0.1"]);
-		var down = new NetworkAdapter("Ethernet", IsUp: false, IsLoopback: false, IsVirtual: false,
-			OwnsDefaultGateway: true, IPv4Addresses: ["192.168.1.5"]);
+		var loopback = new NetworkAdapter(IsUp: true, IsLoopback: true, IsVirtual: false,
+			OwnsDefaultGateway: false, IpV4Addresses: ["127.0.0.1"]);
+		var down = new NetworkAdapter(IsUp: false, IsLoopback: false, IsVirtual: false,
+			OwnsDefaultGateway: true, IpV4Addresses: ["192.168.1.5"]);
 		var wifi = Adapter("Wi-Fi", "192.168.1.42", isVirtual: false, ownsGateway: true);
 
 		var selected = LocalAddressSelector.Select([loopback, down, wifi]);
@@ -43,8 +41,8 @@ public class LocalAddressSelectorTests
 	[Test]
 	public async Task ReturnsNullWhenNoUsableAdapterExists()
 	{
-		var loopback = new NetworkAdapter("Loopback", IsUp: true, IsLoopback: true, IsVirtual: false,
-			OwnsDefaultGateway: false, IPv4Addresses: ["127.0.0.1"]);
+		var loopback = new NetworkAdapter(IsUp: true, IsLoopback: true, IsVirtual: false,
+			OwnsDefaultGateway: false, IpV4Addresses: ["127.0.0.1"]);
 
 		var selected = LocalAddressSelector.Select([loopback]);
 
@@ -52,6 +50,6 @@ public class LocalAddressSelectorTests
 	}
 
 	private static NetworkAdapter Adapter(string name, string ipv4, bool isVirtual, bool ownsGateway) =>
-		new(name, IsUp: true, IsLoopback: false, IsVirtual: isVirtual,
-			OwnsDefaultGateway: ownsGateway, IPv4Addresses: [ipv4]);
+		new(IsUp: true, IsLoopback: false, IsVirtual: isVirtual,
+			OwnsDefaultGateway: ownsGateway, IpV4Addresses: [ipv4]);
 }
