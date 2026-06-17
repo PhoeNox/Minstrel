@@ -1,4 +1,4 @@
-namespace Backend.Features.Timer;
+namespace Backend.Sessions;
 
 public sealed class TimerClock(TimerSession session) : BackgroundService
 {

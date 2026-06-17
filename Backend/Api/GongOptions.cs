@@ -1,4 +1,4 @@
-namespace Backend.Features.Timer;
+namespace Backend.Api;
 
 public record GongOptions
 {

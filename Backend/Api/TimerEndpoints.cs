@@ -3,10 +3,13 @@ namespace Backend.Api;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Backend.Features.Timer;
+using Backend.Sessions;
+using Core.Timer;
 using Microsoft.Extensions.Options;
 
 public sealed record TimerStartCommand(double Duration);
+
+public sealed record TimerDto(bool Running, long AnchorTimestamp, double DurationLeftAtAnchor);
 
 public static class TimerEndpoints
 {
@@ -52,10 +55,13 @@ public static class TimerEndpoints
 				$"event: gong\ndata: {JsonSerializer.Serialize(new { gain = gongGain }, JsonOptions)}\n\n",
 				cancellation),
 			TimerSnapshotEvent snapshot => context.Response.WriteAsync(
-				$"data: {JsonSerializer.Serialize(snapshot.Timer, JsonOptions)}\n\n",
+				$"data: {JsonSerializer.Serialize(ToDto(snapshot.Timer), JsonOptions)}\n\n",
 				cancellation),
 			_ => Task.CompletedTask,
 		};
+
+	private static TimerDto? ToDto(TimerAnchor timer) =>
+		timer.Running ? new TimerDto(timer.Running, timer.AnchorTimestamp, timer.DurationLeftAtAnchor) : null;
 
 	private static IResult StartTimer(TimerStartCommand? command, TimerSession session)
 	{

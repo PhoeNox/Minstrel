@@ -1,4 +1,4 @@
-namespace Backend.Features.Timer;
+namespace Backend.Sessions;
 
 using System.Threading.Channels;
 using Core.Timer;
@@ -46,7 +46,7 @@ public sealed class TimerSession
 		lock (gate)
 		{
 			subscribers.Add(channel);
-			channel.Writer.TryWrite(new TimerSnapshotEvent(CurrentSnapshot()));
+			channel.Writer.TryWrite(CurrentSnapshot());
 		}
 
 		return channel;
@@ -64,7 +64,7 @@ public sealed class TimerSession
 
 	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-	private void Broadcast() => Publish(new TimerSnapshotEvent(CurrentSnapshot()));
+	private void Broadcast() => Publish(CurrentSnapshot());
 
 	private void Publish(TimerEvent message)
 	{
@@ -74,6 +74,5 @@ public sealed class TimerSession
 		}
 	}
 
-	private TimerDto? CurrentSnapshot() =>
-		timer.Running ? new TimerDto(timer.Running, timer.AnchorTimestamp, timer.DurationLeftAtAnchor) : null;
+	private TimerSnapshotEvent CurrentSnapshot() => new(timer);
 }

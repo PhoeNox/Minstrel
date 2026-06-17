@@ -47,11 +47,11 @@ dotnet test Backend.Tests/Backend.Tests.csproj --filter "FullyQualifiedName~Clas
   - Plus `Song`/`SongId`, the `GamePhase` enum, and the `Connection`/`Version` info records.
 - **`FileSystem/`** — M3U playlist persistence and TagLibSharp metadata.
 - **`Network/`** — local IP detection.
-- **`Backend/`** — ASP.NET Core. Wires the pure `Core` modules through **edge integrations** that carry no domain logic (ADR-0007):
-  - **`Features/Session/`** — `LiveSession`, the single coordinator holding `PlaybackState` + `PlaylistBook` behind one lock — every command and every `PlaybackClock` tick takes it; it resolves a `SongId` via the Pool, drives a pure Playlist/Playback op, performs M3U I/O, reconciles the index-cursor from the structural change, and broadcasts.
-  - **`Features/Timer/`** — the independent countdown module with its own state, clock, `/sse/timer` stream, and Gong one-shot.
-  - **`Api/`** — thin HTTP endpoint adapters (`PlaybackEndpoints`, `PlaylistEndpoints`, `LibraryEndpoints`, `TimerEndpoints`, `SystemEndpoints`) over the session.
-  - **`Contracts/`** — `SnapshotMapper` assembles the `/sse` snapshot from `Playback ⨝ Playlist`; `SessionEvent` carries it.
+- **`Backend/`** — ASP.NET Core, in four layers: the pure `Core` modules, the stateful **`Sessions/`** coordinators, the I/O **providers** (`FileSystem`/`Network`), and the HTTP **`Api/`** endpoints. The coordinators wire the pure `Core` modules through **edge integrations** that carry no domain logic (ADR-0007):
+  - **`Sessions/`** — the stateful coordinators, each holding live Core state behind one lock and broadcasting it to subscribers as raw Core records (no DTOs):
+    - `LiveSession` holds `PlaybackState` + `PlaylistBook` — every command and every `PlaybackClock` tick takes its lock; it resolves a `SongId` via the Pool, drives a pure Playlist/Playback op, performs M3U I/O, reconciles the index-cursor from the structural change, and broadcasts `SessionEvent`.
+    - `TimerSession` is the independent countdown — own state, `TimerClock` tick, `/timer/sse` stream, and Gong one-shot — broadcasting `TimerEvent`.
+  - **`Api/`** — thin HTTP endpoint adapters (`PlaybackEndpoints`, `PlaylistEndpoints`, `LibraryEndpoints`, `TimerEndpoints`, `SystemEndpoints`) over the sessions; also owns the wire DTOs and the pure `SnapshotMapper` (`SnapshotDtos.cs`, assembling `Playback ⨝ Playlist` and mapping Core→wire per connected client at broadcast time) plus the inline `TimerDto` and `GongOptions`.
 - **`Player/`** — SvelteKit (TypeScript) frontend that renders the Backend's state into sound via native Web Audio. Disposable: it can be closed and reopened, fetching current state and resuming.
 - **`Remote/`** — SvelteKit (TypeScript) control surface. Emits commands; holds no playback state of its own.
 - **`shared/`** — TypeScript shared by both frontends (`position`, `timer`).
