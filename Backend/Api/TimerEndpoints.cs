@@ -3,7 +3,7 @@ namespace Backend.Api;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Backend.Sessions;
+using Backend.Sessions.Timer;
 using Core.Timer;
 using Microsoft.Extensions.Options;
 

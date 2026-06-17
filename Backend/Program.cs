@@ -1,8 +1,9 @@
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Backend.Api;
+using Backend.Sessions.Playback;
 using Core.Playback;
-using Backend.Sessions;
+using Backend.Sessions.Timer;
 using Core.Library;
 using FileSystem;
 using Network;
@@ -29,7 +30,7 @@ builder.Services.AddSingleton(sp =>
 	var all = sp.GetRequiredService<LibraryProvider>().LoadLibrary();
 	return SongPool.From(day, night, all);
 });
-builder.Services.AddSingleton<LiveSession>();
+builder.Services.AddSingleton<PlaybackSession>();
 builder.Services.AddHostedService<PlaybackClock>();
 builder.Services.AddSingleton<TimerSession>();
 builder.Services.AddHostedService<TimerClock>();

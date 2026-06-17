@@ -3,10 +3,10 @@ namespace Backend.Api;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Backend.Sessions;
 using Core;
 using Core.Library;
 using Microsoft.AspNetCore.StaticFiles;
+using Sessions.Playback;
 
 public sealed record PlayCommand(string? SongId);
 public sealed record SelectCommand(GamePhase Phase, int Index);
@@ -34,7 +34,7 @@ public static class PlaybackEndpoints
 		app.MapPost("/playback/set-gain", SetGain);
 	}
 
-	private static async Task StreamState(HttpContext context, LiveSession session, CancellationToken cancellation)
+	private static async Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
 	{
 		context.Response.Headers.ContentType = "text/event-stream";
 		context.Response.Headers.CacheControl = "no-cache";
@@ -57,7 +57,7 @@ public static class PlaybackEndpoints
 		}
 	}
 
-	private static Task WriteEvent(HttpContext context, SessionEvent message, CancellationToken cancellation) =>
+	private static Task WriteEvent(HttpContext context, PlaybackEvent message, CancellationToken cancellation) =>
 		message switch
 		{
 			SnapshotEvent snapshot => context.Response.WriteAsync(
@@ -78,7 +78,7 @@ public static class PlaybackEndpoints
 		return Results.File(Path.GetFullPath(path), contentType, enableRangeProcessing: true);
 	}
 
-	private static IResult Play(PlayCommand? command, LiveSession session)
+	private static IResult Play(PlayCommand? command, PlaybackSession session)
 	{
 		if (command?.SongId is { } songId)
 		{
@@ -97,19 +97,19 @@ public static class PlaybackEndpoints
 			: Results.BadRequest("The active playlist is empty.");
 	}
 
-	private static IResult Pause(LiveSession session)
+	private static IResult Pause(PlaybackSession session)
 	{
 		session.Pause();
 		return Results.NoContent();
 	}
 
-	private static IResult SwitchPhase(LiveSession session)
+	private static IResult SwitchPhase(PlaybackSession session)
 	{
 		session.SwitchPhase();
 		return Results.NoContent();
 	}
 
-	private static IResult Select(SelectCommand? command, LiveSession session)
+	private static IResult Select(SelectCommand? command, PlaybackSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and index are required.");
@@ -118,7 +118,7 @@ public static class PlaybackEndpoints
 		return Results.NoContent();
 	}
 
-	private static IResult SetGain(SetGainCommand? command, LiveSession session)
+	private static IResult SetGain(SetGainCommand? command, PlaybackSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and gain value are required.");

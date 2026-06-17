@@ -1,8 +1,8 @@
 // ReSharper disable ClassNeverInstantiated.Global
 namespace Backend.Api;
 
-using Backend.Sessions;
 using Core;
+using Sessions.Playback;
 
 public sealed record AddCommand(GamePhase Phase, string SongId);
 public sealed record RemoveCommand(GamePhase Phase, int Index);
@@ -19,7 +19,7 @@ public static class PlaylistEndpoints
 		app.MapPost("/playlist/move", Move);
 	}
 
-	private static IResult Add(AddCommand? command, LiveSession session)
+	private static IResult Add(AddCommand? command, PlaybackSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and song id are required.");
@@ -28,7 +28,7 @@ public static class PlaylistEndpoints
 		return Results.NoContent();
 	}
 
-	private static IResult Remove(RemoveCommand? command, LiveSession session)
+	private static IResult Remove(RemoveCommand? command, PlaybackSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and index are required.");
@@ -37,7 +37,7 @@ public static class PlaylistEndpoints
 		return Results.NoContent();
 	}
 
-	private static IResult Shuffle(ShuffleCommand? command, LiveSession session)
+	private static IResult Shuffle(ShuffleCommand? command, PlaybackSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase is required.");
@@ -46,7 +46,7 @@ public static class PlaylistEndpoints
 		return Results.NoContent();
 	}
 
-	private static IResult Move(MoveCommand? command, LiveSession session)
+	private static IResult Move(MoveCommand? command, PlaybackSession session)
 	{
 		if (command is null)
 			return Results.BadRequest("A phase and indices are required.");

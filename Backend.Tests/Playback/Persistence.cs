@@ -4,16 +4,16 @@ using Core;
 using Core.Library;
 using FileSystem;
 using FileSystem.Tests;
-using Sessions;
+using Sessions.Playback;
 
 public class Persistence
 {
-	private static (LiveSession Session, SongPool Pool) Build(FakeFileSystem fileSystem)
+	private static (PlaybackSession Session, SongPool Pool) Build(FakeFileSystem fileSystem)
 	{
 		var (day, night) = new PlaylistProvider(fileSystem).LoadPlaylists();
 		var all = new LibraryProvider(fileSystem).LoadLibrary();
 		var pool = SongPool.From(day, night, all);
-		return (new LiveSession(pool, new PlaylistProvider(fileSystem)), pool);
+		return (new PlaybackSession(pool, new PlaylistProvider(fileSystem)), pool);
 	}
 
 	[Test]

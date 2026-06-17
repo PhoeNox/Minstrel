@@ -1,4 +1,4 @@
-namespace Backend.Sessions;
+namespace Backend.Sessions.Timer;
 
 using System.Threading.Channels;
 using Core.Timer;
@@ -58,9 +58,12 @@ public sealed class TimerSession
 		}
 	}
 
-	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+	private static long Now() 
+		=> DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-	private void Broadcast() => broadcaster.Publish(CurrentSnapshot());
+	private void Broadcast() 
+		=> broadcaster.Publish(CurrentSnapshot());
 
-	private TimerSnapshotEvent CurrentSnapshot() => new(timer);
+	private TimerSnapshotEvent CurrentSnapshot() 
+		=> new(timer);
 }

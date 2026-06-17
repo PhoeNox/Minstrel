@@ -1,4 +1,4 @@
-namespace Backend.Sessions;
+namespace Backend.Sessions.Timer;
 
 using Core.Timer;
 

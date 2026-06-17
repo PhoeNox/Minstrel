@@ -1,4 +1,4 @@
-namespace Backend.Sessions;
+namespace Backend.Sessions.Playback;
 
 using System.Threading.Channels;
 using Core;
@@ -7,10 +7,10 @@ using Core.Playback;
 using Core.Playlist;
 using FileSystem;
 
-public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
+public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStore)
 {
 	private readonly Lock gate = new();
-	private readonly SseBroadcaster<SessionEvent> broadcaster = new();
+	private readonly SseBroadcaster<PlaybackEvent> broadcaster = new();
 
 	private PlaylistBook playlists = new(ToEntries(pool.Day), ToEntries(pool.Night));
 
@@ -174,7 +174,7 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 		}
 	}
 
-	public Channel<SessionEvent> Subscribe()
+	public Channel<PlaybackEvent> Subscribe()
 	{
 		lock (gate)
 		{
@@ -184,7 +184,7 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 		}
 	}
 
-	public void Unsubscribe(Channel<SessionEvent> channel)
+	public void Unsubscribe(Channel<PlaybackEvent> channel)
 	{
 		lock (gate)
 		{

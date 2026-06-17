@@ -15,8 +15,4 @@
 		<ProjectReference Include="..\Network\Network.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Features\" />
-	</ItemGroup>
-
 </Project>
