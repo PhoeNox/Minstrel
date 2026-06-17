@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Backend.Api;
 using Core;
 using FileSystem.Tests;
 
@@ -26,10 +27,26 @@ public static class TestHarness
 	public static FakeFileSystem EmptyLibrary() => new(day: [], night: []);
 
 	public static readonly string AddableSongId = SongId.From("/music/c.mp3");
+	public static readonly string FirstDaySongId = SongId.From("/music/a.mp3");
+	public static readonly string SecondDaySongId = SongId.From("/music/b.mp3");
 
 	public static StringContent JsonBody(string raw) => new(raw, Encoding.UTF8, "application/json");
 
 	public static StringContent NullBody() => JsonBody("null");
+
+	// The current state as a subscriber sees it: the first SSE frame each stream emits on
+	// subscribe is the live snapshot, so this reads back the effect of a preceding command.
+	public static async Task<StateSnapshot> ReadPlayback(HttpClient client)
+	{
+		var data = await Sse.FirstData(client, "/playback/sse");
+		return JsonSerializer.Deserialize<StateSnapshot>(data!, Json)!;
+	}
+
+	public static async Task<TimerDto?> ReadTimer(HttpClient client)
+	{
+		var data = await Sse.FirstData(client, "/timer/sse");
+		return JsonSerializer.Deserialize<TimerDto>(data!, Json);
+	}
 
 	public static async Task<object> StatusAndJson<T>(HttpResponseMessage response)
 	{

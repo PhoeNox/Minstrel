@@ -19,6 +19,9 @@ public class PlaybackEndpointsTests
 		var response = await client.PostAsync("/playback/play", NullBody());
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		var state = await ReadPlayback(client);
+		await Assert.That(state.IsPlaying).IsTrue();
+		await Assert.That(state.CurrentSongId).IsEqualTo(FirstDaySongId);
 	}
 
 	[Test]
@@ -33,36 +36,47 @@ public class PlaybackEndpointsTests
 	}
 
 	[Test]
-	public async Task Pause_AcceptsCommand()
+	public async Task Pause_StopsPlayback()
 	{
 		await using var app = new MinstrelApp(SeededLibrary());
 		var client = app.CreateClient();
+		await client.PostAsync("/playback/play", NullBody());
 
 		var response = await client.PostAsync("/playback/pause", content: null);
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		var state = await ReadPlayback(client);
+		await Assert.That(state.IsPlaying).IsFalse();
 	}
 
 	[Test]
-	public async Task SwitchPhase_AcceptsCommand()
+	public async Task SwitchPhase_TogglesTheActivePhase()
 	{
-		await using var app = new MinstrelApp(SeededLibrary());
+		// Switching is a no-op onto an empty phase, so Night needs a song to switch to.
+		await using var app = new MinstrelApp(new FakeFileSystem(
+			day: [TestSongs.At("a.mp3")],
+			night: [TestSongs.At("d.mp3")]));
 		var client = app.CreateClient();
 
 		var response = await client.PostAsync("/playback/switch-phase", content: null);
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		var state = await ReadPlayback(client);
+		await Assert.That(state.Phase).IsEqualTo(GamePhase.Night);
+		await Assert.That(state.CurrentSongId).IsEqualTo(SongId.From("/music/d.mp3"));
 	}
 
 	[Test]
-	public async Task Select_AcceptsCommand()
+	public async Task Select_SetsTheRequestedSongAsCurrent()
 	{
 		await using var app = new MinstrelApp(SeededLibrary());
 		var client = app.CreateClient();
 
-		var response = await client.PostAsync("/playback/select", JsonBody("""{"phase":"Day","index":0}"""));
+		var response = await client.PostAsync("/playback/select", JsonBody("""{"phase":"Day","index":1}"""));
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		var state = await ReadPlayback(client);
+		await Assert.That(state.CurrentSongId).IsEqualTo(SecondDaySongId);
 	}
 
 	[Test]
@@ -77,7 +91,7 @@ public class PlaybackEndpointsTests
 	}
 
 	[Test]
-	public async Task SetGain_AcceptsCommand()
+	public async Task SetGain_UpdatesThePhaseGain()
 	{
 		await using var app = new MinstrelApp(SeededLibrary());
 		var client = app.CreateClient();
@@ -85,6 +99,8 @@ public class PlaybackEndpointsTests
 		var response = await client.PostAsync("/playback/set-gain", JsonBody("""{"phase":"Day","value":0.5}"""));
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		var state = await ReadPlayback(client);
+		await Assert.That(state.Playlists.Day.Gain).IsEqualTo(0.5);
 	}
 
 	[Test]
@@ -99,7 +115,7 @@ public class PlaybackEndpointsTests
 	}
 
 	[Test]
-	public async Task Audio_ServesFile_ForKnownSong()
+	public async Task Audio_ServesTheSongBytes_ForKnownSong()
 	{
 		var file = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp3");
 		await File.WriteAllBytesAsync(file, [0x49, 0x44, 0x33]);
@@ -113,6 +129,7 @@ public class PlaybackEndpointsTests
 
 			await response.ShouldHaveStatus(HttpStatusCode.OK);
 			await Assert.That(response.Content.Headers.ContentType?.ToString()).IsEqualTo("audio/mpeg");
+			await Assert.That(Convert.ToHexString(await response.Content.ReadAsByteArrayAsync())).IsEqualTo("494433");
 		}
 		finally
 		{
