@@ -1,17 +1,19 @@
 namespace Backend.Tests.Playback;
 
 using Core;
+using Core.Library;
 using FileSystem;
 using FileSystem.Tests;
 using Features.Session;
 
 public class Persistence
 {
-	private static LiveSession Build(FakeFileSystem fileSystem)
+	private static (LiveSession Session, SongPool Pool) Build(FakeFileSystem fileSystem)
 	{
-		var provider = new SongPoolProvider(fileSystem);
-		var pool = provider.SongPool;
-		return new LiveSession(pool, fileSystem);
+		var (day, night) = new PlaylistProvider(fileSystem).LoadPlaylists();
+		var all = new LibraryProvider(fileSystem).LoadLibrary();
+		var pool = SongPool.From(day, night, all);
+		return (new LiveSession(pool, new PlaylistProvider(fileSystem)), pool);
 	}
 
 	[Test]
@@ -20,7 +22,7 @@ public class Persistence
 		var fileSystem = new FakeFileSystem(
 				day: [TestSongs.At("a.mp3"), TestSongs.At("b.mp3")],
 				night: []);
-		var session = Build(fileSystem);
+		var (session, _) = Build(fileSystem);
 
 		session.Move(GamePhase.Day, oldIndex: 0, newIndex: 1);
 
@@ -34,10 +36,8 @@ public class Persistence
 				day: [TestSongs.At("a.mp3")],
 				night: [],
 				alsoOnDisk: [TestSongs.At("c.mp3")]);
-		var poolProvider = new SongPoolProvider(fileSystem);
-		var pool = poolProvider.SongPool;
-		var session = new LiveSession(pool, fileSystem);
-		var added = pool.All.Single(entry => entry.Song.Path == "c.mp3");
+		var (session, pool) = Build(fileSystem);
+		var added = pool.All.Single(entry => entry.Song.Path == "/music/c.mp3");
 
 		session.Add(GamePhase.Day, added.Id);
 

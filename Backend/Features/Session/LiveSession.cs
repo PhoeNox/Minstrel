@@ -8,7 +8,7 @@ using Core.Playlist;
 using FileSystem;
 using Playback;
 
-public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
+public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 {
 	private readonly Lock gate = new();
 	private readonly List<Channel<SessionEvent>> subscribers = [];
@@ -216,8 +216,8 @@ public sealed class LiveSession(SongPool pool, IFileSystemProvider fileSystem)
 	private static Track? ToTrack(PlaylistEntry? entry)
 		=> entry is null ? null : new Track(entry.Id, entry.Length);
 
-	private void Save(GamePhase phase, PlaylistEntry[] entries) 
-		=> fileSystem.SavePlaylist(phase, entries.Select(entry => entry.Path).ToArray());
+	private void Save(GamePhase phase, PlaylistEntry[] entries)
+		=> playlistStore.Save(phase, entries.Select(entry => entry.Path).ToArray());
 
 	private void Broadcast() 
 		=> Publish(new SnapshotEvent(CurrentSnapshot()));

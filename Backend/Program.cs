@@ -22,8 +22,14 @@ builder.Services.AddOptions<GongOptions>()
 
 builder.Services.AddSingleton<IFileSystemProvider, FileSystemProvider>();
 builder.Services.AddSingleton<INetworkProvider, NetworkProvider>();
+builder.Services.AddSingleton<LibraryProvider>();
+builder.Services.AddSingleton<PlaylistProvider>();
 builder.Services.AddSingleton(sp =>
-	new SongPoolProvider(sp.GetRequiredService<IFileSystemProvider>()).SongPool);
+{
+	var (day, night) = sp.GetRequiredService<PlaylistProvider>().LoadPlaylists();
+	var all = sp.GetRequiredService<LibraryProvider>().LoadLibrary();
+	return SongPool.From(day, night, all);
+});
 builder.Services.AddSingleton<LiveSession>();
 builder.Services.AddHostedService<PlaybackClock>();
 builder.Services.AddSingleton<TimerSession>();

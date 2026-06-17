@@ -11,25 +11,36 @@ public sealed class FakeFileSystem(Song[] day, Song[] night, Song[]? alsoOnDisk 
 			[GamePhase.Night] = night,
 	};
 
-	private readonly Song[] alsoOnDisk = alsoOnDisk ?? [];
+	private readonly Song[] onDisk = day.Concat(night).Concat(alsoOnDisk ?? []).ToArray();
 	private readonly Dictionary<GamePhase, string[]> saved = new();
+
+	public string MusicDirectory => "/music";
 
 	public string[] Saved(GamePhase phase)
 		=> saved[phase];
 
-	public Song[] LoadSongs()
-		=> playlists.Values.SelectMany(songs => songs).Concat(alsoOnDisk).ToArray();
+	public IEnumerable<string> EnumerateFiles()
+		=> onDisk.Select(song => song.Path);
 
-	public (Song[] DayPlaylist, Song[] NightPlaylist) LoadPlaylists()
-		=> (playlists[GamePhase.Day], playlists[GamePhase.Night]);
+	public string[] ReadLines(string path)
+		=> playlists[PhaseOf(path)].Select(song => song.Path).ToArray();
 
-	public void SavePlaylist(GamePhase gamePhase, IReadOnlyList<string> songPaths)
-		=> saved[gamePhase] = songPaths.ToArray();
+	public Song[] ReadSongs(IEnumerable<string> paths)
+	{
+		var byPath = onDisk.ToDictionary(song => song.Path);
+		return paths.Where(byPath.ContainsKey).Select(path => byPath[path]).ToArray();
+	}
+
+	public void WriteLines(string path, IEnumerable<string> lines)
+		=> saved[PhaseOf(path)] = lines.ToArray();
+
+	private static GamePhase PhaseOf(string path)
+		=> path.EndsWith("day.m3u") ? GamePhase.Day : GamePhase.Night;
 }
 
 public static class TestSongs
 {
-	public static Song At(string path, TimeSpan? length = null)
-		=> new(path, Title: $"Title {path}", Artist: $"Artist {path}", Album: "Album",
+	public static Song At(string name, TimeSpan? length = null)
+		=> new($"/music/{name}", Title: $"Title {name}", Artist: $"Artist {name}", Album: "Album",
 				Length: length ?? TimeSpan.FromMinutes(3));
 }

@@ -5,16 +5,20 @@ using Microsoft.Extensions.Options;
 
 public interface IFileSystemProvider
 {
-	Song[] LoadSongs();
+	string MusicDirectory { get; }
 
-	(Song[] DayPlaylist, Song[] NightPlaylist) LoadPlaylists();
+	Song[] ReadSongs(IEnumerable<string> paths);
 
-	void SavePlaylist(GamePhase gamePhase, IReadOnlyList<string> songPaths);
+	IEnumerable<string> EnumerateFiles();
+
+	string[] ReadLines(string path);
+
+	void WriteLines(string path, IEnumerable<string> lines);
 }
 
 public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSystemProvider
 {
-	private string MusicDirectory
+	public string MusicDirectory
 	{
 		get
 		{
@@ -25,37 +29,17 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSy
 		}
 	}
 
-	public (Song[] DayPlaylist, Song[] NightPlaylist) LoadPlaylists()
-	{
-		var daySongs = LoadPlaylist(GamePhase.Day);
-		var nightSongs = LoadPlaylist(GamePhase.Night);
-		return (daySongs, nightSongs);
-	}
+	public IEnumerable<string> EnumerateFiles()
+		=> Directory.EnumerateFiles(MusicDirectory, "*", SearchOption.AllDirectories);
 
-	public void SavePlaylist(GamePhase gamePhase, IReadOnlyList<string> songPaths)
-	{
-		var playlist = PlaylistPath(gamePhase);
-		File.WriteAllLines(playlist, songPaths.Select(path => Path.GetRelativePath(MusicDirectory, path)));
-	}
+	public string[] ReadLines(string path)
+		=> File.ReadAllLines(path);
 
-	private Song[] LoadPlaylist(GamePhase gamePhase)
-	{
-		var playlist = PlaylistPath(gamePhase);
-		var songPaths = File.ReadAllLines(playlist);
-		return songPaths.SelectMany(CreateSongFromFile).ToArray();
-	}
+	public void WriteLines(string path, IEnumerable<string> lines)
+		=> File.WriteAllLines(path, lines);
 
-	private string PlaylistPath(GamePhase gamePhase)
-	{
-		var fileName = gamePhase == GamePhase.Day ? "day.m3u" : "night.m3u";
-		return Path.Combine(MusicDirectory, fileName);
-	}
-
-	public Song[] LoadSongs()
-	{
-		var files = Directory.EnumerateFiles(MusicDirectory, "*", SearchOption.AllDirectories);
-		return files.SelectMany(CreateSongFromFile).ToArray();
-	}
+	public Song[] ReadSongs(IEnumerable<string> paths)
+		=> paths.SelectMany(CreateSongFromFile).ToArray();
 
 	private IEnumerable<Song> CreateSongFromFile(string path)
 	{
