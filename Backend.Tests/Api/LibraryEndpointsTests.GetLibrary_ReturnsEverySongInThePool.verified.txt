@@ -1,0 +1,23 @@
+﻿{
+  Status: 200,
+  Body: [
+    {
+      Id: 355d896ab5c9f0bb,
+      Title: Title a.mp3,
+      Artist: Artist a.mp3,
+      Length: 180.0
+    },
+    {
+      Id: b7a4285f70078037,
+      Title: Title b.mp3,
+      Artist: Artist b.mp3,
+      Length: 180.0
+    },
+    {
+      Id: dd79e056ccd21308,
+      Title: Title c.mp3,
+      Artist: Artist c.mp3,
+      Length: 180.0
+    }
+  ]
+}

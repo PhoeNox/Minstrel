@@ -1,0 +1,29 @@
+﻿{
+  IsPlaying: false,
+  Playlists: {
+    Day: {
+      Songs: [
+        {
+          Id: 355d896ab5c9f0bb,
+          Title: Title a.mp3,
+          Artist: Artist a.mp3,
+          Length: 180.0
+        },
+        {
+          Id: b7a4285f70078037,
+          Title: Title b.mp3,
+          Artist: Artist b.mp3,
+          Length: 180.0
+        }
+      ],
+      CurrentIndex: 0,
+      Gain: 1.0
+    },
+    Night: {
+      Gain: 1.0
+    }
+  },
+  Position: {
+    IsPlaying: false
+  }
+}

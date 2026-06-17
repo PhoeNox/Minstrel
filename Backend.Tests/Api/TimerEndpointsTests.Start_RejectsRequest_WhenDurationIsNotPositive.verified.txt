@@ -1,0 +1,4 @@
+﻿{
+  Status: 400,
+  Body: "A positive duration is required."
+}

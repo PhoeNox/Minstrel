@@ -75,3 +75,6 @@ static void OpenPlayerInBrowser(string playerUrl)
 		// Headless host (CI, server, E2E): no browser to launch.
 	}
 }
+
+// Exposes the top-level entry point to WebApplicationFactory in Backend.Tests.
+public partial class Program;
