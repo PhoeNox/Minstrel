@@ -1,8 +1,9 @@
-namespace Backend.Tests.Api;
+namespace Backend.Tests;
 
 using System.Net;
+using Backend.Tests.Helpers;
 using Core;
-using static TestHarness;
+using static Backend.Tests.Helpers.TestHarness;
 
 public class PlaylistEndpointsTests
 {

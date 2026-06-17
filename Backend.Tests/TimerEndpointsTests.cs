@@ -1,7 +1,8 @@
-namespace Backend.Tests.Api;
+namespace Backend.Tests;
 
 using System.Net;
-using static TestHarness;
+using Backend.Tests.Helpers;
+using static Backend.Tests.Helpers.TestHarness;
 
 public class TimerEndpointsTests
 {

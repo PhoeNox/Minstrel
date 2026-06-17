@@ -1,4 +1,4 @@
-namespace Backend.Tests.Api;
+namespace Backend.Tests.Helpers;
 
 using System.Net;
 using System.Net.Http.Json;

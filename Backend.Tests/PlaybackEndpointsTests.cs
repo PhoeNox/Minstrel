@@ -1,11 +1,12 @@
-namespace Backend.Tests.Api;
+namespace Backend.Tests;
 
 using System.Net;
 using System.Text.Json;
 using Backend.Api;
+using Backend.Tests.Helpers;
 using Core;
 using FileSystem.Tests;
-using static TestHarness;
+using static Backend.Tests.Helpers.TestHarness;
 using static VerifyTUnit.Verifier;
 
 public class PlaybackEndpointsTests

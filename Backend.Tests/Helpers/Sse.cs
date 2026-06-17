@@ -1,4 +1,4 @@
-namespace Backend.Tests.Api;
+namespace Backend.Tests.Helpers;
 
 // Reads the first SSE frame from a stream endpoint. Both stream endpoints push the current
 // snapshot the instant a subscriber attaches, so the first `data:` line is that snapshot;

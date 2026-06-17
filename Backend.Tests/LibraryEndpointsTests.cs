@@ -1,7 +1,8 @@
-namespace Backend.Tests.Api;
+namespace Backend.Tests;
 
 using Backend.Api;
-using static TestHarness;
+using Backend.Tests.Helpers;
+using static Backend.Tests.Helpers.TestHarness;
 using static VerifyTUnit.Verifier;
 
 public class LibraryEndpointsTests

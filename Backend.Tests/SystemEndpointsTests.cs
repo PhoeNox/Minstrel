@@ -1,10 +1,11 @@
-namespace Backend.Tests.Api;
+namespace Backend.Tests;
 
 using System.Net;
 using System.Net.Http.Json;
+using Backend.Tests.Helpers;
 using Core.Connection;
 using Core.Version;
-using static TestHarness;
+using static Backend.Tests.Helpers.TestHarness;
 using static VerifyTUnit.Verifier;
 
 public class SystemEndpointsTests

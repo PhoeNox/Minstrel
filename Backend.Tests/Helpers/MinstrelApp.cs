@@ -1,4 +1,4 @@
-namespace Backend.Tests.Api;
+namespace Backend.Tests.Helpers;
 
 using FileSystem;
 using Microsoft.AspNetCore.Hosting;
