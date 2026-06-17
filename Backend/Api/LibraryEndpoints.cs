@@ -1,6 +1,5 @@
 namespace Backend.Api;
 
-using Contracts;
 using Core.Library;
 
 public static class LibraryEndpoints

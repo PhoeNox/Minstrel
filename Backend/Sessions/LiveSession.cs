@@ -1,7 +1,6 @@
-namespace Backend.Features.Session;
+namespace Backend.Sessions;
 
 using System.Threading.Channels;
-using Backend.Contracts;
 using Core;
 using Core.Library;
 using Core.Playback;
@@ -181,7 +180,7 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 		lock (gate)
 		{
 			subscribers.Add(channel);
-			channel.Writer.TryWrite(new SnapshotEvent(CurrentSnapshot()));
+			channel.Writer.TryWrite(CurrentSnapshot());
 		}
 
 		return channel;
@@ -205,7 +204,7 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 	private static PlaylistEntry[] ToEntries(IReadOnlyList<PoolEntry> entries)
 		=> entries.Select(ToEntry).ToArray();
 
-	private static PlaylistEntry ToEntry(PoolEntry entry) 
+	private static PlaylistEntry ToEntry(PoolEntry entry)
 		=> new(entry.Id, entry.Song.Path, entry.Song.Title, entry.Song.Artist,
 					entry.Song.Length.TotalSeconds);
 
@@ -218,8 +217,8 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 	private void Save(GamePhase phase, PlaylistEntry[] entries)
 		=> playlistStore.Save(phase, entries.Select(entry => entry.Path).ToArray());
 
-	private void Broadcast() 
-		=> Publish(new SnapshotEvent(CurrentSnapshot()));
+	private void Broadcast()
+		=> Publish(CurrentSnapshot());
 
 	private void Publish(SessionEvent message)
 	{
@@ -229,5 +228,5 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 		}
 	}
 
-	private StateSnapshot CurrentSnapshot() => SnapshotMapper.ToSnapshot(playback, playlists);
+	private SnapshotEvent CurrentSnapshot() => new(playback, playlists);
 }

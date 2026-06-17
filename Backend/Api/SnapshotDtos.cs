@@ -1,4 +1,4 @@
-namespace Backend.Contracts;
+namespace Backend.Api;
 
 using Core;
 using Core.Playlist;

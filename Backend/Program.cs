@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Text.Json.Serialization;
 using Backend.Api;
 using Core.Playback;
-using Backend.Features.Session;
+using Backend.Sessions;
 using Backend.Features.Timer;
 using Core.Library;
 using FileSystem;

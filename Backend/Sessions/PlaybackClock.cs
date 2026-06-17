@@ -1,4 +1,4 @@
-namespace Backend.Features.Session;
+namespace Backend.Sessions;
 
 public sealed class PlaybackClock(LiveSession session) : BackgroundService
 {

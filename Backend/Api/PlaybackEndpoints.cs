@@ -3,8 +3,7 @@ namespace Backend.Api;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Backend.Contracts;
-using Backend.Features.Session;
+using Backend.Sessions;
 using Core;
 using Core.Library;
 using Microsoft.AspNetCore.StaticFiles;
@@ -62,7 +61,7 @@ public static class PlaybackEndpoints
 		message switch
 		{
 			SnapshotEvent snapshot => context.Response.WriteAsync(
-				$"data: {JsonSerializer.Serialize(snapshot.Snapshot, JsonOptions)}\n\n",
+				$"data: {JsonSerializer.Serialize(SnapshotMapper.ToSnapshot(snapshot.Playback, snapshot.Playlists), JsonOptions)}\n\n",
 				cancellation),
 			_ => Task.CompletedTask,
 		};
