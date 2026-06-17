@@ -1,19 +1,22 @@
 namespace Backend.Tests.Api;
 
 using System.Net;
+using Core;
 using static TestHarness;
 
 public class PlaylistEndpointsTests
 {
 	[Test]
-	public async Task Add_AcceptsCommand()
+	public async Task Add_AppendsSongToPlaylist()
 	{
-		await using var app = new MinstrelApp(SeededLibrary());
+		var fileSystem = SeededLibrary();
+		await using var app = new MinstrelApp(fileSystem);
 		var client = app.CreateClient();
 
 		var response = await client.PostAsync("/playlist/add", JsonBody($$"""{"phase":"Day","songId":"{{AddableSongId}}"}"""));
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		await Assert.That(Saved(fileSystem)).IsEqualTo("a.mp3,b.mp3,c.mp3");
 	}
 
 	[Test]
@@ -28,14 +31,16 @@ public class PlaylistEndpointsTests
 	}
 
 	[Test]
-	public async Task Remove_AcceptsCommand()
+	public async Task Remove_DropsSongFromPlaylist()
 	{
-		await using var app = new MinstrelApp(SeededLibrary());
+		var fileSystem = SeededLibrary();
+		await using var app = new MinstrelApp(fileSystem);
 		var client = app.CreateClient();
 
 		var response = await client.PostAsync("/playlist/remove", JsonBody("""{"phase":"Day","index":0}"""));
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		await Assert.That(Saved(fileSystem)).IsEqualTo("b.mp3");
 	}
 
 	[Test]
@@ -50,14 +55,16 @@ public class PlaylistEndpointsTests
 	}
 
 	[Test]
-	public async Task Shuffle_AcceptsCommand()
+	public async Task Shuffle_PersistsThePlaylistsSongs()
 	{
-		await using var app = new MinstrelApp(SeededLibrary());
+		var fileSystem = SeededLibrary();
+		await using var app = new MinstrelApp(fileSystem);
 		var client = app.CreateClient();
 
 		var response = await client.PostAsync("/playlist/shuffle", JsonBody("""{"phase":"Day"}"""));
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		await Assert.That(SavedSorted(fileSystem)).IsEqualTo("a.mp3,b.mp3");
 	}
 
 	[Test]
@@ -72,14 +79,16 @@ public class PlaylistEndpointsTests
 	}
 
 	[Test]
-	public async Task Move_AcceptsCommand()
+	public async Task Move_ReordersThePlaylist()
 	{
-		await using var app = new MinstrelApp(SeededLibrary());
+		var fileSystem = SeededLibrary();
+		await using var app = new MinstrelApp(fileSystem);
 		var client = app.CreateClient();
 
 		var response = await client.PostAsync("/playlist/move", JsonBody("""{"phase":"Day","oldIndex":0,"newIndex":1}"""));
 
 		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
+		await Assert.That(Saved(fileSystem)).IsEqualTo("b.mp3,a.mp3");
 	}
 
 	[Test]
@@ -92,4 +101,11 @@ public class PlaylistEndpointsTests
 
 		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A phase and indices are required.");
 	}
+
+	// The persisted Day playlist as the M3U writer left it: relative paths, in order.
+	private static string Saved(FileSystem.Tests.FakeFileSystem fileSystem)
+		=> string.Join(",", fileSystem.Saved(GamePhase.Day));
+
+	private static string SavedSorted(FileSystem.Tests.FakeFileSystem fileSystem)
+		=> string.Join(",", fileSystem.Saved(GamePhase.Day).Order());
 }
