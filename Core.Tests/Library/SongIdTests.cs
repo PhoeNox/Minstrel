@@ -1,4 +1,4 @@
-namespace Backend.Tests.Library;
+namespace Core.Tests.Library;
 
 using Core;
 
