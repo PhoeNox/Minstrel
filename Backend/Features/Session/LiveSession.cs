@@ -37,8 +37,7 @@ public sealed class LiveSession(SongPool pool, PlaylistProvider playlistStore)
 		lock (gate)
 		{
 			var entries = playlists.Entries(playback.ActivePhase);
-			var index = Array.FindIndex(entries, entry => entry.Id == songId);
-			if (index < 0)
+			if (Playlists.IndexOfSong(entries, songId) is not { } index)
 				return;
 
 			playback = PlaybackTimeline.Select(playback, playback.ActivePhase, index,

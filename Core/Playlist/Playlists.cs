@@ -2,6 +2,12 @@ namespace Core.Playlist;
 
 public static class Playlists
 {
+	public static int? IndexOfSong(PlaylistEntry[] entries, string songId)
+	{
+		var index = Array.FindIndex(entries, entry => entry.Id == songId);
+		return index < 0 ? null : index;
+	}
+
 	public static PlaylistEntry[] Add(PlaylistEntry[] entries, PlaylistEntry entry) => [..entries, entry];
 
 	public static PlaylistEntry[] RemoveAt(PlaylistEntry[] entries, int index)
