@@ -31,16 +31,6 @@ public static class TestHarness
 
 	public static StringContent NullBody() => JsonBody("null");
 
-	public static async Task<object> StatusAndText(HttpResponseMessage response)
-	{
-		var body = await response.Content.ReadAsStringAsync();
-		return new
-		{
-			Status = (int)response.StatusCode,
-			Body = body.Length == 0 ? null : body,
-		};
-	}
-
 	public static async Task<object> StatusAndJson<T>(HttpResponseMessage response)
 	{
 		var body = await response.Content.ReadFromJsonAsync<T>(Json);

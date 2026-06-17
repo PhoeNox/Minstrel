@@ -1,4 +1,0 @@
-﻿{
-  Status: 200,
-  ContentType: audio/mpeg
-}

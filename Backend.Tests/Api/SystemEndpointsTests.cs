@@ -1,5 +1,7 @@
 namespace Backend.Tests.Api;
 
+using System.Net;
+using System.Net.Http.Json;
 using Core.Connection;
 using Core.Version;
 using static TestHarness;
@@ -26,6 +28,9 @@ public class SystemEndpointsTests
 
 		var response = await client.GetAsync("/system/version");
 
-		await Verify(await StatusAndJson<VersionInfo>(response));
+		await response.ShouldHaveStatus(HttpStatusCode.OK);
+		var version = await response.Content.ReadFromJsonAsync<VersionInfo>(Json);
+		await Assert.That(version).IsNotNull();
+		await Assert.That(version!.Version).IsNotEqualTo("");
 	}
 }

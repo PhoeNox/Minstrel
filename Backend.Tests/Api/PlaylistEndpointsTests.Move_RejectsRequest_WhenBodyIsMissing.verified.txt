@@ -1,4 +1,0 @@
-﻿{
-  Status: 400,
-  Body: "A phase and indices are required."
-}

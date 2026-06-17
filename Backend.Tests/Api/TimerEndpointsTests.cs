@@ -1,9 +1,7 @@
 namespace Backend.Tests.Api;
 
-using System.Text.Json;
-using Backend.Api;
+using System.Net;
 using static TestHarness;
-using static VerifyTUnit.Verifier;
 
 public class TimerEndpointsTests
 {
@@ -15,7 +13,7 @@ public class TimerEndpointsTests
 
 		var response = await client.PostAsync("/timer/start", JsonBody("""{"duration":60}"""));
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -26,7 +24,7 @@ public class TimerEndpointsTests
 
 		var response = await client.PostAsync("/timer/start", JsonBody("""{"duration":0}"""));
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A positive duration is required.");
 	}
 
 	[Test]
@@ -37,18 +35,17 @@ public class TimerEndpointsTests
 
 		var response = await client.PostAsync("/timer/stop", content: null);
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
-	public async Task Sse_EmitsInitialSnapshot_OnSubscribe()
+	public async Task Sse_EmitsIdleSnapshot_OnSubscribe()
 	{
 		await using var app = new MinstrelApp(SeededLibrary());
 		var client = app.CreateClient();
 
 		var data = await Sse.FirstData(client, "/timer/sse");
-		var timer = JsonSerializer.Deserialize<TimerDto>(data!, Json);
 
-		await Verify(new { Timer = timer });
+		await Assert.That(data).IsEqualTo("null");
 	}
 }

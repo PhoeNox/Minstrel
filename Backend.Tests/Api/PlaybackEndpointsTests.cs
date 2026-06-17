@@ -1,5 +1,6 @@
 namespace Backend.Tests.Api;
 
+using System.Net;
 using System.Text.Json;
 using Backend.Api;
 using Core;
@@ -17,7 +18,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.PostAsync("/playback/play", NullBody());
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -28,7 +29,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.PostAsync("/playback/play", NullBody());
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "The active playlist is empty.");
 	}
 
 	[Test]
@@ -39,7 +40,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.PostAsync("/playback/pause", content: null);
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -50,7 +51,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.PostAsync("/playback/switch-phase", content: null);
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -61,7 +62,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.PostAsync("/playback/select", JsonBody("""{"phase":"Day","index":0}"""));
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -72,7 +73,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.PostAsync("/playback/select", NullBody());
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A phase and index are required.");
 	}
 
 	[Test]
@@ -83,7 +84,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.PostAsync("/playback/set-gain", JsonBody("""{"phase":"Day","value":0.5}"""));
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -94,7 +95,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.PostAsync("/playback/set-gain", NullBody());
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A phase and gain value are required.");
 	}
 
 	[Test]
@@ -110,11 +111,8 @@ public class PlaybackEndpointsTests
 
 			var response = await client.GetAsync($"/playback/audio/{SongId.From(file)}");
 
-			await Verify(new
-			{
-				Status = (int)response.StatusCode,
-				ContentType = response.Content.Headers.ContentType?.ToString(),
-			});
+			await response.ShouldHaveStatus(HttpStatusCode.OK);
+			await Assert.That(response.Content.Headers.ContentType?.ToString()).IsEqualTo("audio/mpeg");
 		}
 		finally
 		{
@@ -130,7 +128,7 @@ public class PlaybackEndpointsTests
 
 		var response = await client.GetAsync("/playback/audio/does-not-exist");
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NotFound);
 	}
 
 	[Test]

@@ -7,8 +7,8 @@ public static class VerifySettings
 	[ModuleInitializer]
 	public static void Init()
 	{
-		// Drop the two clock-derived fields from snapshots: a position anchor and the
-		// assembly version are wall-clock / build dependent and carry no wiring signal.
-		VerifierSettings.IgnoreMembers("AnchorTimestamp", "Version");
+		// The position anchor is a wall-clock timestamp; drop it so the state snapshot stays
+		// stable across runs.
+		VerifierSettings.IgnoreMembers("AnchorTimestamp");
 	}
 }

@@ -1,4 +1,0 @@
-﻿{
-  Status: 400,
-  Body: "The active playlist is empty."
-}

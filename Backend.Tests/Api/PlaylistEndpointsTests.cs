@@ -1,7 +1,7 @@
 namespace Backend.Tests.Api;
 
+using System.Net;
 using static TestHarness;
-using static VerifyTUnit.Verifier;
 
 public class PlaylistEndpointsTests
 {
@@ -13,7 +13,7 @@ public class PlaylistEndpointsTests
 
 		var response = await client.PostAsync("/playlist/add", JsonBody($$"""{"phase":"Day","songId":"{{AddableSongId}}"}"""));
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -24,7 +24,7 @@ public class PlaylistEndpointsTests
 
 		var response = await client.PostAsync("/playlist/add", NullBody());
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A phase and song id are required.");
 	}
 
 	[Test]
@@ -35,7 +35,7 @@ public class PlaylistEndpointsTests
 
 		var response = await client.PostAsync("/playlist/remove", JsonBody("""{"phase":"Day","index":0}"""));
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -46,7 +46,7 @@ public class PlaylistEndpointsTests
 
 		var response = await client.PostAsync("/playlist/remove", NullBody());
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A phase and index are required.");
 	}
 
 	[Test]
@@ -57,7 +57,7 @@ public class PlaylistEndpointsTests
 
 		var response = await client.PostAsync("/playlist/shuffle", JsonBody("""{"phase":"Day"}"""));
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -68,7 +68,7 @@ public class PlaylistEndpointsTests
 
 		var response = await client.PostAsync("/playlist/shuffle", NullBody());
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A phase is required.");
 	}
 
 	[Test]
@@ -79,7 +79,7 @@ public class PlaylistEndpointsTests
 
 		var response = await client.PostAsync("/playlist/move", JsonBody("""{"phase":"Day","oldIndex":0,"newIndex":1}"""));
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldHaveStatus(HttpStatusCode.NoContent);
 	}
 
 	[Test]
@@ -90,6 +90,6 @@ public class PlaylistEndpointsTests
 
 		var response = await client.PostAsync("/playlist/move", NullBody());
 
-		await Verify(await StatusAndText(response));
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A phase and indices are required.");
 	}
 }
