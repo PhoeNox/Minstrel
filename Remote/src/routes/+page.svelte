@@ -58,6 +58,8 @@
 	);
 
 	const isNight = $derived(snapshot.phase === 'Night');
+	const activePlaylist = $derived(isNight ? snapshot.playlists.night : snapshot.playlists.day);
+	const canPlay = $derived(connected && activePlaylist.currentIndex !== null);
 
 	function stepMinutes(delta: number): void {
 		durationMinutes = Math.min(180, Math.max(1, durationMinutes + delta));
@@ -159,7 +161,7 @@
 			<button
 				class="play"
 				class:playing={snapshot.isPlaying}
-				disabled={!connected}
+				disabled={!canPlay}
 				aria-label={snapshot.isPlaying ? 'Pause' : 'Play'}
 				onclick={togglePlay}
 			>
