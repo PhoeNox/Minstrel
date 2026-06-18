@@ -181,6 +181,9 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 	{
 		lock (gate)
 		{
+			if (!playback.IsPlaying)
+				return;
+
 			var now = Now();
 			var previous = playback;
 			playback = PlaybackTimeline.Tick(playback, ToTracks(playlists.Entries(playback.ActivePhase)),
