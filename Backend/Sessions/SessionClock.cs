@@ -1,6 +1,6 @@
-namespace Backend.Sessions.Playback;
+namespace Backend.Sessions;
 
-public sealed class PlaybackClock(PlaybackSession session) : BackgroundService
+public sealed class SessionClock(Action tick) : BackgroundService
 {
 	private static readonly TimeSpan Interval = TimeSpan.FromMilliseconds(250);
 
@@ -9,7 +9,7 @@ public sealed class PlaybackClock(PlaybackSession session) : BackgroundService
 		using var timer = new PeriodicTimer(Interval);
 		while (await timer.WaitForNextTickAsync(stoppingToken))
 		{
-			session.Tick();
+			tick();
 		}
 	}
 }

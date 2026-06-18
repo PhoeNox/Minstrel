@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Backend.Api;
+using Backend.Sessions;
 using Backend.Sessions.Playback;
 using Core.Playback;
 using Backend.Sessions.Timer;
@@ -30,9 +31,9 @@ builder.Services.AddSingleton(sp =>
 	return SongPool.From(day, night, all);
 });
 builder.Services.AddSingleton<PlaybackSession>();
-builder.Services.AddHostedService<PlaybackClock>();
+builder.Services.AddHostedService(sp => new SessionClock(sp.GetRequiredService<PlaybackSession>().Tick));
 builder.Services.AddSingleton<TimerSession>();
-builder.Services.AddHostedService<TimerClock>();
+builder.Services.AddHostedService(sp => new SessionClock(sp.GetRequiredService<TimerSession>().Tick));
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
