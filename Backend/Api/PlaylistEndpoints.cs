@@ -24,8 +24,9 @@ public static class PlaylistEndpoints
 		if (command is null)
 			return Results.BadRequest("A phase and song id are required.");
 
-		session.Add(command.Phase, command.SongId);
-		return Results.NoContent();
+		return session.Add(command.Phase, command.SongId)
+			? Results.NoContent()
+			: Results.NotFound($"No song with id '{command.SongId}' in the library.");
 	}
 
 	private static IResult Remove(RemoveCommand? command, PlaybackSession session)
@@ -33,8 +34,9 @@ public static class PlaylistEndpoints
 		if (command is null)
 			return Results.BadRequest("A phase and index are required.");
 
-		session.Remove(command.Phase, command.Index);
-		return Results.NoContent();
+		return session.Remove(command.Phase, command.Index)
+			? Results.NoContent()
+			: Results.BadRequest("The playlist index is out of range.");
 	}
 
 	private static IResult Shuffle(ShuffleCommand? command, PlaybackSession session)
@@ -51,7 +53,8 @@ public static class PlaylistEndpoints
 		if (command is null)
 			return Results.BadRequest("A phase and indices are required.");
 
-		session.Move(command.Phase, command.OldIndex, command.NewIndex);
-		return Results.NoContent();
+		return session.Move(command.Phase, command.OldIndex, command.NewIndex)
+			? Results.NoContent()
+			: Results.BadRequest("The playlist index is out of range.");
 	}
 }

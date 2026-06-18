@@ -81,10 +81,9 @@ public static class PlaybackEndpoints
 	private static IResult Play(PlayCommand? command, PlaybackSession session)
 	{
 		if (command?.SongId is { } songId)
-		{
-			session.Play(songId);
-			return Results.NoContent();
-		}
+			return session.Play(songId)
+				? Results.NoContent()
+				: Results.NotFound($"No song with id '{songId}' in the active playlist.");
 
 		if (session.HasCurrentSong)
 		{
@@ -114,8 +113,9 @@ public static class PlaybackEndpoints
 		if (command is null)
 			return Results.BadRequest("A phase and index are required.");
 
-		session.Select(command.Phase, command.Index);
-		return Results.NoContent();
+		return session.Select(command.Phase, command.Index)
+			? Results.NoContent()
+			: Results.BadRequest("The playlist index is out of range.");
 	}
 
 	private static IResult SetGain(SetGainCommand? command, PlaybackSession session)

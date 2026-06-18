@@ -31,17 +31,18 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 		}
 	}
 
-	public void Play(string songId)
+	public bool Play(string songId)
 	{
 		lock (gate)
 		{
 			var entries = playlists.Entries(playback.ActivePhase);
 			if (Playlists.IndexOfSong(entries, songId) is not { } index)
-				return;
+				return false;
 
 			playback = PlaybackTimeline.Select(playback, playback.ActivePhase, index,
 					ToTrack(entries[index]), Now());
 			Broadcast();
+			return true;
 		}
 	}
 
@@ -77,13 +78,17 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 		}
 	}
 
-	public void Select(GamePhase phase, int index)
+	public bool Select(GamePhase phase, int index)
 	{
 		lock (gate)
 		{
+			if (!InRange(phase, index))
+				return false;
+
 			var track = ToTrack(playlists.At(phase, index));
 			playback = PlaybackTimeline.Select(playback, phase, index, track, Now());
 			Broadcast();
+			return true;
 		}
 	}
 
@@ -108,23 +113,29 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 		}
 	}
 
-	public void Add(GamePhase phase, string songId)
+	public bool Add(GamePhase phase, string songId)
 	{
 		lock (gate)
 		{
-			var entry = pool.EntriesById[songId];
+			if (!pool.EntriesById.TryGetValue(songId, out var entry))
+				return false;
+
 			var added = Playlists.Add(playlists.Entries(phase), ToEntry(entry));
 			playlists = playlists.Replace(phase, added);
 			playback = PlaybackTimeline.ReindexAfterAdd(playback, phase);
 			Save(phase, added);
 			Broadcast();
+			return true;
 		}
 	}
 
-	public void Remove(GamePhase phase, int index)
+	public bool Remove(GamePhase phase, int index)
 	{
 		lock (gate)
 		{
+			if (!InRange(phase, index))
+				return false;
+
 			var entries = playlists.Entries(phase);
 			var removed = Playlists.RemoveAt(entries, index);
 			playlists = playlists.Replace(phase, removed);
@@ -132,6 +143,7 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 					ToTracks(removed), Now());
 			Save(phase, removed);
 			Broadcast();
+			return true;
 		}
 	}
 
@@ -147,10 +159,13 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 		}
 	}
 
-	public void Move(GamePhase phase, int oldIndex, int newIndex)
+	public bool Move(GamePhase phase, int oldIndex, int newIndex)
 	{
 		lock (gate)
 		{
+			if (!InRange(phase, oldIndex))
+				return false;
+
 			var entries = playlists.Entries(phase);
 			var moved = Playlists.Move(entries, oldIndex, newIndex);
 			playlists = playlists.Replace(phase, moved);
@@ -158,6 +173,7 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 					PlaybackTimeline.ReindexAfterMove(playback, phase, oldIndex, newIndex, entries.Length);
 			Save(phase, moved);
 			Broadcast();
+			return true;
 		}
 	}
 
@@ -191,6 +207,9 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 			broadcaster.Remove(channel);
 		}
 	}
+
+	private bool InRange(GamePhase phase, int index)
+		=> index >= 0 && index < playlists.Entries(phase).Length;
 
 	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 

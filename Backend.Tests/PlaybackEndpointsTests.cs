@@ -37,6 +37,18 @@ public class PlaybackEndpointsTests
 	}
 
 	[Test]
+	public async Task Play_NotFound_WhenSongIsNotInActivePlaylist()
+	{
+		await using var app = new MinstrelApp(SeededLibrary());
+		var client = app.CreateClient();
+
+		var response = await client.PostAsync("/playback/play", JsonBody("""{"songId":"does-not-exist"}"""));
+
+		await response.ShouldBeProblem(HttpStatusCode.NotFound,
+			"No song with id 'does-not-exist' in the active playlist.");
+	}
+
+	[Test]
 	public async Task Pause_StopsPlayback()
 	{
 		await using var app = new MinstrelApp(SeededLibrary());
@@ -88,6 +100,17 @@ public class PlaybackEndpointsTests
 		var response = await client.PostAsync("/playback/select", NullBody());
 
 		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "A phase and index are required.");
+	}
+
+	[Test]
+	public async Task Select_RejectsRequest_WhenIndexIsOutOfRange()
+	{
+		await using var app = new MinstrelApp(SeededLibrary());
+		var client = app.CreateClient();
+
+		var response = await client.PostAsync("/playback/select", JsonBody("""{"phase":"Day","index":5}"""));
+
+		await response.ShouldBeProblem(HttpStatusCode.BadRequest, "The playlist index is out of range.");
 	}
 
 	[Test]
