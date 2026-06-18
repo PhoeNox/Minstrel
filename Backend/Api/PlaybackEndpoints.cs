@@ -28,27 +28,10 @@ public static class PlaybackEndpoints
 		app.MapPost("/playback/set-gain", SetGain);
 	}
 
-	private static async Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
+	private static Task StreamState(HttpContext context, PlaybackSession session, CancellationToken cancellation)
 	{
-		context.Response.Headers.ContentType = "text/event-stream";
-		context.Response.Headers.CacheControl = "no-cache";
-
 		var channel = session.Subscribe();
-		try
-		{
-			await foreach (var message in channel.Reader.ReadAllAsync(cancellation))
-			{
-				await WriteEvent(context, message, cancellation);
-				await context.Response.Body.FlushAsync(cancellation);
-			}
-		}
-		catch (OperationCanceledException)
-		{
-		}
-		finally
-		{
-			session.Unsubscribe(channel);
-		}
+		return SsePump.Run(context, channel, WriteEvent, () => session.Unsubscribe(channel), cancellation);
 	}
 
 	private static Task WriteEvent(HttpContext context, PlaybackEvent message, CancellationToken cancellation) =>

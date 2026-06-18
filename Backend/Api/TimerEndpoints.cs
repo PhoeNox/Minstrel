@@ -19,27 +19,16 @@ public static class TimerEndpoints
 		app.MapPost("/timer/stop", StopTimer);
 	}
 
-	private static async Task StreamTimer(HttpContext context, TimerSession session, IOptions<GongOptions> gong, CancellationToken cancellation)
+	private static Task StreamTimer(HttpContext context, TimerSession session, IOptions<GongOptions> gong, CancellationToken cancellation)
 	{
-		context.Response.Headers.ContentType = "text/event-stream";
-		context.Response.Headers.CacheControl = "no-cache";
-
+		var gongGain = gong.Value.Gain;
 		var channel = session.Subscribe();
-		try
-		{
-			await foreach (var message in channel.Reader.ReadAllAsync(cancellation))
-			{
-				await WriteEvent(context, message, gong.Value.Gain, cancellation);
-				await context.Response.Body.FlushAsync(cancellation);
-			}
-		}
-		catch (OperationCanceledException)
-		{
-		}
-		finally
-		{
-			session.Unsubscribe(channel);
-		}
+		return SsePump.Run(
+			context,
+			channel,
+			(ctx, message, token) => WriteEvent(ctx, message, gongGain, token),
+			() => session.Unsubscribe(channel),
+			cancellation);
 	}
 
 	private static Task WriteEvent(HttpContext context, TimerEvent message, double gongGain, CancellationToken cancellation) =>
