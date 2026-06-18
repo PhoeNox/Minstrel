@@ -2,6 +2,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { playbackStore } from '$lib/sseStore';
 	import { play, pause, switchPhase, startTimer, stopTimer } from '$lib/commandClient';
+	import { commandError, report } from '$lib/commandError';
 	import { fetchLibrary } from '$lib/libraryClient';
 	import Playlist from '$lib/Playlist.svelte';
 	import Library from '$lib/Library.svelte';
@@ -66,20 +67,16 @@
 	}
 
 	function togglePlay(): void {
-		if (snapshot.isPlaying) {
-			void pause();
-		} else {
-			void play();
-		}
+		void report(snapshot.isPlaying ? pause() : play());
 	}
 
 	function handleStartTimer(): void {
-		void startTimer(durationMinutes * 60);
+		void report(startTimer(durationMinutes * 60));
 		timerDialogOpen = false;
 	}
 
 	function handleStopTimer(): void {
-		void stopTimer();
+		void report(stopTimer());
 		timerDialogOpen = false;
 	}
 </script>
@@ -167,7 +164,7 @@
 			>
 				<span class="play-glyph">{snapshot.isPlaying ? '❚❚' : '▶'}</span>
 			</button>
-			<button class="switch" disabled={!connected} onclick={() => switchPhase()}>
+			<button class="switch" disabled={!connected} onclick={() => report(switchPhase())}>
 				<span class="switch-glyph">{isNight ? '☀' : '☾'}</span>
 				<span class="switch-text">
 					<span class="switch-eyebrow">Switch to</span>
@@ -229,6 +226,10 @@
 				{/if}
 			</div>
 		</div>
+	{/if}
+
+	{#if $commandError}
+		<div class="toast" role="alert">{$commandError}</div>
 	{/if}
 </div>
 
@@ -793,5 +794,25 @@
 		border-radius: 0 0 2px 2px;
 		background: var(--accent);
 		box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6);
+	}
+
+	/* ---------- Command error toast ---------- */
+	.toast {
+		position: fixed;
+		left: 50%;
+		bottom: calc(env(safe-area-inset-bottom) + 6.5rem);
+		transform: translateX(-50%);
+		z-index: 30;
+		max-width: calc(100% - 1.7rem);
+		padding: 0.7rem 1.1rem;
+		border: 1px solid rgba(226, 59, 52, 0.5);
+		border-radius: 11px;
+		background: linear-gradient(180deg, #2a1413, #1c0f0e);
+		box-shadow: 0 12px 26px -12px rgba(0, 0, 0, 0.8);
+		color: #f3d9d4;
+		font-size: 0.95rem;
+		text-align: center;
+		animation: rise 0.2s ease both;
+		pointer-events: none;
 	}
 </style>

@@ -1,53 +1,69 @@
 import type { Phase } from './state';
 
-export async function play(): Promise<void> {
-	await fetch('/playback/play', { method: 'POST' });
+export class CommandError extends Error {
+	constructor(readonly action: string) {
+		super(`${action} failed`);
+		this.name = 'CommandError';
+	}
 }
 
-export async function pause(): Promise<void> {
-	await fetch('/playback/pause', { method: 'POST' });
+export function play(): Promise<void> {
+	return send('Play', '/playback/play');
 }
 
-export async function switchPhase(): Promise<void> {
-	await fetch('/playback/switch-phase', { method: 'POST' });
+export function pause(): Promise<void> {
+	return send('Pause', '/playback/pause');
 }
 
-export async function selectSong(phase: Phase, index: number): Promise<void> {
-	await post('/playback/select', { phase, index });
+export function switchPhase(): Promise<void> {
+	return send('Switch phase', '/playback/switch-phase');
 }
 
-export async function addSong(phase: Phase, songId: string): Promise<void> {
-	await post('/playlist/add', { phase, songId });
+export function selectSong(phase: Phase, index: number): Promise<void> {
+	return send('Select song', '/playback/select', { phase, index });
 }
 
-export async function removeSong(phase: Phase, index: number): Promise<void> {
-	await post('/playlist/remove', { phase, index });
+export function addSong(phase: Phase, songId: string): Promise<void> {
+	return send('Add song', '/playlist/add', { phase, songId });
 }
 
-export async function shuffle(phase: Phase): Promise<void> {
-	await post('/playlist/shuffle', { phase });
+export function removeSong(phase: Phase, index: number): Promise<void> {
+	return send('Remove song', '/playlist/remove', { phase, index });
 }
 
-export async function moveSong(phase: Phase, oldIndex: number, newIndex: number): Promise<void> {
-	await post('/playlist/move', { phase, oldIndex, newIndex });
+export function shuffle(phase: Phase): Promise<void> {
+	return send('Shuffle', '/playlist/shuffle', { phase });
 }
 
-export async function setGain(phase: Phase, value: number): Promise<void> {
-	await post('/playback/set-gain', { phase, value });
+export function moveSong(phase: Phase, oldIndex: number, newIndex: number): Promise<void> {
+	return send('Move song', '/playlist/move', { phase, oldIndex, newIndex });
 }
 
-export async function startTimer(duration: number): Promise<void> {
-	await post('/timer/start', { duration });
+export function setGain(phase: Phase, value: number): Promise<void> {
+	return send('Set volume', '/playback/set-gain', { phase, value });
 }
 
-export async function stopTimer(): Promise<void> {
-	await fetch('/timer/stop', { method: 'POST' });
+export function startTimer(duration: number): Promise<void> {
+	return send('Start timer', '/timer/start', { duration });
 }
 
-async function post(url: string, body: unknown): Promise<void> {
-	await fetch(url, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(body)
-	});
+export function stopTimer(): Promise<void> {
+	return send('Stop timer', '/timer/stop');
+}
+
+async function send(action: string, url: string, body?: unknown): Promise<void> {
+	const init: RequestInit =
+		body === undefined
+			? { method: 'POST' }
+			: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+
+	let response: Response;
+	try {
+		response = await fetch(url, init);
+	} catch {
+		throw new CommandError(action);
+	}
+	if (!response.ok) {
+		throw new CommandError(action);
+	}
 }

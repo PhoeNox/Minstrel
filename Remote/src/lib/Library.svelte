@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { addSong } from './commandClient';
+	import { report } from './commandError';
 	import type { SongDto } from './state';
 
 	let { songs }: { songs: SongDto[] } = $props();
@@ -40,13 +41,15 @@
 						<span class="artist">{song.artist}</span>
 					</span>
 					<span class="length">{formatLength(song.length)}</span>
-					<button class="add day" title="Add to Day playlist" onclick={() => addSong('Day', song.id)}
-						>☀</button
+					<button
+						class="add day"
+						title="Add to Day playlist"
+						onclick={() => report(addSong('Day', song.id))}>☀</button
 					>
 					<button
 						class="add night"
 						title="Add to Night playlist"
-						onclick={() => addSong('Night', song.id)}>☾</button
+						onclick={() => report(addSong('Night', song.id))}>☾</button
 					>
 				</li>
 			{/each}
