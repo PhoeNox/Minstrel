@@ -2,7 +2,6 @@
 namespace Backend.Api;
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Backend.Sessions.Timer;
 using Core.Timer;
 using Microsoft.Extensions.Options;
@@ -13,11 +12,6 @@ public sealed record TimerDto(bool Running, long AnchorTimestamp, double Duratio
 
 public static class TimerEndpoints
 {
-	private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-	{
-		Converters = { new JsonStringEnumConverter() },
-	};
-
 	public static void MapTimerEndpoints(this WebApplication app)
 	{
 		app.MapGet("/timer/sse", StreamTimer);
@@ -52,10 +46,10 @@ public static class TimerEndpoints
 		message switch
 		{
 			GongEvent => context.Response.WriteAsync(
-				$"event: gong\ndata: {JsonSerializer.Serialize(new { gain = gongGain }, JsonOptions)}\n\n",
+				$"event: gong\ndata: {JsonSerializer.Serialize(new { gain = gongGain }, SseJson.Options)}\n\n",
 				cancellation),
 			TimerSnapshotEvent snapshot => context.Response.WriteAsync(
-				$"data: {JsonSerializer.Serialize(ToDto(snapshot.Timer), JsonOptions)}\n\n",
+				$"data: {JsonSerializer.Serialize(ToDto(snapshot.Timer), SseJson.Options)}\n\n",
 				cancellation),
 			_ => Task.CompletedTask,
 		};

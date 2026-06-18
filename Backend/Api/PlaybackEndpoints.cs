@@ -2,7 +2,6 @@
 namespace Backend.Api;
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Core;
 using Core.Library;
 using Microsoft.AspNetCore.StaticFiles;
@@ -14,11 +13,6 @@ public sealed record SetGainCommand(GamePhase Phase, double Value);
 
 public static class PlaybackEndpoints
 {
-	private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-	{
-		Converters = { new JsonStringEnumConverter() },
-	};
-
 	private static readonly FileExtensionContentTypeProvider ContentTypes = new();
 
 	public static void MapPlaybackEndpoints(this WebApplication app)
@@ -61,7 +55,7 @@ public static class PlaybackEndpoints
 		message switch
 		{
 			SnapshotEvent snapshot => context.Response.WriteAsync(
-				$"data: {JsonSerializer.Serialize(SnapshotMapper.ToSnapshot(snapshot.Playback, snapshot.Playlists), JsonOptions)}\n\n",
+				$"data: {JsonSerializer.Serialize(SnapshotMapper.ToSnapshot(snapshot.Playback, snapshot.Playlists), SseJson.Options)}\n\n",
 				cancellation),
 			_ => Task.CompletedTask,
 		};

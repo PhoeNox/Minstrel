@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text.Json.Serialization;
 using Backend.Api;
 using Backend.Sessions.Playback;
 using Core.Playback;
@@ -36,7 +35,10 @@ builder.Services.AddSingleton<TimerSession>();
 builder.Services.AddHostedService<TimerClock>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
-	options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+{
+	foreach (var converter in SseJson.Options.Converters)
+		options.SerializerOptions.Converters.Add(converter);
+});
 
 var app = builder.Build();
 
