@@ -1,3 +1,4 @@
+import { BUFFER_CACHE_BYTES, evictions, type CachedBuffer } from './bufferCache';
 import { FADE_SECONDS, type AudioOperation } from './reconciler';
 
 const GAIN_RAMP_SECONDS = 0.3;
@@ -20,6 +21,7 @@ export class AudioEngine {
 	private gongBuffer: AudioBuffer | null = null;
 	private leadHandle: number | null = null;
 	private nextHandle = 0;
+	private prefetchedSongId: string | null = null;
 
 	get leadSongId(): string | null {
 		return this.lead?.songId ?? null;
@@ -49,7 +51,7 @@ export class AudioEngine {
 			} else if (operation.type === 'set-gain') {
 				this.setLeadGain(operation.gain);
 			} else if (operation.type === 'prefetch') {
-				await this.load(operation.songId);
+				await this.prefetch(operation.songId);
 			} else {
 				this.fadeOutLead();
 			}
@@ -135,9 +137,15 @@ export class AudioEngine {
 		}
 	}
 
+	private async prefetch(songId: string): Promise<void> {
+		this.prefetchedSongId = songId;
+		await this.load(songId);
+	}
+
 	private async load(songId: string): Promise<AudioBuffer> {
 		const cached = this.buffers.get(songId);
 		if (cached) {
+			this.touch(songId, cached);
 			return cached;
 		}
 
@@ -145,6 +153,26 @@ export class AudioEngine {
 		const encoded = await response.arrayBuffer();
 		const decoded = await this.context.decodeAudioData(encoded);
 		this.buffers.set(songId, decoded);
+		this.evict();
 		return decoded;
+	}
+
+	private touch(songId: string, buffer: AudioBuffer): void {
+		this.buffers.delete(songId);
+		this.buffers.set(songId, buffer);
+	}
+
+	private evict(): void {
+		const order: CachedBuffer[] = [...this.buffers].map(([songId, buffer]) => ({
+			songId,
+			bytes: buffer.length * buffer.numberOfChannels * Float32Array.BYTES_PER_ELEMENT
+		}));
+		for (const songId of evictions(order, this.retained(), BUFFER_CACHE_BYTES)) {
+			this.buffers.delete(songId);
+		}
+	}
+
+	private retained(): string[] {
+		return [this.leadSongId, this.prefetchedSongId].filter((id): id is string => id !== null);
 	}
 }
