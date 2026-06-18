@@ -86,6 +86,9 @@
 />
 
 <div class="app" class:night={isNight}>
+	{#if !connected}
+		<div class="offline" role="status">Disconnected — trying to reconnect…</div>
+	{/if}
 	<header class="topbar">
 		<section class="now">
 			<div class="now-line">
@@ -794,6 +797,24 @@
 		border-radius: 0 0 2px 2px;
 		background: var(--accent);
 		box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6);
+	}
+
+	/* ---------- Offline banner (SSE connection down) ---------- */
+	.offline {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 40;
+		padding: calc(env(safe-area-inset-top) + 0.45rem) 0.85rem 0.45rem;
+		text-align: center;
+		font-size: 0.85rem;
+		letter-spacing: 0.04em;
+		color: #f3d9d4;
+		background: linear-gradient(180deg, #2a1413, rgba(28, 15, 14, 0.96));
+		border-bottom: 1px solid rgba(226, 59, 52, 0.5);
+		box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.8);
+		animation: fade 0.18s ease both;
 	}
 
 	/* ---------- Command error toast ---------- */
