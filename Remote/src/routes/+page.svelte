@@ -58,10 +58,6 @@
 	);
 
 	const isNight = $derived(snapshot.phase === 'Night');
-	const otherPlaylist = $derived(
-		isNight ? snapshot.playlists.day : snapshot.playlists.night
-	);
-	const canSwitch = $derived(connected && otherPlaylist.currentIndex !== null);
 
 	function stepMinutes(delta: number): void {
 		durationMinutes = Math.min(180, Math.max(1, durationMinutes + delta));
@@ -169,7 +165,7 @@
 			>
 				<span class="play-glyph">{snapshot.isPlaying ? '❚❚' : '▶'}</span>
 			</button>
-			<button class="switch" disabled={!canSwitch} onclick={() => switchPhase()}>
+			<button class="switch" disabled={!connected} onclick={() => switchPhase()}>
 				<span class="switch-glyph">{isNight ? '☀' : '☾'}</span>
 				<span class="switch-text">
 					<span class="switch-eyebrow">Switch to</span>

@@ -39,12 +39,11 @@ public static class PlaybackTimeline
 
 	public static PlaybackState SwitchPhase(PlaybackState state, Track? activeCurrent, Track? targetCurrent, long now)
 	{
-		if (targetCurrent is null)
-			return state;
-
 		var target = state.ActivePhase == GamePhase.Day ? GamePhase.Night : GamePhase.Day;
 		var remembered = RememberResumeOffset(state, activeCurrent, now) with { ActivePhase = target };
-		return PlayAt(remembered, targetCurrent.Id, state.Phase(target).ResumeOffset, now);
+		return targetCurrent is null
+			? remembered with { Position = PositionAnchor.Idle }
+			: PlayAt(remembered, targetCurrent.Id, state.Phase(target).ResumeOffset, now);
 	}
 
 	public static PlaybackState SetGain(PlaybackState state, GamePhase phase, double gain) =>

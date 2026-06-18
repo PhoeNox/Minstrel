@@ -53,7 +53,6 @@ public class PlaybackEndpointsTests
 	[Test]
 	public async Task SwitchPhase_TogglesTheActivePhase()
 	{
-		// Switching is a no-op onto an empty phase, so Night needs a song to switch to.
 		await using var app = new MinstrelApp(new FakeFileSystem(
 			day: [TestSongs.At("a.mp3")],
 			night: [TestSongs.At("d.mp3")]));

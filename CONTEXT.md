@@ -17,7 +17,7 @@ A frontend that projects backend state into a control surface and emits commands
 _Avoid_: Controller, control client, admin.
 
 **Game Phase**:
-Day or Night. Each phase has its own Playlist; switching phase crossfades from one phase's Current Entry to the other's.
+Day or Night. Each phase has its own Playlist; switching phase crossfades from one phase's Current Entry to the other's. Switching to a phase whose Playlist is empty cues nothing (Nothing Cued) — silence until you switch back or add a song.
 _Avoid_: Mode, state (overloaded).
 
 **Playlist**:
@@ -25,8 +25,12 @@ The ordered list of songs for one Game Phase. Mutable: songs are added from the 
 _Avoid_: Queue, tracklist.
 
 **Current Entry**:
-The selected song within a Game Phase's Playlist, addressed by index. Each phase has its own, remembered even while that phase is dormant; switching to a phase resumes at its Current Entry. Playback state, not part of the Playlist.
+The selected song within a Game Phase's Playlist, addressed by index. Each phase has its own, remembered even while that phase is dormant; switching to a phase resumes at its Current Entry. An empty Playlist has no Current Entry, so switching to it leaves the phase Nothing Cued. Playback state, not part of the Playlist.
 _Avoid_: Cursor, current song, selected track.
+
+**Nothing Cued**:
+The state of the active phase when it has no Current Entry — its Playlist is empty. Position is idle, no sound plays, and the Player fades to silence. Switching back to a phase with a Current Entry resumes playback.
+_Avoid_: Stopped, empty, off.
 
 **Gain**:
 The per-phase output level applied to a Playlist's playback. Live playback state, not persisted with the Playlist. Distinct from Fade, which shapes loudness over time at a song's start or stop.

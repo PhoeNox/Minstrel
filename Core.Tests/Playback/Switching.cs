@@ -80,13 +80,57 @@ public class Switching
 	}
 
 	[Test]
-	public async Task SwitchingIsANoOpWhenTheOtherPlaylistHasNoCurrentSong()
+	public async Task SwitchingToAnEmptyPhaseFlipsThePhaseAndGoesIdle()
 	{
 		var book = Fixtures.Book([Fixtures.Entry("day-1", 10), Fixtures.Entry("day-2", 10)], []);
 		var state = PlaybackTimeline.Play(PlaybackState.Idle with { Day = new PhasePlayback(Cursor: 0) }, "day-1", now: 1000);
 
 		var result = Fixtures.Switch(book, state, now: 2000);
 
-		await Assert.That(result).IsEqualTo(state);
+		await Assert.That(result.ActivePhase).IsEqualTo(GamePhase.Night);
+		await Assert.That(result.CurrentSongId).IsNull();
+		await Assert.That(result.IsPlaying).IsFalse();
+		await Assert.That(result.Position).IsEqualTo(PositionAnchor.Idle);
+	}
+
+	[Test]
+	public async Task SwitchingBackFromAnEmptyPhaseResumesTheDepartedSongAtThePositionLeftPlusTheFadeout()
+	{
+		var book = Fixtures.Book([Fixtures.Entry("day-1", 10), Fixtures.Entry("day-2", 10)], []);
+		var state = PlaybackTimeline.Play(PlaybackState.Idle with { Day = new PhasePlayback(Cursor: 0) }, "day-1", now: 1000);
+
+		var toEmpty = Fixtures.Switch(book, state, now: 4000);
+		var back = Fixtures.Switch(book, toEmpty, now: 9000);
+
+		await Assert.That(back.ActivePhase).IsEqualTo(GamePhase.Day);
+		await Assert.That(back.CurrentSongId).IsEqualTo("day-1");
+		await Assert.That(back.Position.Offset).IsEqualTo(3 + PlaybackTimeline.FadeSeconds);
+		await Assert.That(back.Position.AnchorTimestamp).IsEqualTo(9000);
+		await Assert.That(back.Position.IsPlaying).IsTrue();
+	}
+
+	[Test]
+	public async Task SwitchingFromAnEmptyActivePhasePlaysTheTargetsCurrentSong()
+	{
+		var book = Fixtures.Book([], [Fixtures.Entry("night-1", 10)]);
+		var state = PlaybackState.Idle with { Night = new PhasePlayback(Cursor: 0) };
+
+		var result = Fixtures.Switch(book, state, now: 2000);
+
+		await Assert.That(result.ActivePhase).IsEqualTo(GamePhase.Night);
+		await Assert.That(result.CurrentSongId).IsEqualTo("night-1");
+		await Assert.That(result.IsPlaying).IsTrue();
+	}
+
+	[Test]
+	public async Task SwitchingFlipsThePhaseWhenBothPlaylistsAreEmpty()
+	{
+		var book = Fixtures.Book([], []);
+
+		var result = Fixtures.Switch(book, PlaybackState.Idle, now: 2000);
+
+		await Assert.That(result.ActivePhase).IsEqualTo(GamePhase.Night);
+		await Assert.That(result.CurrentSongId).IsNull();
+		await Assert.That(result.IsPlaying).IsFalse();
 	}
 }
