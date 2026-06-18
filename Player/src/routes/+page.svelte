@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { playbackStore } from '$lib/sseStore';
-	import { reconcile } from '$lib/reconciler';
 	import { AudioEngine } from '$lib/audioEngine';
+	import { PlaybackSync } from '$lib/playbackSync';
 	import { emptyState, type PlaybackState } from '$lib/state';
 	import { fetchRemoteUrl } from '$lib/connection';
 	import { fetchVersion } from '$lib/version';
@@ -23,7 +23,6 @@
 		return { value: String(Math.min(59, Math.ceil(seconds))), unit: 'sec' };
 	}
 
-	const playback = playbackStore();
 	const timer = timerStore((gain) => void engine?.playGong(gain));
 
 	let engine: AudioEngine | null = $state(null);
@@ -36,19 +35,20 @@
 	let version: string | null = $state(null);
 	let qrVisible = $state(true);
 
-	const unsubscribePlayback = playback.subscribe((next) => {
-		snapshot = next.state;
-		connected = next.connected;
-		void sync();
+	const sync = new PlaybackSync(playbackStore(), {
+		onConnection: (connection) => {
+			snapshot = connection.state;
+			connected = connection.connected;
+		},
+		onTick: () => {
+			now = Date.now();
+		}
 	});
+	sync.start();
+
 	const unsubscribeTimer = timer.subscribe((next) => {
 		timerAnchor = next;
 	});
-
-	const ticker = setInterval(() => {
-		now = Date.now();
-		void sync();
-	}, 250);
 
 	onMount(async () => {
 		qrVisible = localStorage.getItem(QR_DISMISSED_KEY) !== '1';
@@ -58,9 +58,8 @@
 	});
 
 	onDestroy(() => {
-		unsubscribePlayback();
+		sync.stop();
 		unsubscribeTimer();
-		clearInterval(ticker);
 	});
 
 	const timeLeft = $derived(timerAnchor ? deriveTimeLeft(timerAnchor, now) : null);
@@ -69,38 +68,13 @@
 	const urgent = $derived(timeLeft !== null && timeLeft > 0 && timeLeft <= 10);
 	const countdown = $derived(timeLeft !== null ? formatCountdown(timeLeft) : null);
 
-	let syncing = false;
-
-	async function sync(): Promise<void> {
-		if (!engine || syncing) {
-			return;
-		}
-
-		syncing = true;
-		try {
-			const operations = reconcile(
-				snapshot,
-				{
-					leadSongId: engine.leadSongId,
-					leadPosition: engine.leadPosition,
-					leadGain: engine.leadGain,
-					loadedSongIds: engine.loadedSongIds
-				},
-				Date.now()
-			);
-			await engine.apply(operations);
-		} finally {
-			syncing = false;
-		}
-	}
-
 	function enableSound(): void {
 		if (engine) {
 			return;
 		}
 
 		engine = new AudioEngine();
-		void sync();
+		sync.attach(engine);
 	}
 
 	function dismissQr(): void {
