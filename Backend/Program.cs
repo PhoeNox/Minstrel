@@ -31,9 +31,10 @@ builder.Services.AddSingleton(sp =>
 	return SongPool.From(day, night, all);
 });
 builder.Services.AddSingleton<PlaybackSession>();
-builder.Services.AddHostedService(sp => new SessionClock(sp.GetRequiredService<PlaybackSession>().Tick));
 builder.Services.AddSingleton<TimerSession>();
-builder.Services.AddHostedService(sp => new SessionClock(sp.GetRequiredService<TimerSession>().Tick));
+builder.Services.AddHostedService(sp => new SessionClock(
+	sp.GetRequiredService<PlaybackSession>().Tick,
+	sp.GetRequiredService<TimerSession>().Tick));
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
