@@ -28,6 +28,7 @@
 
 	let engine: AudioEngine | null = $state(null);
 	let snapshot: PlaybackState = $state(emptyState);
+	let connected = $state(false);
 	let timerAnchor: TimerAnchor | null = $state(null);
 	let now = $state(Date.now());
 	let qr: string | null = $state(null);
@@ -36,7 +37,8 @@
 	let qrVisible = $state(true);
 
 	const unsubscribePlayback = playback.subscribe((next) => {
-		snapshot = next;
+		snapshot = next.state;
+		connected = next.connected;
 		void sync();
 	});
 	const unsubscribeTimer = timer.subscribe((next) => {
@@ -117,6 +119,23 @@
 	<div class="vignette"></div>
 	<div class="grain"></div>
 </div>
+
+{#if !connected}
+	<div class="offline" role="status">
+		<svg
+			class="offline-glyph"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2.4"
+			stroke-linecap="round"
+			aria-hidden="true"
+		>
+			<path d="M21 12a9 9 0 1 1-9-9" />
+		</svg>
+		<span>Reconnecting…</span>
+	</div>
+{/if}
 
 <main class:night={isNight}>
 	<section class="centerpiece">
@@ -199,6 +218,41 @@
 		opacity: 0.25;
 		pointer-events: none;
 		user-select: none;
+	}
+
+	/* ---------- Offline banner (SSE connection down) ---------- */
+	.offline {
+		position: fixed;
+		top: clamp(1rem, 3vmin, 2rem);
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 9;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.7em;
+		padding: 0.7em 1.6em;
+		border-radius: 999px;
+		font-family: var(--display);
+		font-weight: 600;
+		font-size: clamp(0.95rem, 1.4vw, 1.25rem);
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--parchment);
+		background: rgba(20, 8, 8, 0.82);
+		border: 1px solid rgba(177, 22, 22, 0.7);
+		box-shadow:
+			0 18px 50px rgba(0, 0, 0, 0.7),
+			0 0 40px rgba(177, 22, 22, 0.3);
+		backdrop-filter: blur(10px);
+		animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+
+	.offline-glyph {
+		width: 1.15em;
+		height: 1.15em;
+		color: var(--ember-soft);
+		transform-origin: center;
+		animation: turn 1.1s linear infinite;
 	}
 
 	/* ---------- Full-bleed atmospheric backdrop ---------- */
@@ -668,6 +722,8 @@
 		.reveal-btn,
 		.gate,
 		.gate-btn,
+		.offline,
+		.offline-glyph,
 		.clock.urgent .clock-time,
 		.clock.expired::before {
 			animation: none !important;
