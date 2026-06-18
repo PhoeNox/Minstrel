@@ -10,7 +10,7 @@ using Network;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var port = builder.Configuration["Port"] ?? "5757";
+var port = builder.Configuration.ResolvePort();
 builder.WebHost.UseUrls($"http://*:{port}");
 
 builder.Services.AddOptions<MusicOptions>()

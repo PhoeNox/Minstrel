@@ -15,7 +15,7 @@ public static class SystemEndpoints
 	private static IResult GetConnection(INetworkProvider network, IConfiguration configuration)
 	{
 		var host = ResolveHost(configuration["Host"], network);
-		var info = ConnectionInfoFactory.Create(host, configuration["Port"] ?? "5757");
+		var info = ConnectionInfoFactory.Create(host, configuration.ResolvePort());
 		return Results.Ok(info);
 	}
 
