@@ -24,10 +24,14 @@ class FakeEngine implements SyncEngine {
 	leadGain: number | null = null;
 	loadedSongIds: string[] = [];
 	readonly applied: AudioOperation[][] = [];
+	rejection: unknown = null;
 	private gate: (() => void) | null = null;
 
 	apply(operations: AudioOperation[]): Promise<void> {
 		this.applied.push(operations);
+		if (this.rejection !== null) {
+			return Promise.reject(this.rejection);
+		}
 		if (this.gate === null) {
 			return Promise.resolve();
 		}
@@ -47,7 +51,7 @@ class FakeEngine implements SyncEngine {
 	}
 }
 
-const noopHooks = { onConnection: () => {}, onTick: () => {} };
+const noopHooks = { onConnection: () => {}, onTick: () => {}, onError: () => {} };
 
 const flush = () => Promise.resolve();
 
@@ -146,7 +150,7 @@ describe('PlaybackSync', () => {
 		const store = writable<Connection>(connection(emptyState, false));
 		const onConnection = vi.fn();
 		const onTick = vi.fn();
-		const sync = new PlaybackSync(store, { onConnection, onTick });
+		const sync = new PlaybackSync(store, { onConnection, onTick, onError: () => {} });
 
 		sync.start();
 		store.set(connection(playing('a'), true));
@@ -155,6 +159,39 @@ describe('PlaybackSync', () => {
 		expect(onConnection).toHaveBeenCalledWith(connection(emptyState, false));
 		expect(onConnection).toHaveBeenCalledWith(connection(playing('a'), true));
 		expect(onTick).toHaveBeenCalledTimes(1);
+		sync.stop();
+	});
+
+	it('catches a rejecting apply and routes it to onError instead of throwing', async () => {
+		const store = writable<Connection>(connection(playing('a')));
+		const onError = vi.fn();
+		const sync = new PlaybackSync(store, { ...noopHooks, onError });
+		const engine = new FakeEngine();
+		engine.rejection = new Error('decode failed');
+
+		sync.start();
+		sync.attach(engine);
+		await flush();
+
+		expect(onError).toHaveBeenCalledWith(engine.rejection);
+		sync.stop();
+	});
+
+	it('clears the surfaced error on the next successful sync', async () => {
+		const store = writable<Connection>(connection(playing('a')));
+		const onError = vi.fn();
+		const sync = new PlaybackSync(store, { ...noopHooks, onError });
+		const engine = new FakeEngine();
+		engine.rejection = new Error('decode failed');
+
+		sync.start();
+		sync.attach(engine);
+		await flush();
+		engine.rejection = null;
+
+		await vi.advanceTimersByTimeAsync(SYNC_INTERVAL_MS);
+
+		expect(onError).toHaveBeenLastCalledWith(null);
 		sync.stop();
 	});
 

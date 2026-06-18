@@ -14,6 +14,13 @@ interface Voice {
 
 const GONG_URL = '/gong.mp3';
 
+async function readOk(response: Response, url: string): Promise<ArrayBuffer> {
+	if (!response.ok) {
+		throw new Error(`Audio fetch failed (${response.status}) for ${url}`);
+	}
+	return response.arrayBuffer();
+}
+
 export class AudioEngine {
 	private readonly context = new AudioContext();
 	private readonly buffers = new Map<string, AudioBuffer>();
@@ -76,7 +83,7 @@ export class AudioEngine {
 		}
 
 		const response = await fetch(GONG_URL);
-		const encoded = await response.arrayBuffer();
+		const encoded = await readOk(response, GONG_URL);
 		this.gongBuffer = await this.context.decodeAudioData(encoded);
 		return this.gongBuffer;
 	}
@@ -149,8 +156,9 @@ export class AudioEngine {
 			return cached;
 		}
 
-		const response = await fetch(`/playback/audio/${songId}`);
-		const encoded = await response.arrayBuffer();
+		const url = `/playback/audio/${songId}`;
+		const response = await fetch(url);
+		const encoded = await readOk(response, url);
 		const decoded = await this.context.decodeAudioData(encoded);
 		this.buffers.set(songId, decoded);
 		this.evict();

@@ -12,6 +12,7 @@ export interface SyncEngine extends AudioGraph {
 export interface SyncHooks {
 	onConnection: (connection: Connection) => void;
 	onTick: () => void;
+	onError: (error: unknown) => void;
 }
 
 /**
@@ -66,6 +67,9 @@ export class PlaybackSync {
 		this.syncing = true;
 		try {
 			await engine.apply(reconcile(this.snapshot, engine, Date.now()));
+			this.hooks.onError(null);
+		} catch (error) {
+			this.hooks.onError(error);
 		} finally {
 			this.syncing = false;
 		}
