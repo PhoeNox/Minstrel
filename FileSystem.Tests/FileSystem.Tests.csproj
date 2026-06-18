@@ -16,4 +16,10 @@
         <ProjectReference Include="..\FileSystem\FileSystem.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="..\Player\static\gong.mp3" Link="Fixtures\gong.mp3">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>

@@ -1,6 +1,7 @@
 namespace FileSystem;
 
 using Core;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 public interface IFileSystemProvider
@@ -16,7 +17,8 @@ public interface IFileSystemProvider
 	void WriteLines(string path, IEnumerable<string> lines);
 }
 
-public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSystemProvider
+public class FileSystemProvider(IOptionsMonitor<MusicOptions> options, ILogger<FileSystemProvider> logger)
+	: IFileSystemProvider
 {
 	public string MusicDirectory
 	{
@@ -56,8 +58,12 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options) : IFileSy
 			);
 			return [song];
 		}
-		catch (Exception)
+		catch (Exception ex) when (ex is TagLib.CorruptFileException
+			or TagLib.UnsupportedFormatException
+			or IOException
+			or UnauthorizedAccessException)
 		{
+			logger.LogWarning(ex, "Skipping unreadable song file {Path}", fullPath);
 			return [];
 		}
 	}
