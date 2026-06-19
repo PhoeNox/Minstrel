@@ -18,6 +18,11 @@ remote:
 build: player remote
 	dotnet build {{solution}} -c {{configuration}}
 
+# Build the standalone Mobile PWA into Mobile/build (decoupled static host, ADR-0008).
+# BASE_PATH sets the host subpath (e.g. a GitHub Pages project path); omit for a root deploy.
+mobile BASE_PATH="":
+	cd Mobile && npm install && BASE_PATH={{BASE_PATH}} npm run build
+
 # Test the Backend (.NET) and the frontends (Vitest). Excludes the E2E suite, which is local-only (see `e2e`).
 test: player
 	dotnet test --project Core.Tests/Core.Tests.csproj -c {{configuration}} --ignore-exit-code 8
@@ -26,6 +31,7 @@ test: player
 	dotnet test --project Backend.Tests/Backend.Tests.csproj -c {{configuration}} --ignore-exit-code 8
 	cd Player && npm test
 	cd Remote && npm install && npm test
+	cd Mobile && npm install && npm test
 
 # Run only the Playwright E2E snapshot suite (builds the frontends first). Local-only: too unstable for CI.
 e2e: player remote
