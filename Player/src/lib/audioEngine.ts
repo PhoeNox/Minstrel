@@ -74,6 +74,10 @@ export class AudioEngine {
 		amplifier.gain.value = gain;
 		source.connect(amplifier);
 		amplifier.connect(this.context.destination);
+		source.onended = () => {
+			source.disconnect();
+			amplifier.disconnect();
+		};
 		source.start();
 	}
 

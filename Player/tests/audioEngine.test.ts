@@ -58,4 +58,31 @@ describe('AudioEngine audio fetch boundary', () => {
 		await expect(engine.playGong(1)).rejects.toThrow(/500/);
 		expect(context.decodeAudioData).not.toHaveBeenCalled();
 	});
+
+	it('disconnects the gong graph once playback ends', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => Promise.resolve(response({ ok: true, status: 200 })))
+		);
+		const source = {
+			buffer: null as AudioBuffer | null,
+			connect: vi.fn(),
+			disconnect: vi.fn(),
+			start: vi.fn(),
+			onended: null as (() => void) | null
+		};
+		const amplifier = { gain: { value: 0 }, connect: vi.fn(), disconnect: vi.fn() };
+		context.createBufferSource.mockReturnValue(source);
+		context.createGain.mockReturnValue(amplifier);
+		const engine = new AudioEngine();
+
+		await engine.playGong(0.5);
+		expect(source.start).toHaveBeenCalled();
+		expect(source.disconnect).not.toHaveBeenCalled();
+
+		source.onended?.();
+
+		expect(source.disconnect).toHaveBeenCalled();
+		expect(amplifier.disconnect).toHaveBeenCalled();
+	});
 });
