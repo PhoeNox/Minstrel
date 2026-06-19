@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { addSong } from './commandClient';
 	import { report } from './commandError';
+	import type { MinstrelApi } from './minstrelApi';
 	import type { SongDto } from './state';
 
-	let { songs }: { songs: SongDto[] } = $props();
+	let { api, songs }: { api: MinstrelApi; songs: SongDto[] } = $props();
 
 	let search = $state('');
 
@@ -44,12 +44,12 @@
 					<button
 						class="add day"
 						title="Add to Day playlist"
-						onclick={() => report(addSong('Day', song.id))}>☀</button
+						onclick={() => report(api.addSong('Day', song.id))}>☀</button
 					>
 					<button
 						class="add night"
 						title="Add to Night playlist"
-						onclick={() => report(addSong('Night', song.id))}>☾</button
+						onclick={() => report(api.addSong('Night', song.id))}>☾</button
 					>
 				</li>
 			{/each}

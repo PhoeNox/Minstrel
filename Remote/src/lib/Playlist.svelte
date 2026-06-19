@@ -1,15 +1,21 @@
 <script lang="ts">
-	import { moveSong, removeSong, selectSong, setGain, shuffle } from './commandClient';
 	import { report } from './commandError';
+	import type { MinstrelApi } from './minstrelApi';
 	import type { Phase, PlaylistDto, SongDto } from './state';
 
 	let {
+		api,
 		phase,
 		playlist,
 		currentSongId,
 		progress
-	}: { phase: Phase; playlist: PlaylistDto; currentSongId: string | null; progress: number } =
-		$props();
+	}: {
+		api: MinstrelApi;
+		phase: Phase;
+		playlist: PlaylistDto;
+		currentSongId: string | null;
+		progress: number;
+	} = $props();
 
 	interface Row {
 		key: string;
@@ -114,7 +120,7 @@
 		dragging = false;
 		dragY = 0;
 		if (dragIndex !== startIndex) {
-			void report(moveSong(phase, startIndex, dragIndex));
+			void report(api.moveSong(phase, startIndex, dragIndex));
 		}
 		dragIndex = -1;
 	}
@@ -127,7 +133,7 @@
 			{phase}
 			<span class="count">{playlist.songs.length}</span>
 		</h2>
-		<button class="shuffle" title="Shuffle {phase} playlist" onclick={() => report(shuffle(phase))}>
+		<button class="shuffle" title="Shuffle {phase} playlist" onclick={() => report(api.shuffle(phase))}>
 			<span>⇄</span> Shuffle
 		</button>
 	</div>
@@ -141,7 +147,7 @@
 			step="0.01"
 			style="--val: {playlist.gain}"
 			value={playlist.gain}
-			oninput={(event) => report(setGain(phase, event.currentTarget.valueAsNumber))}
+			oninput={(event) => report(api.setGain(phase, event.currentTarget.valueAsNumber))}
 		/>
 		<span class="vol-pct">{Math.round(playlist.gain * 100)}</span>
 	</label>
@@ -159,7 +165,7 @@
 					{#if row.song === currentSong && cueFraction > 0}
 						<span class="fill" style="width: {cueFraction * 100}%"></span>
 					{/if}
-					<button class="select" onclick={() => report(selectSong(phase, index))}>
+					<button class="select" onclick={() => report(api.selectSong(phase, index))}>
 						{#if row.song === currentSong}
 							<span class="bars" class:playing={currentPlaying} aria-hidden="true"
 								><i></i><i></i><i></i></span
@@ -174,7 +180,7 @@
 					<button
 						class="remove"
 						title="Remove from playlist"
-						onclick={() => report(removeSong(phase, index))}>✕</button
+						onclick={() => report(api.removeSong(phase, index))}>✕</button
 					>
 					<button
 						class="grip"

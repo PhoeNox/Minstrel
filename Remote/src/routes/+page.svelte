@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { playbackStore } from '$lib/sseStore';
-	import { play, pause, switchPhase, startTimer, stopTimer } from '$lib/commandClient';
+	import { RestApi } from '$lib/restApi';
+	import type { MinstrelApi } from '$lib/minstrelApi';
 	import { commandError, report } from '$lib/commandError';
-	import { fetchLibrary } from '$lib/libraryClient';
 	import Playlist from '$lib/Playlist.svelte';
 	import Library from '$lib/Library.svelte';
 	import { emptyState, type PlaybackState, type SongDto } from '$lib/state';
@@ -12,7 +11,7 @@
 
 	type Tab = 'day' | 'night' | 'library';
 
-	const playback = playbackStore();
+	const api: MinstrelApi = new RestApi();
 	const timer = timerStore();
 
 	let snapshot: PlaybackState = $state(emptyState);
@@ -25,10 +24,10 @@
 	let timerDialogOpen = $state(false);
 
 	onMount(async () => {
-		library = await fetchLibrary();
+		library = await api.fetchLibrary();
 	});
 
-	const unsubscribe = playback.subscribe((next) => {
+	const unsubscribe = api.snapshot.subscribe((next) => {
 		snapshot = next.state;
 		connected = next.connected;
 	});
@@ -67,16 +66,16 @@
 	}
 
 	function togglePlay(): void {
-		void report(snapshot.isPlaying ? pause() : play());
+		void report(snapshot.isPlaying ? api.pause() : api.play());
 	}
 
 	function handleStartTimer(): void {
-		void report(startTimer(durationMinutes * 60));
+		void report(api.startTimer(durationMinutes * 60));
 		timerDialogOpen = false;
 	}
 
 	function handleStopTimer(): void {
-		void report(stopTimer());
+		void report(api.stopTimer());
 		timerDialogOpen = false;
 	}
 </script>
@@ -124,6 +123,7 @@
 	<main class="deck">
 		{#if tab === 'day'}
 			<Playlist
+				{api}
 				phase="Day"
 				playlist={snapshot.playlists.day}
 				currentSongId={snapshot.currentSongId}
@@ -131,13 +131,14 @@
 			/>
 		{:else if tab === 'night'}
 			<Playlist
+				{api}
 				phase="Night"
 				playlist={snapshot.playlists.night}
 				currentSongId={snapshot.currentSongId}
 				progress={playProgress}
 			/>
 		{:else}
-			<Library songs={library} />
+			<Library {api} songs={library} />
 		{/if}
 	</main>
 
@@ -167,7 +168,7 @@
 			>
 				<span class="play-glyph">{snapshot.isPlaying ? '❚❚' : '▶'}</span>
 			</button>
-			<button class="switch" disabled={!connected} onclick={() => report(switchPhase())}>
+			<button class="switch" disabled={!connected} onclick={() => report(api.switchPhase())}>
 				<span class="switch-glyph">{isNight ? '☀' : '☾'}</span>
 				<span class="switch-text">
 					<span class="switch-eyebrow">Switch to</span>

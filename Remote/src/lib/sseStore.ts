@@ -1,15 +1,11 @@
 import { readable, type Readable } from 'svelte/store';
 import { emptyState, type PlaybackState } from './state';
+import type { Snapshot } from './minstrelApi';
 
-export interface Connection {
-	state: PlaybackState;
-	connected: boolean;
-}
+const initial: Snapshot = { state: emptyState, connected: false };
 
-const initial: Connection = { state: emptyState, connected: false };
-
-export function playbackStore(): Readable<Connection> {
-	return readable<Connection>(initial, (set) => {
+export function playbackStore(): Readable<Snapshot> {
+	return readable<Snapshot>(initial, (set) => {
 		let state = emptyState;
 		const source = new EventSource('/playback/sse');
 		source.onopen = () => set({ state, connected: true });
