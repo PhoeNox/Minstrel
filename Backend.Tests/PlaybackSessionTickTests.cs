@@ -41,6 +41,6 @@ public class PlaybackSessionTickTests
 		var playlists = new PlaylistProvider(fileSystem);
 		var (day, night) = playlists.LoadPlaylists();
 		var pool = SongPool.From(day, night, day.Concat(night).ToArray());
-		return new PlaybackSession(pool, playlists);
+		return new PlaybackSession(pool, playlists, (_, _) => string.Empty);
 	}
 }

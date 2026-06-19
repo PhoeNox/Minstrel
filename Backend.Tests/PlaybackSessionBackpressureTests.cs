@@ -1,5 +1,6 @@
 namespace Backend.Tests;
 
+using System.Globalization;
 using System.Threading.Channels;
 using Backend.Sessions.Playback;
 using Core;
@@ -28,7 +29,7 @@ public class PlaybackSessionBackpressureTests
 	}
 
 	private static double Gain(PlaybackEvent message)
-		=> ((SnapshotEvent)message).Playback.Day.Gain;
+		=> double.Parse(((SnapshotEvent)message).Frame, CultureInfo.InvariantCulture);
 
 	private static List<PlaybackEvent> Drain(Channel<PlaybackEvent> channel)
 	{
@@ -43,6 +44,7 @@ public class PlaybackSessionBackpressureTests
 		var playlists = new PlaylistProvider(fileSystem);
 		var (day, night) = playlists.LoadPlaylists();
 		var pool = SongPool.From(day, night, day.Concat(night).ToArray());
-		return new PlaybackSession(pool, playlists);
+		return new PlaybackSession(pool, playlists,
+			(playback, _) => playback.Day.Gain.ToString(CultureInfo.InvariantCulture));
 	}
 }

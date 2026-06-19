@@ -30,7 +30,10 @@ builder.Services.AddSingleton(sp =>
 	var all = sp.GetRequiredService<LibraryProvider>().LoadLibrary();
 	return SongPool.From(day, night, all);
 });
-builder.Services.AddSingleton<PlaybackSession>();
+builder.Services.AddSingleton(sp => new PlaybackSession(
+	sp.GetRequiredService<SongPool>(),
+	sp.GetRequiredService<PlaylistProvider>(),
+	PlaybackEndpoints.RenderFrame));
 builder.Services.AddSingleton<TimerSession>();
 builder.Services.AddHostedService(sp => new SessionClock(
 	sp.GetRequiredService<PlaybackSession>().Tick,

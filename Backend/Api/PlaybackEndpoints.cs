@@ -4,6 +4,8 @@ namespace Backend.Api;
 using System.Text.Json;
 using Core;
 using Core.Library;
+using Core.Playback;
+using Core.Playlist;
 using Microsoft.AspNetCore.StaticFiles;
 using Sessions.Playback;
 
@@ -34,12 +36,15 @@ public static class PlaybackEndpoints
 		return SsePump.Run(context, channel, WriteEvent, () => session.Unsubscribe(channel), cancellation);
 	}
 
+	// Maps and serializes the snapshot once per broadcast (the payload is identical for every
+	// subscriber); the session renders the frame through this and the pump replays the bytes.
+	public static string RenderFrame(PlaybackState playback, PlaylistBook playlists) =>
+		$"data: {JsonSerializer.Serialize(SnapshotMapper.ToSnapshot(playback, playlists), SseJson.Options)}\n\n";
+
 	private static Task WriteEvent(HttpContext context, PlaybackEvent message, CancellationToken cancellation) =>
 		message switch
 		{
-			SnapshotEvent snapshot => context.Response.WriteAsync(
-				$"data: {JsonSerializer.Serialize(SnapshotMapper.ToSnapshot(snapshot.Playback, snapshot.Playlists), SseJson.Options)}\n\n",
-				cancellation),
+			SnapshotEvent snapshot => context.Response.WriteAsync(snapshot.Frame, cancellation),
 			_ => Task.CompletedTask,
 		};
 

@@ -7,7 +7,10 @@ using Core.Playback;
 using Core.Playlist;
 using FileSystem;
 
-public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStore)
+public sealed class PlaybackSession(
+	SongPool pool,
+	PlaylistProvider playlistStore,
+	Func<PlaybackState, PlaylistBook, string> renderFrame)
 {
 	// A half-open subscriber stalls its reader; bounding with DropOldest caps the
 	// backlog and lets it resync from the newest snapshot once it drains, since the
@@ -247,5 +250,5 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 	private void Broadcast()
 		=> broadcaster.Publish(CurrentSnapshot());
 
-	private SnapshotEvent CurrentSnapshot() => new(playback, playlists);
+	private SnapshotEvent CurrentSnapshot() => new(renderFrame(playback, playlists));
 }
