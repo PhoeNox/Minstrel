@@ -9,8 +9,13 @@ using FileSystem;
 
 public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStore)
 {
+	// A half-open subscriber stalls its reader; bounding with DropOldest caps the
+	// backlog and lets it resync from the newest snapshot once it drains, since the
+	// payload is a full snapshot rather than a delta.
+	private const int SnapshotBacklog = 8;
+
 	private readonly Lock gate = new();
-	private readonly SseBroadcaster<PlaybackEvent> broadcaster = new();
+	private readonly SseBroadcaster<PlaybackEvent> broadcaster = new(CreateBoundedChannel);
 
 	private PlaylistBook playlists = new(ToEntries(pool.Day), ToEntries(pool.Night));
 
@@ -213,6 +218,10 @@ public sealed class PlaybackSession(SongPool pool, PlaylistProvider playlistStor
 
 	private bool InRange(GamePhase phase, int index)
 		=> index >= 0 && index < playlists.Entries(phase).Length;
+
+	private static Channel<PlaybackEvent> CreateBoundedChannel()
+		=> Channel.CreateBounded<PlaybackEvent>(
+			new BoundedChannelOptions(SnapshotBacklog) { FullMode = BoundedChannelFullMode.DropOldest });
 
 	private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
