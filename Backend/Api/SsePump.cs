@@ -24,6 +24,11 @@ internal static class SsePump
 		}
 		catch (OperationCanceledException)
 		{
+			// Client closed the stream or the request was cancelled — a clean end.
+		}
+		catch (IOException)
+		{
+			// Broken pipe / connection reset: the client aborted a live stream. Normal disconnect.
 		}
 		finally
 		{
