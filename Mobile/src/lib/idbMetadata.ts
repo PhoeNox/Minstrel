@@ -35,6 +35,11 @@ export function idbSongMetadata(): SongMetadataStore {
 			);
 			db.close();
 			return records;
+		},
+		async delete(id) {
+			const db = await openDb();
+			await promisify(db.transaction(STORE, 'readwrite').objectStore(STORE).delete(id));
+			db.close();
 		}
 	};
 }

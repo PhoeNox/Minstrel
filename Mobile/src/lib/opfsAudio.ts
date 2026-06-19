@@ -26,6 +26,16 @@ export function opfsAudioBytes(): AudioBytesStore {
 			} catch {
 				return null;
 			}
+		},
+		async delete(id) {
+			const dir = await audioDir();
+			await dir.removeEntry(id).catch(() => undefined);
+		},
+		async ids() {
+			const dir = await audioDir();
+			const ids: string[] = [];
+			for await (const name of dir.keys()) ids.push(name);
+			return ids;
 		}
 	};
 }
