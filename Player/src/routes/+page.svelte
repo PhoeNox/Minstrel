@@ -7,7 +7,8 @@
 	import { fetchRemoteUrl } from '$lib/connection';
 	import { fetchVersion } from '$lib/version';
 	import { qrSvg } from '$lib/qr';
-	import { deriveTimeLeft, timerStore, type TimerAnchor } from '$shared/timer';
+	import { timerStore } from '$shared/timer';
+	import { deriveTimeLeft, type TimerAnchor } from '$shared/core';
 
 	const QR_DISMISSED_KEY = 'minstrel.qrDismissed';
 

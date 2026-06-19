@@ -7,8 +7,8 @@
 	import Playlist from '$lib/Playlist.svelte';
 	import Library from '$lib/Library.svelte';
 	import { emptyState, type PlaybackState, type SongDto } from '$lib/state';
-	import { deriveTimeLeft, formatTimeLeft, timerStore, type TimerAnchor } from '$shared/timer';
-	import { derivePosition } from '$shared/position';
+	import { timerStore } from '$shared/timer';
+	import { deriveTimeLeft, formatTimeLeft, derivePosition, type TimerAnchor } from '$shared/core';
 
 	type Tab = 'day' | 'night' | 'library';
 

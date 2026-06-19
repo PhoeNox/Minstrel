@@ -1,4 +1,4 @@
-import type { PositionAnchor } from '$shared/position';
+import type { PositionAnchor } from '$shared/core';
 
 export type Phase = 'Day' | 'Night';
 

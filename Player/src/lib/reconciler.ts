@@ -1,4 +1,4 @@
-import { derivePosition } from '$shared/position';
+import { derivePosition } from '$shared/core';
 import { activePlaylist, type PlaybackState } from './state';
 
 export const FADE_SECONDS = 5;

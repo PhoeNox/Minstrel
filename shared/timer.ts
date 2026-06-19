@@ -1,11 +1,8 @@
 import { readable, type Readable } from 'svelte/store';
+import type { TimerAnchor } from './core';
 
-export interface TimerAnchor {
-	running: boolean;
-	anchorTimestamp: number;
-	durationLeftAtAnchor: number;
-}
-
+// The timer SSE subscription is a transport concern, not a domain derivation, so it
+// stays here; the pure `deriveTimeLeft`/`formatTimeLeft` live in `core`.
 export function timerStore(onGong?: (gain: number) => void): Readable<TimerAnchor | null> {
 	return readable<TimerAnchor | null>(null, (set) => {
 		const source = new EventSource('/timer/sse');
@@ -15,17 +12,4 @@ export function timerStore(onGong?: (gain: number) => void): Readable<TimerAncho
 		}
 		return () => source.close();
 	});
-}
-
-export function deriveTimeLeft(anchor: TimerAnchor, now: number): number {
-	return anchor.running
-		? Math.max(0, anchor.durationLeftAtAnchor - (now - anchor.anchorTimestamp) / 1000)
-		: anchor.durationLeftAtAnchor;
-}
-
-export function formatTimeLeft(seconds: number): string {
-	const total = Math.ceil(seconds);
-	const minutes = Math.floor(total / 60);
-	const remainder = total % 60;
-	return `${minutes}:${remainder.toString().padStart(2, '0')}`;
 }
