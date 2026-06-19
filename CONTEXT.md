@@ -16,12 +16,17 @@ _Avoid_: Playing client, display, output.
 A frontend that projects backend state into a control surface and emits commands (play, pause, switch phase, select song, set gain, run timer). Holds no playback state of its own.
 _Avoid_: Controller, control client, admin.
 
+**Mobile**:
+The standalone single-device variant of Minstrel, for running a game off a phone alone. It collapses the **Backend**, **Player**, and **Remote** roles into one offline app: it owns its own state, renders its own sound, and is its own control surface, with no network between them. Same domain and language as the desktop deployment (Game Phases, Playlists, Library, Timer, Fade); only the topology differs.
+_Avoid_: App, native app, mini.
+
 **Game Phase**:
 Day or Night. Each phase has its own Playlist; switching phase crossfades from one phase's Current Entry to the other's. Switching to a phase whose Playlist is empty cues nothing (Nothing Cued) — silence until you switch back or add a song.
 _Avoid_: Mode, state (overloaded).
 
 **Playlist**:
 The ordered list of songs for one Game Phase. Mutable: songs are added from the Library, removed, reordered, or shuffled, and the result is persisted as M3U. An entry is addressed by its index, so the same song may appear more than once. Carries no dynamic playback state of its own — Current Entry and Gain belong to playback.
+_On Mobile_: persisted as app-held data rather than M3U files; the role is unchanged.
 _Avoid_: Queue, tracklist.
 
 **Current Entry**:
@@ -38,6 +43,7 @@ _Avoid_: Volume, level.
 
 **Library**:
 Every song available under the music directory — the pool a Playlist draws from. Static reference data, loaded once; not part of replicable playback state.
+_On Mobile_: a pool of songs imported into the app rather than auto-scanned from a directory; still the pool a Playlist draws from.
 _Avoid_: Database, catalog, song database.
 
 **Position**:
