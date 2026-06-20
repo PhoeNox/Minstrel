@@ -1,6 +1,6 @@
 import { readable, type Readable } from 'svelte/store';
-import { emptyState, type PlaybackState } from './state';
-import type { Snapshot } from './minstrelApi';
+import { emptyState, type PlaybackState } from '$shared/ui/state';
+import type { Snapshot } from '$shared/ui/minstrelApi';
 
 const initial: Snapshot = { state: emptyState, connected: false };
 

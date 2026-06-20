@@ -1,4 +1,4 @@
-import type { SongDto } from './state';
+import type { SongDto } from '$shared/ui/state';
 
 export async function fetchLibrary(): Promise<SongDto[]> {
 	const response = await fetch('/library');

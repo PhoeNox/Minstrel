@@ -1,8 +1,10 @@
 import { opfsAudioBytes } from './opfsAudio';
 import { idbSongMetadata } from './idbMetadata';
+import { idbSession } from './idbSession';
 import { musicMetadataParser, type TagParser } from './metadata';
 import { deriveSongId } from './songId';
 import { findEvicted, partitionNew } from './library';
+import type { GamePhase, PlaylistEntry } from '$shared/core';
 
 // Library metadata for one imported song: a stable content id, the Title/Artist/Length
 // read at import, plus the source file name and import time (ADR-0008). Superset of the
@@ -40,12 +42,37 @@ export interface SongMetadataStore {
 	delete(id: string): Promise<void>;
 }
 
+// One Playlist as persisted: its denormalized entries plus the phase's Current Entry and
+// Gain (ADR-0008). The entries carry their own Title/Artist/Length so a restart restores
+// the Playlist without re-resolving against the Library.
+export interface PersistedPlaylist {
+	entries: PlaylistEntry[];
+	cursor: number | null;
+	gain: number;
+}
+
+// The whole session as persisted: both Playlists and the active Game Phase. Position is
+// playback state (slice 6), not curation, so it is not persisted.
+export interface PersistedSession {
+	activePhase: GamePhase;
+	day: PersistedPlaylist;
+	night: PersistedPlaylist;
+}
+
+// The single persisted session snapshot lives in IndexedDB alongside the Library index.
+export interface SessionMetadataStore {
+	load(): Promise<PersistedSession | null>;
+	save(session: PersistedSession): Promise<void>;
+}
+
 export interface MusicStore {
 	importFiles(files: File[]): Promise<ImportResult>;
 	songs(): Promise<SongRecord[]>;
 	remove(id: string): Promise<void>;
 	evictedSongs(): Promise<SongRecord[]>;
 	audioBlob(id: string): Promise<Blob | null>;
+	loadSession(): Promise<PersistedSession | null>;
+	saveSession(session: PersistedSession): Promise<void>;
 }
 
 interface Candidate {
@@ -59,6 +86,7 @@ interface Candidate {
 export function createMusicStore(
 	audio: AudioBytesStore,
 	metadata: SongMetadataStore,
+	session: SessionMetadataStore,
 	tags: TagParser,
 	requestPersistence: () => Promise<unknown>
 ): MusicStore {
@@ -107,14 +135,20 @@ export function createMusicStore(
 			const present = new Set(await audio.ids());
 			return findEvicted(records, present);
 		},
-		audioBlob: (id) => audio.get(id)
+		audioBlob: (id) => audio.get(id),
+		loadSession: () => session.load(),
+		saveSession: (snapshot) => session.save(snapshot)
 	};
 }
 
 // Browser wiring: OPFS bytes, IndexedDB metadata, music-metadata tags, and
 // persistence-as-cache durability.
 export function browserMusicStore(): MusicStore {
-	return createMusicStore(opfsAudioBytes(), idbSongMetadata(), musicMetadataParser(), () =>
-		navigator.storage?.persist?.() ?? Promise.resolve(false)
+	return createMusicStore(
+		opfsAudioBytes(),
+		idbSongMetadata(),
+		idbSession(),
+		musicMetadataParser(),
+		() => navigator.storage?.persist?.() ?? Promise.resolve(false)
 	);
 }

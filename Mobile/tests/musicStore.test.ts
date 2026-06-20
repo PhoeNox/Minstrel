@@ -3,6 +3,8 @@ import {
 	createMusicStore,
 	type AudioBytesStore,
 	type MusicStore,
+	type PersistedSession,
+	type SessionMetadataStore,
 	type SongMetadataStore,
 	type SongRecord
 } from '../src/lib/musicStore';
@@ -35,13 +37,21 @@ function fakeTags(): TagParser {
 	};
 }
 
+function fakeSession(): SessionMetadataStore {
+	let saved: PersistedSession | null = null;
+	return {
+		load: async () => saved,
+		save: async (session) => void (saved = session)
+	};
+}
+
 function makeStore(audio: AudioBytesStore = fakeAudio()): {
 	store: MusicStore;
 	audio: AudioBytesStore;
 	persistCalls: () => number;
 } {
 	let persistCalls = 0;
-	const store = createMusicStore(audio, fakeMetadata(), fakeTags(), async () => {
+	const store = createMusicStore(audio, fakeMetadata(), fakeSession(), fakeTags(), async () => {
 		persistCalls += 1;
 		return true;
 	});

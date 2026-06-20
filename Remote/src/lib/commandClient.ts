@@ -1,11 +1,9 @@
-import type { Phase } from './state';
+import type { Phase } from '$shared/ui/state';
+import { CommandError } from '$shared/ui/commandError';
 
-export class CommandError extends Error {
-	constructor(readonly action: string) {
-		super(`${action} failed`);
-		this.name = 'CommandError';
-	}
-}
+// Re-exported so existing callers (and the command-client tests) reach CommandError
+// through the transport module that raises it.
+export { CommandError };
 
 export function play(): Promise<void> {
 	return send('Play', '/playback/play');

@@ -2,8 +2,8 @@ import type { Readable } from 'svelte/store';
 import * as rest from './commandClient';
 import { fetchLibrary } from './libraryClient';
 import { playbackStore } from './sseStore';
-import type { MinstrelApi, Snapshot } from './minstrelApi';
-import type { Phase, SongDto } from './state';
+import type { MinstrelApi, Snapshot } from '$shared/ui/minstrelApi';
+import type { Phase, SongDto } from '$shared/ui/state';
 
 // The REST implementation of MinstrelApi: the Remote's original transport, now reached
 // through the interface. SSE feeds the snapshot, commands POST to the Backend, and the

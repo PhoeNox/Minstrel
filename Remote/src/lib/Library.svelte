@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { report } from './commandError';
-	import type { MinstrelApi } from './minstrelApi';
-	import type { SongDto } from './state';
+	import { report } from '$shared/ui/commandError';
+	import type { MinstrelApi } from '$shared/ui/minstrelApi';
+	import type { SongDto } from '$shared/ui/state';
 
 	let { api, songs }: { api: MinstrelApi; songs: SongDto[] } = $props();
 

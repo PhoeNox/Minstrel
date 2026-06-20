@@ -1,23 +1,45 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browserMusicStore, type MusicStore, type SongRecord } from '$lib/musicStore';
+	import { createLocalSession, type LocalSession } from '$lib/localSession';
 	import { pickDirectoryFiles, supportsDirectoryPicker } from '$lib/importPicker';
+	import Playlist from '$shared/ui/Playlist.svelte';
+	import { commandError, report } from '$shared/ui/commandError';
+	import { emptyState, type PlaybackState } from '$shared/ui/state';
+
+	type Tab = 'day' | 'night' | 'library';
 
 	let store: MusicStore;
+	let session = $state<LocalSession>();
+	let ready = $state(false);
+
+	let snapshot = $state<PlaybackState>(emptyState);
 	let songs: SongRecord[] = $state([]);
 	let evicted: SongRecord[] = $state([]);
-	let evictedIds = $derived(new Set(evicted.map((song) => song.id)));
+	let evictedIds = $derived(new Set(evicted.map((entry) => entry.id)));
+
+	let tab: Tab = $state('day');
 	let importing = $state(false);
 	let error: string | null = $state(null);
 	let notice: string | null = $state(null);
 	let canPickFolder = $state(false);
-	let fileInput: HTMLInputElement;
+	let fileInput: HTMLInputElement | undefined = $state();
 
-	onMount(async () => {
+	onMount(() => {
 		store = browserMusicStore();
+		session = createLocalSession(store);
 		canPickFolder = supportsDirectoryPicker();
-		await refresh();
+		const unsubscribe = session.snapshot.subscribe((next) => (snapshot = next.state));
+		void start();
+		return unsubscribe;
 	});
+
+	async function start(): Promise<void> {
+		if (!session) return;
+		await session.load();
+		await refresh();
+		ready = true;
+	}
 
 	async function refresh(): Promise<void> {
 		songs = await store.songs();
@@ -63,7 +85,7 @@
 		await importFiles(files);
 	}
 
-	async function remove(song: SongRecord): Promise<void> {
+	async function removeFromLibrary(song: SongRecord): Promise<void> {
 		await store.remove(song.id);
 		await refresh();
 	}
@@ -75,67 +97,102 @@
 	}
 </script>
 
-<div class="app">
+<div class="app" class:night={tab === 'night'}>
 	<header class="head">
 		<span class="glyph">♪</span>
 		<h1>Minstrel</h1>
-		<p class="sub">Library</p>
+		<p class="sub">{tab === 'library' ? 'Library' : `${tab === 'night' ? 'Night' : 'Day'} Playlist`}</p>
 	</header>
 
 	<main class="deck">
-		{#if evicted.length > 0}
-			<div class="evicted" role="alert">
-				{evicted.length} song{evicted.length === 1 ? '' : 's'} need re-importing — the phone cleared
-				their audio. Import the same files to restore them.
-			</div>
-		{/if}
+		{#if ready && session && tab !== 'library'}
+			<Playlist
+				api={session}
+				phase={tab === 'night' ? 'Night' : 'Day'}
+				playlist={tab === 'night' ? snapshot.playlists.night : snapshot.playlists.day}
+				currentSongId={snapshot.currentSongId}
+				progress={0}
+			/>
+		{:else if tab === 'library'}
+			{#if evicted.length > 0}
+				<div class="evicted" role="alert">
+					{evicted.length} song{evicted.length === 1 ? '' : 's'} need re-importing — the phone cleared
+					their audio. Import the same files to restore them.
+				</div>
+			{/if}
 
-		{#if songs.length === 0}
-			<p class="empty">No songs yet. Import some to begin.</p>
-		{:else}
-			<ul class="songs">
-				{#each songs as song (song.id)}
-					<li class="song" class:gone={evictedIds.has(song.id)}>
-						<span class="details">
-							<span class="title">{song.title}</span>
-							<span class="artist">{song.artist}</span>
-						</span>
-						{#if evictedIds.has(song.id)}
-							<span class="reimport">re-import</span>
-						{:else}
-							<span class="length">{formatLength(song.length)}</span>
-						{/if}
-						<button class="remove" aria-label="Remove" onclick={() => remove(song)}>✕</button>
-					</li>
-				{/each}
-			</ul>
+			{#if songs.length === 0}
+				<p class="empty">No songs yet. Import some to begin.</p>
+			{:else}
+				<ul class="songs">
+					{#each songs as song (song.id)}
+						<li class="song" class:gone={evictedIds.has(song.id)}>
+							<span class="details">
+								<span class="title">{song.title}</span>
+								<span class="artist">{song.artist}</span>
+							</span>
+							{#if evictedIds.has(song.id)}
+								<span class="reimport">re-import</span>
+							{:else}
+								<span class="length">{formatLength(song.length)}</span>
+							{/if}
+							<button
+								class="add day"
+								title="Add to Day playlist"
+								onclick={() => session && report(session.addSong('Day', song.id))}>☀</button
+							>
+							<button
+								class="add night"
+								title="Add to Night playlist"
+								onclick={() => session && report(session.addSong('Night', song.id))}>☾</button
+							>
+							<button class="remove" aria-label="Remove" onclick={() => removeFromLibrary(song)}>✕</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+
+			<input
+				bind:this={fileInput}
+				class="hidden-input"
+				type="file"
+				accept="audio/*"
+				multiple
+				onchange={handleFiles}
+			/>
+			{#if canPickFolder}
+				<button class="import" disabled={importing} onclick={pickFolder}>
+					{importing ? 'Importing…' : 'Import a folder'}
+				</button>
+			{:else}
+				<button class="import" disabled={importing} onclick={() => fileInput?.click()}>
+					{importing ? 'Importing…' : 'Import songs'}
+				</button>
+			{/if}
 		{/if}
 	</main>
 
-	<footer class="controls">
-		<input
-			bind:this={fileInput}
-			class="hidden-input"
-			type="file"
-			accept="audio/*"
-			multiple
-			onchange={handleFiles}
-		/>
-		{#if canPickFolder}
-			<button class="import" disabled={importing} onclick={pickFolder}>
-				{importing ? 'Importing…' : 'Import a folder'}
-			</button>
-		{:else}
-			<button class="import" disabled={importing} onclick={() => fileInput.click()}>
-				{importing ? 'Importing…' : 'Import songs'}
-			</button>
-		{/if}
-	</footer>
+	<nav class="tabbar">
+		<button class="tab" class:active={tab === 'day'} onclick={() => (tab = 'day')}>
+			<span class="tab-glyph">☀</span>
+			<span class="tab-label">Day</span>
+		</button>
+		<button class="tab" class:active={tab === 'night'} onclick={() => (tab = 'night')}>
+			<span class="tab-glyph">☾</span>
+			<span class="tab-label">Night</span>
+		</button>
+		<button class="tab" class:active={tab === 'library'} onclick={() => (tab = 'library')}>
+			<span class="tab-glyph">♪</span>
+			<span class="tab-label">Library</span>
+		</button>
+	</nav>
 
 	{#if error}
 		<div class="toast" role="alert">{error}</div>
 	{:else if notice}
 		<div class="toast notice" role="status">{notice}</div>
+	{:else if $commandError}
+		<div class="toast" role="alert">{$commandError}</div>
 	{/if}
 </div>
 
@@ -144,12 +201,16 @@
 		--ink: #0a0608;
 		--panel: #15100f;
 		--panel-edge: rgba(239, 230, 211, 0.1);
+		--row: #1c1614;
+		--row-edge: rgba(239, 230, 211, 0.06);
+		--line: rgba(239, 230, 211, 0.08);
 		--text: #efe6d3;
 		--dim: #b9ac93;
 		--muted: #7c7263;
 		--blood: #c01f1f;
 		--blood-bright: #e23b34;
 		--accent: #e3c177;
+		--accent-deep: #cd9a3f;
 		--accent-rgb: 227, 193, 119;
 		--display: 'Cinzel', 'Times New Roman', serif;
 		--body: 'EB Garamond', Georgia, serif;
@@ -174,6 +235,12 @@
 			radial-gradient(120% 70% at 50% -10%, rgba(var(--accent-rgb), 0.08), transparent 60%),
 			linear-gradient(180deg, #100b0a 0%, var(--ink) 60%);
 		overflow: hidden;
+	}
+
+	.app.night {
+		--accent: #cdd6ea;
+		--accent-deep: #9aa6c4;
+		--accent-rgb: 205, 214, 234;
 	}
 
 	.head {
@@ -222,7 +289,7 @@
 
 	.songs {
 		list-style: none;
-		margin: 0;
+		margin: 0 0 1rem;
 		padding: 0;
 		display: flex;
 		flex-direction: column;
@@ -232,8 +299,8 @@
 	.song {
 		display: flex;
 		align-items: center;
-		gap: 0.7rem;
-		padding: 0.7rem 0.8rem;
+		gap: 0.5rem;
+		padding: 0.6rem 0.7rem;
 		border: 1px solid var(--panel-edge);
 		border-radius: 12px;
 		background: var(--panel);
@@ -284,6 +351,35 @@
 		color: var(--blood-bright);
 	}
 
+	.add {
+		flex: none;
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: 9px;
+		border: 1px solid var(--line);
+		background: rgba(0, 0, 0, 0.25);
+		font-size: 1.05rem;
+		cursor: pointer;
+	}
+
+	.add.day {
+		color: #e3c177;
+	}
+
+	.add.day:active {
+		background: rgba(227, 193, 119, 0.18);
+		border-color: rgba(227, 193, 119, 0.4);
+	}
+
+	.add.night {
+		color: #cdd6ea;
+	}
+
+	.add.night:active {
+		background: rgba(205, 214, 234, 0.18);
+		border-color: rgba(205, 214, 234, 0.4);
+	}
+
 	.remove {
 		flex: none;
 		width: 2.4rem;
@@ -312,16 +408,6 @@
 		line-height: 1.35;
 	}
 
-	.controls {
-		flex: none;
-		padding: 0.9rem 1rem calc(env(safe-area-inset-bottom) + 0.9rem);
-		border-top: 1px solid rgba(239, 230, 211, 0.08);
-	}
-
-	.hidden-input {
-		display: none;
-	}
-
 	.import {
 		width: 100%;
 		min-height: 3.5rem;
@@ -342,10 +428,64 @@
 		cursor: default;
 	}
 
+	.hidden-input {
+		display: none;
+	}
+
+	.tabbar {
+		flex: none;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		border-top: 1px solid var(--line);
+		background: rgba(0, 0, 0, 0.2);
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+
+	.tab {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		min-height: 3.2rem;
+		border: none;
+		background: none;
+		color: var(--muted);
+		cursor: pointer;
+	}
+
+	.tab-glyph {
+		font-size: 1.1rem;
+		line-height: 1;
+	}
+
+	.tab-label {
+		font-size: 0.72rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.tab.active {
+		color: var(--accent);
+	}
+
+	.tab.active::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 2.2rem;
+		height: 2px;
+		border-radius: 0 0 2px 2px;
+		background: var(--accent);
+		box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6);
+	}
+
 	.toast {
 		position: fixed;
 		left: 50%;
-		bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
+		bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
 		transform: translateX(-50%);
 		max-width: calc(100% - 2rem);
 		padding: 0.7rem 1.1rem;

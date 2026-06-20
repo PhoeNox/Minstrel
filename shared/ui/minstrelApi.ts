@@ -9,9 +9,9 @@ export interface Snapshot {
 }
 
 // The single command/query interface the shared control-surface UI programs against
-// (ADR-0008). Two implementations exist: RestApi (POST-to-Backend) and, later, Mobile's
-// in-process Core. It carries no transport concern — HTTP status, SSE, EventSource stay
-// behind the implementations.
+// (ADR-0008). Two implementations exist: RestApi (POST-to-Backend) and LocalSession
+// (Mobile, in-process Core). It carries no transport concern — HTTP status, SSE,
+// EventSource stay behind the implementations.
 export interface MinstrelApi {
 	readonly snapshot: Readable<Snapshot>;
 

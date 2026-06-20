@@ -1,5 +1,15 @@
 import { writable, type Readable } from 'svelte/store';
-import { CommandError } from './commandClient';
+
+// A command the user issued that the system rejected (e.g. the Backend returned non-OK,
+// or it was unreachable). Distinct from a programming bug: a CommandError is shown to the
+// user as a transient message, anything else propagates. Mobile's in-process commands do
+// not reject this way, so its surface simply never raises one.
+export class CommandError extends Error {
+	constructor(readonly action: string) {
+		super(`${action} failed`);
+		this.name = 'CommandError';
+	}
+}
 
 const CLEAR_AFTER_MS = 4000;
 

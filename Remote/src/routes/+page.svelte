@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { RestApi } from '$lib/restApi';
-	import type { MinstrelApi } from '$lib/minstrelApi';
-	import { commandError, report } from '$lib/commandError';
-	import Playlist from '$lib/Playlist.svelte';
+	import type { MinstrelApi } from '$shared/ui/minstrelApi';
+	import { commandError, report } from '$shared/ui/commandError';
+	import Playlist from '$shared/ui/Playlist.svelte';
 	import Library from '$lib/Library.svelte';
-	import { emptyState, type PlaybackState, type SongDto } from '$lib/state';
+	import { emptyState, type PlaybackState, type SongDto } from '$shared/ui/state';
 	import { timerStore } from '$shared/timer';
 	import { deriveTimeLeft, formatTimeLeft, derivePosition, type TimerAnchor } from '$shared/core';
 
