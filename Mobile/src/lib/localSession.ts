@@ -1,5 +1,6 @@
 import { writable, type Readable } from 'svelte/store';
 import {
+	derivePosition,
 	IDLE_PLAYBACK,
 	playbackTimeline,
 	playlists,
@@ -11,6 +12,7 @@ import {
 } from '$shared/core';
 import type { MinstrelApi, Snapshot } from '$shared/ui/minstrelApi';
 import { emptyState, type PlaybackState, type PlaylistDto, type SongDto } from '$shared/ui/state';
+import type { EngineTrack, PlaybackEngine } from './mobileAudioEngine';
 import type { PersistedPlaylist, PersistedSession, SongRecord } from './musicStore';
 
 // The slice of the MusicStore LocalSession coordinates: the Library to resolve songs
@@ -37,7 +39,8 @@ interface Book {
 export function createLocalSession(
 	store: SessionStore,
 	now: () => number = () => Date.now(),
-	rng: Rng = Math.random
+	rng: Rng = Math.random,
+	engine?: PlaybackEngine
 ): LocalSession {
 	let playback: CoreState = IDLE_PLAYBACK;
 	let book: Book = { day: [], night: [] };
@@ -56,6 +59,55 @@ export function createLocalSession(
 		return index !== null && index >= 0 && index < list.length
 			? { id: list[index].id, length: list[index].length }
 			: null;
+	}
+
+	function engineTrackAt(phase: GamePhase, index: number | null): EngineTrack | null {
+		const list = entries(phase);
+		if (index === null || index < 0 || index >= list.length) {
+			return null;
+		}
+		const entry = list[index];
+		return { id: entry.id, title: entry.title, artist: entry.artist, length: entry.length };
+	}
+
+	// Drives the engine from the playback state a command just produced — the in-process
+	// stand-in for Player's reconciler (dropped per ADR-0008, since there is no remote
+	// snapshot to converge towards). Nothing Cued stops; a paused song fades out; an
+	// unchanged lead only re-ramps its gain; a new lead crossfades in. `force` replays the
+	// active current even when it is the same song id (a single-entry loop), where the
+	// re-gain shortcut would otherwise leave the ended song silent.
+	function renderAudio(force = false): void {
+		if (engine === undefined) {
+			return;
+		}
+		const position = playback.position;
+		if (position.songId === null) {
+			engine.stop();
+			return;
+		}
+		if (!position.isPlaying) {
+			engine.pause();
+			return;
+		}
+		const gain = playbackTimeline.phaseOf(playback, playback.activePhase).gain;
+		if (!force && engine.currentSongId === position.songId) {
+			engine.setGain(gain);
+			return;
+		}
+		const track = engineTrackAt(playback.activePhase, playbackTimeline.activeCursor(playback));
+		if (track !== null) {
+			engine.play(track, derivePosition(position, now()), gain);
+		}
+	}
+
+	// Auto-advance: the engine signalled the lead song is a fade-length from its end (or the
+	// lock-screen "next" was pressed), so step the active Playlist to the next entry — wrapping
+	// last→first for a long game — and crossfade it in over the outgoing song's tail.
+	function advanceCurrent(): void {
+		playback = playbackTimeline.advance(playback, toTracks(entries(playback.activePhase)), now());
+		publish();
+		renderAudio(true);
+		void persist();
 	}
 
 	async function persist(): Promise<void> {
@@ -95,7 +147,7 @@ export function createLocalSession(
 		};
 	}
 
-	return {
+	const api: LocalSession = {
 		snapshot: { subscribe: state.subscribe } as Readable<Snapshot>,
 
 		async load() {
@@ -124,6 +176,7 @@ export function createLocalSession(
 			replace(phase, playlists.add(entries(phase), toEntry(song)));
 			playback = playbackTimeline.reindexAfterAdd(playback, phase);
 			publish();
+			renderAudio();
 			await persist();
 		},
 
@@ -143,6 +196,7 @@ export function createLocalSession(
 				now()
 			);
 			publish();
+			renderAudio();
 			await persist();
 		},
 
@@ -154,6 +208,7 @@ export function createLocalSession(
 			replace(phase, playlists.move(list, oldIndex, newIndex));
 			playback = playbackTimeline.reindexAfterMove(playback, phase, oldIndex, newIndex, list.length);
 			publish();
+			renderAudio();
 			await persist();
 		},
 
@@ -162,6 +217,7 @@ export function createLocalSession(
 			replace(phase, shuffled);
 			playback = playbackTimeline.reindexAfterShuffle(playback, phase, permutation);
 			publish();
+			renderAudio();
 			await persist();
 		},
 
@@ -172,12 +228,14 @@ export function createLocalSession(
 			}
 			playback = playbackTimeline.select(playback, phase, index, trackAt(phase, index), now());
 			publish();
+			renderAudio();
 			await persist();
 		},
 
 		async setGain(phase, value) {
 			playback = playbackTimeline.setGain(playback, phase, value);
 			publish();
+			renderAudio();
 			await persist();
 		},
 
@@ -189,11 +247,13 @@ export function createLocalSession(
 			const phase = playback.activePhase;
 			playback = playbackTimeline.select(playback, phase, index, trackAt(phase, index), now());
 			publish();
+			renderAudio();
 		},
 
 		async pause() {
 			playback = playbackTimeline.pause(playback, now());
 			publish();
+			renderAudio();
 		},
 
 		async switchPhase() {
@@ -202,6 +262,7 @@ export function createLocalSession(
 			const targetCurrent = trackAt(target, playbackTimeline.cursorOf(playback, target));
 			playback = playbackTimeline.switchPhase(playback, activeCurrent, targetCurrent, now());
 			publish();
+			renderAudio();
 			await persist();
 		},
 
@@ -210,6 +271,17 @@ export function createLocalSession(
 		async startTimer() {},
 		async stopTimer() {}
 	};
+
+	// The engine's own events fold back into the coordinator: a song ending or the
+	// lock-screen "next" auto-advances, and the lock-screen play/pause mirror the surface.
+	if (engine !== undefined) {
+		engine.onEnded = advanceCurrent;
+		engine.onMediaNext = advanceCurrent;
+		engine.onMediaPlay = () => void api.play();
+		engine.onMediaPause = () => void api.pause();
+	}
+
+	return api;
 }
 
 function toEntry(record: SongRecord): PlaylistEntry {

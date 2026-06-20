@@ -2,10 +2,12 @@
 	import { onMount } from 'svelte';
 	import { browserMusicStore, type MusicStore, type SongRecord } from '$lib/musicStore';
 	import { createLocalSession, type LocalSession } from '$lib/localSession';
+	import { MobileAudioEngine } from '$lib/mobileAudioEngine';
 	import { pickDirectoryFiles, supportsDirectoryPicker } from '$lib/importPicker';
 	import Playlist from '$shared/ui/Playlist.svelte';
 	import { commandError, report } from '$shared/ui/commandError';
 	import { emptyState, type PlaybackState } from '$shared/ui/state';
+	import { derivePosition } from '$shared/core';
 
 	type Tab = 'day' | 'night' | 'library';
 
@@ -14,6 +16,7 @@
 	let ready = $state(false);
 
 	let snapshot = $state<PlaybackState>(emptyState);
+	let now = $state(Date.now());
 	let songs: SongRecord[] = $state([]);
 	let evicted: SongRecord[] = $state([]);
 	let evictedIds = $derived(new Set(evicted.map((entry) => entry.id)));
@@ -25,14 +28,42 @@
 	let canPickFolder = $state(false);
 	let fileInput: HTMLInputElement | undefined = $state();
 
+	// The now-playing song and its live position derive from the playback anchor (the engine
+	// is the audio clock, but the anchor tracks it closely enough for the indicator); a light
+	// 250ms ticker advances `now` so the progress fill animates without a server tick.
+	let currentSong = $derived(
+		[...snapshot.playlists.day.songs, ...snapshot.playlists.night.songs].find(
+			(song) => song.id === snapshot.currentSongId
+		) ?? null
+	);
+	let playProgress = $derived(
+		currentSong && currentSong.length > 0
+			? Math.min(1, Math.max(0, derivePosition(snapshot.position, now) / currentSong.length))
+			: 0
+	);
+	let activePlaylist = $derived(
+		snapshot.phase === 'Night' ? snapshot.playlists.night : snapshot.playlists.day
+	);
+	let canPlay = $derived(activePlaylist.currentIndex !== null);
+
 	onMount(() => {
 		store = browserMusicStore();
-		session = createLocalSession(store);
+		const engine = new MobileAudioEngine((id) => store.audioBlob(id));
+		session = createLocalSession(store, () => Date.now(), Math.random, engine);
 		canPickFolder = supportsDirectoryPicker();
 		const unsubscribe = session.snapshot.subscribe((next) => (snapshot = next.state));
+		const ticker = setInterval(() => (now = Date.now()), 250);
 		void start();
-		return unsubscribe;
+		return () => {
+			unsubscribe();
+			clearInterval(ticker);
+		};
 	});
+
+	function togglePlay(): void {
+		if (!session) return;
+		void report(snapshot.isPlaying ? session.pause() : session.play());
+	}
 
 	async function start(): Promise<void> {
 		if (!session) return;
@@ -111,7 +142,7 @@
 				phase={tab === 'night' ? 'Night' : 'Day'}
 				playlist={tab === 'night' ? snapshot.playlists.night : snapshot.playlists.day}
 				currentSongId={snapshot.currentSongId}
-				progress={0}
+				progress={playProgress}
 			/>
 		{:else if tab === 'library'}
 			{#if evicted.length > 0}
@@ -171,6 +202,35 @@
 			{/if}
 		{/if}
 	</main>
+
+	<footer class="transport" class:night={snapshot.phase === 'Night'}>
+		<div class="np">
+			{#if currentSong}
+				<span class="np-title">{currentSong.title}</span>
+				<span class="np-artist">{currentSong.artist}</span>
+			{:else}
+				<span class="np-title np-empty">Nothing cued</span>
+				<span class="np-artist">{snapshot.phase} · choose a song to play</span>
+			{/if}
+			<span class="np-bar"><span class="np-fill" style="width: {playProgress * 100}%"></span></span>
+		</div>
+		<button
+			class="play"
+			class:playing={snapshot.isPlaying}
+			disabled={!canPlay}
+			aria-label={snapshot.isPlaying ? 'Pause' : 'Play'}
+			onclick={togglePlay}
+		>
+			<span class="play-glyph">{snapshot.isPlaying ? '❚❚' : '▶'}</span>
+		</button>
+		<button
+			class="switch"
+			aria-label="Switch phase"
+			onclick={() => session && report(session.switchPhase())}
+		>
+			<span class="switch-glyph">{snapshot.phase === 'Night' ? '☀' : '☾'}</span>
+		</button>
+	</footer>
 
 	<nav class="tabbar">
 		<button class="tab" class:active={tab === 'day'} onclick={() => (tab = 'day')}>
@@ -430,6 +490,105 @@
 
 	.hidden-input {
 		display: none;
+	}
+
+	.transport {
+		--accent: #e3c177;
+		--accent-rgb: 227, 193, 119;
+		flex: none;
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		padding: 0.6rem 0.85rem;
+		border-top: 1px solid var(--line);
+		background: linear-gradient(0deg, rgba(var(--accent-rgb), 0.05), transparent 80%), var(--ink);
+	}
+
+	.transport.night {
+		--accent: #cdd6ea;
+		--accent-rgb: 205, 214, 234;
+	}
+
+	.np {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+
+	.np-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 1rem;
+		color: var(--text);
+	}
+
+	.np-title.np-empty {
+		color: var(--muted);
+		font-style: italic;
+	}
+
+	.np-artist {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.82rem;
+		color: var(--dim);
+	}
+
+	.np-bar {
+		margin-top: 0.3rem;
+		height: 3px;
+		border-radius: 999px;
+		background: rgba(239, 230, 211, 0.12);
+		overflow: hidden;
+	}
+
+	.np-fill {
+		display: block;
+		height: 100%;
+		background: var(--accent);
+		box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
+		transition: width 0.26s linear;
+	}
+
+	.play {
+		flex: none;
+		width: 3.4rem;
+		height: 3.4rem;
+		border-radius: 50%;
+		border: 1px solid rgba(var(--accent-rgb), 0.5);
+		background: rgba(var(--accent-rgb), 0.12);
+		color: var(--accent);
+		font-size: 1.1rem;
+		cursor: pointer;
+	}
+
+	.play:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+
+	.play.playing {
+		background: rgba(var(--accent-rgb), 0.22);
+	}
+
+	.play-glyph {
+		line-height: 1;
+	}
+
+	.switch {
+		flex: none;
+		width: 3.4rem;
+		height: 3.4rem;
+		border-radius: 13px;
+		border: 1px solid var(--line);
+		background: rgba(0, 0, 0, 0.25);
+		color: var(--accent);
+		font-size: 1.25rem;
+		cursor: pointer;
 	}
 
 	.tabbar {
