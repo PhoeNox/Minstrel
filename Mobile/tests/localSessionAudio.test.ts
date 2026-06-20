@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Rng } from '$shared/core';
+import { get } from 'svelte/store';
+import { playbackTimeline, type Rng } from '$shared/core';
 import { createLocalSession, type SessionStore } from '../src/lib/localSession';
 import type { EngineTrack, PlaybackEngine } from '../src/lib/mobileAudioEngine';
 import type { PersistedSession, SongRecord } from '../src/lib/musicStore';
@@ -66,6 +67,12 @@ function fakeEngine(): FakeEngine {
 
 function newSession(songs: SongRecord[], engine: PlaybackEngine) {
 	return createLocalSession(memoryStore(songs), () => 1000, seededRng(1), engine);
+}
+
+// A session over a mutable clock, so a test can let real time pass between commands —
+// needed to exercise the resume offset, which is the heard duration plus the fade.
+function clockedSession(songs: SongRecord[], engine: PlaybackEngine, clock: { now: number }) {
+	return createLocalSession(memoryStore(songs), () => clock.now, seededRng(1), engine);
 }
 
 describe('play', () => {
@@ -151,6 +158,39 @@ describe('switchPhase', () => {
 		await session.switchPhase();
 
 		expect(engine.calls.at(-1)).toBe('stop');
+	});
+
+	it('remembers the left phase resume offset including the fade adjustment', async () => {
+		const engine = fakeEngine();
+		const clock = { now: 1000 };
+		const session = clockedSession([song('a'), song('b')], engine, clock);
+		await session.addSong('Day', 'a');
+		await session.addSong('Night', 'b');
+		await session.play();
+
+		clock.now = 21000;
+		await session.switchPhase();
+
+		const heard = 20;
+		expect(get(session.snapshot).state.playlists.day.resumeOffset).toBe(
+			heard + playbackTimeline.FADE_SECONDS
+		);
+	});
+
+	it('resumes the left phase near where it left off when switched back', async () => {
+		const engine = fakeEngine();
+		const clock = { now: 1000 };
+		const session = clockedSession([song('a'), song('b')], engine, clock);
+		await session.addSong('Day', 'a');
+		await session.addSong('Night', 'b');
+		await session.play();
+
+		clock.now = 21000;
+		await session.switchPhase();
+		await session.switchPhase();
+
+		const resume = 20 + playbackTimeline.FADE_SECONDS;
+		expect(engine.calls.at(-1)).toBe(`play a @${resume} g1`);
 	});
 });
 
