@@ -3,7 +3,7 @@
 	import { browserMusicStore, type MusicStore, type SongRecord } from '$lib/musicStore';
 	import { createLocalSession, type LocalSession } from '$lib/localSession';
 	import { MobileAudioEngine } from '$lib/mobileAudioEngine';
-	import { pickDirectoryFiles, supportsDirectoryPicker } from '$lib/importPicker';
+	import { audioFiles, pickDirectoryFiles, supportsDirectoryPicker } from '$lib/importPicker';
 	import Playlist from '$shared/ui/Playlist.svelte';
 	import { commandError, report } from '$shared/ui/commandError';
 	import { emptyState, type PlaybackState } from '$shared/ui/state';
@@ -25,8 +25,9 @@
 	let importing = $state(false);
 	let error: string | null = $state(null);
 	let notice: string | null = $state(null);
-	let canPickFolder = $state(false);
+	let pickerFolders = $state(false);
 	let fileInput: HTMLInputElement | undefined = $state();
+	let folderInput: HTMLInputElement | undefined = $state();
 
 	// The now-playing song and its live position derive from the playback anchor (the engine
 	// is the audio clock, but the anchor tracks it closely enough for the indicator); a light
@@ -50,7 +51,7 @@
 		store = browserMusicStore();
 		const engine = new MobileAudioEngine((id) => store.audioBlob(id));
 		session = createLocalSession(store, () => Date.now(), Math.random, engine);
-		canPickFolder = supportsDirectoryPicker();
+		pickerFolders = supportsDirectoryPicker();
 		const unsubscribe = session.snapshot.subscribe((next) => (snapshot = next.state));
 		const ticker = setInterval(() => (now = Date.now()), 250);
 		void start();
@@ -101,12 +102,23 @@
 	}
 
 	async function pickFolder(): Promise<void> {
+		if (!pickerFolders) {
+			folderInput?.click();
+			return;
+		}
 		try {
 			await importFiles(await pickDirectoryFiles());
 		} catch (e) {
 			if (e instanceof DOMException && e.name === 'AbortError') return;
 			error = e instanceof Error ? e.message : 'Import failed';
 		}
+	}
+
+	async function handleFolder(event: Event): Promise<void> {
+		const input = event.currentTarget as HTMLInputElement;
+		const files = audioFiles(input.files ?? []);
+		input.value = '';
+		await importFiles(files);
 	}
 
 	async function handleFiles(event: Event): Promise<void> {
@@ -184,6 +196,14 @@
 			{/if}
 
 			<input
+				bind:this={folderInput}
+				class="hidden-input"
+				type="file"
+				webkitdirectory
+				multiple
+				onchange={handleFolder}
+			/>
+			<input
 				bind:this={fileInput}
 				class="hidden-input"
 				type="file"
@@ -191,15 +211,12 @@
 				multiple
 				onchange={handleFiles}
 			/>
-			{#if canPickFolder}
-				<button class="import" disabled={importing} onclick={pickFolder}>
-					{importing ? 'Importing…' : 'Import a folder'}
-				</button>
-			{:else}
-				<button class="import" disabled={importing} onclick={() => fileInput?.click()}>
-					{importing ? 'Importing…' : 'Import songs'}
-				</button>
-			{/if}
+			<button class="import" disabled={importing} onclick={pickFolder}>
+				{importing ? 'Importing…' : 'Import a folder'}
+			</button>
+			<button class="import-files" disabled={importing} onclick={() => fileInput?.click()}>
+				Import individual files
+			</button>
 		{/if}
 	</main>
 
@@ -484,6 +501,25 @@
 	}
 
 	.import:disabled {
+		opacity: 0.55;
+		cursor: default;
+	}
+
+	.import-files {
+		width: 100%;
+		margin-top: 0.6rem;
+		min-height: 2.8rem;
+		border: 1px solid var(--panel-edge);
+		border-radius: 12px;
+		background: rgba(0, 0, 0, 0.25);
+		color: var(--dim);
+		font-family: var(--body);
+		font-size: 0.95rem;
+		letter-spacing: 0.04em;
+		cursor: pointer;
+	}
+
+	.import-files:disabled {
 		opacity: 0.55;
 		cursor: default;
 	}
