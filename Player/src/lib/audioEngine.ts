@@ -99,8 +99,13 @@ export class AudioEngine {
 
 	private async play(songId: string, offset: number, target: number): Promise<void> {
 		await this.context.resume();
-		const buffer = await this.load(songId);
+		// Fade the outgoing voice out before awaiting the incoming buffer: a cold
+		// fetch + decode must not hold the current song at full volume. With the
+		// next song warmed (see the reconciler's prefetch) the load resolves at
+		// once and the two ramps form a symmetric crossfade; cold, the outgoing
+		// fade still starts immediately and the incoming voice joins once ready.
 		this.fadeOutLead();
+		const buffer = await this.load(songId);
 
 		const now = this.context.currentTime;
 		const gain = this.context.createGain();
