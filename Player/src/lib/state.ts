@@ -41,3 +41,7 @@ export const emptyState: PlaybackState = {
 export function activePlaylist(state: PlaybackState): PlaylistDto {
 	return state.phase === 'Night' ? state.playlists.night : state.playlists.day;
 }
+
+export function inactivePlaylist(state: PlaybackState): PlaylistDto {
+	return state.phase === 'Night' ? state.playlists.day : state.playlists.night;
+}

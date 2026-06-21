@@ -140,6 +140,45 @@ describe('reconcile', () => {
 		expect(operations).toEqual([{ type: 'prefetch', songId: 'a' }]);
 	});
 
+	it('prefetches the inactive phase Current Entry so a switch can crossfade at once', () => {
+		const state: PlaybackState = {
+			...playingDay('a', [song('a'), song('b')]),
+			playlists: {
+				day: { songs: [song('a'), song('b')], currentIndex: 0, gain: 1 },
+				night: { songs: [song('n1'), song('n2')], currentIndex: 1, gain: 1 }
+			}
+		};
+
+		const operations = reconcile(
+			state,
+			{ leadSongId: 'a', leadPosition: 10, leadGain: 1, loadedSongIds: ['a', 'b'] },
+			4000
+		);
+
+		expect(operations).toEqual([{ type: 'prefetch', songId: 'n2' }]);
+	});
+
+	it('prefetches both the next song and the inactive phase Current Entry', () => {
+		const state: PlaybackState = {
+			...playingDay('a', [song('a'), song('b')]),
+			playlists: {
+				day: { songs: [song('a'), song('b')], currentIndex: 0, gain: 1 },
+				night: { songs: [song('n1'), song('n2')], currentIndex: 1, gain: 1 }
+			}
+		};
+
+		const operations = reconcile(
+			state,
+			{ leadSongId: 'a', leadPosition: 10, leadGain: 1, loadedSongIds: ['a'] },
+			4000
+		);
+
+		expect(operations).toEqual([
+			{ type: 'prefetch', songId: 'b' },
+			{ type: 'prefetch', songId: 'n2' }
+		]);
+	});
+
 	it('sets the gain on the lead when the phase gain changes', () => {
 		const operations = reconcile(
 			playingDay('a', [song('a'), song('b')], 0.4),

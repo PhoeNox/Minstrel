@@ -1,5 +1,5 @@
 import { derivePosition } from '$shared/core';
-import { activePlaylist, type PlaybackState } from './state';
+import { activePlaylist, inactivePlaylist, type PlaybackState, type PlaylistDto } from './state';
 
 export const FADE_SECONDS = 5;
 
@@ -26,26 +26,47 @@ export function reconcile(desired: PlaybackState, current: AudioGraph, now: numb
 	const next = nextSongId(desired);
 	const operations: AudioOperation[] = [];
 
-	if (next !== null && !current.loadedSongIds.includes(next)) {
-		operations.push({ type: 'prefetch', songId: next });
-	}
-
 	const anticipated = next !== null && current.leadSongId === next;
 	if (current.leadSongId !== wanted && !anticipated) {
 		operations.push({ type: 'play', songId: wanted, offset: derivePosition(desired.position, now), gain });
-		return operations;
-	}
-
-	if (current.leadSongId === wanted && nearingEnd(desired, current, wanted, next)) {
+	} else if (current.leadSongId === wanted && nearingEnd(desired, current, wanted, next)) {
 		operations.push({ type: 'play', songId: next as string, offset: 0, gain });
-		return operations;
-	}
-
-	if (gain !== current.leadGain) {
+	} else if (gain !== current.leadGain) {
 		operations.push({ type: 'set-gain', gain });
 	}
 
+	for (const songId of warmTargets(desired, wanted, next)) {
+		if (!current.loadedSongIds.includes(songId)) {
+			operations.push({ type: 'prefetch', songId });
+		}
+	}
+
 	return operations;
+}
+
+// The two buffers worth warming ahead of need: the active playlist's next song
+// (auto-advance) and the inactive phase's Current Entry (so a phase switch can
+// crossfade at once instead of stalling on a cold fetch + decode). Prefetch ops
+// follow the play/gain op so a switch begins fading immediately and the warming
+// loads behind it.
+function warmTargets(desired: PlaybackState, wanted: string, next: string | null): string[] {
+	const targets: string[] = [];
+	if (next !== null && next !== wanted) {
+		targets.push(next);
+	}
+	const otherCurrent = currentSongId(inactivePlaylist(desired));
+	if (otherCurrent !== null && otherCurrent !== wanted && !targets.includes(otherCurrent)) {
+		targets.push(otherCurrent);
+	}
+	return targets;
+}
+
+function currentSongId(playlist: PlaylistDto): string | null {
+	const index = playlist.currentIndex;
+	if (index === null || index < 0 || index >= playlist.songs.length) {
+		return null;
+	}
+	return playlist.songs[index].id;
 }
 
 function nearingEnd(

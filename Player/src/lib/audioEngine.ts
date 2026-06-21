@@ -3,6 +3,11 @@ import { FADE_SECONDS, type AudioOperation } from './reconciler';
 
 const GAIN_RAMP_SECONDS = 0.3;
 
+// The reconciler warms two buffers ahead of the lead — the active playlist's
+// next song and the inactive phase's Current Entry — so both are held against
+// eviction until a fresher prefetch displaces them.
+const PREFETCH_RETAIN = 2;
+
 interface Voice {
 	source: AudioBufferSourceNode;
 	gain: GainNode;
@@ -28,7 +33,7 @@ export class AudioEngine {
 	private gongBuffer: AudioBuffer | null = null;
 	private leadHandle: number | null = null;
 	private nextHandle = 0;
-	private prefetchedSongId: string | null = null;
+	private readonly prefetched: string[] = [];
 
 	get leadSongId(): string | null {
 		return this.lead?.songId ?? null;
@@ -149,8 +154,17 @@ export class AudioEngine {
 	}
 
 	private async prefetch(songId: string): Promise<void> {
-		this.prefetchedSongId = songId;
+		this.remember(songId);
 		await this.load(songId);
+	}
+
+	private remember(songId: string): void {
+		const existing = this.prefetched.indexOf(songId);
+		if (existing !== -1) {
+			this.prefetched.splice(existing, 1);
+		}
+		this.prefetched.unshift(songId);
+		this.prefetched.length = Math.min(this.prefetched.length, PREFETCH_RETAIN);
 	}
 
 	private async load(songId: string): Promise<AudioBuffer> {
@@ -185,6 +199,6 @@ export class AudioEngine {
 	}
 
 	private retained(): string[] {
-		return [this.leadSongId, this.prefetchedSongId].filter((id): id is string => id !== null);
+		return [this.leadSongId, ...this.prefetched].filter((id): id is string => id !== null);
 	}
 }
