@@ -747,7 +747,12 @@
 		min-height: 0;
 		overflow-y: auto;
 		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
 		padding: 0.85rem 0.85rem 1.2rem;
+	}
+
+	.deck::-webkit-scrollbar {
+		display: none;
 	}
 
 	/* ---------- Section tabs (below the deck) ---------- */
