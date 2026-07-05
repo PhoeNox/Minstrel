@@ -6,35 +6,43 @@ public static class PlaybackTimeline
 {
 	public const double FadeSeconds = 5;
 
-	public static PlaybackState Play(PlaybackState state, string songId, long now) =>
-		PlayAt(state, songId, offset: 0, now);
+	public static PlaybackState Play(PlaybackState state, string songId, long now) 
+		=> PlayAt(state, songId, offset: 0, now);
 
-	public static PlaybackState PlayAt(PlaybackState state, string songId, double offset, long now) =>
-		state with { Position = new PositionAnchor(songId, offset, AnchorTimestamp: now, IsPlaying: true) };
-
-	public static PlaybackState Pause(PlaybackState state, long now) =>
-		state with
+	public static PlaybackState PlayAt(PlaybackState state, string songId, double offset, long now)
+	{
+		return state with
 		{
-			Position = state.Position with
-			{
-				Offset = DerivePosition(state.Position, now),
-				AnchorTimestamp = now,
-				IsPlaying = false,
-			},
+				Position = new PositionAnchor(songId, offset, AnchorTimestamp: now, IsPlaying: true),
 		};
+	}
 
-	public static PlaybackState Resume(PlaybackState state, long now) =>
-		state.Position.SongId is null
-			? state
-			: state with { Position = state.Position with { AnchorTimestamp = now, IsPlaying = true } };
+	public static PlaybackState Pause(PlaybackState state, long now)
+	{
+		return state with
+		{
+				Position = state.Position with
+				{
+						Offset = DerivePosition(state.Position, now),
+						AnchorTimestamp = now,
+						IsPlaying = false,
+				},
+		};
+	}
+
+	public static PlaybackState Resume(PlaybackState state, long now)
+	{
+		return state.Position.SongId is null
+				? state
+				: state with {Position = state.Position with {AnchorTimestamp = now, IsPlaying = true}};
+	}
 
 	public static PlaybackState Select(PlaybackState state, GamePhase phase, int index, Track? track, long now)
 	{
 		var selected = WithPhase(state, phase, playback => playback with { Cursor = index, ResumeOffset = 0 });
 		if (phase != state.ActivePhase)
 			return selected;
-
-		return track is { } song ? Play(selected, song.Id, now) : selected;
+		return track != null ? Play(selected, track.Id, now) : selected;
 	}
 
 	public static PlaybackState SwitchPhase(PlaybackState state, Track? activeCurrent, Track? targetCurrent, long now)
@@ -46,20 +54,20 @@ public static class PlaybackTimeline
 			: PlayAt(remembered, targetCurrent.Id, state.Phase(target).ResumeOffset, now);
 	}
 
-	public static PlaybackState SetGain(PlaybackState state, GamePhase phase, double gain) =>
-		WithPhase(state, phase, playback => playback with { Gain = gain });
+	public static PlaybackState SetGain(PlaybackState state, GamePhase phase, double gain) 
+		=> WithPhase(state, phase, playback => playback with { Gain = gain });
 
-	public static PlaybackState ReindexAfterAdd(PlaybackState state, GamePhase phase) =>
-		WithPhase(state, phase, playback => playback with { Cursor = playback.Cursor ?? 0 });
+	public static PlaybackState ReindexAfterAdd(PlaybackState state, GamePhase phase) 
+		=> WithPhase(state, phase, playback => playback with { Cursor = playback.Cursor ?? 0 });
 
-	public static PlaybackState ReindexAfterMove(PlaybackState state, GamePhase phase, int oldIndex, int newIndex, int length) =>
-		WithCursor(state, phase, RemapCursor(state.Cursor(phase), oldIndex, newIndex, length));
+	public static PlaybackState ReindexAfterMove(PlaybackState state, GamePhase phase, int oldIndex, int newIndex, int length) 
+		=> WithCursor(state, phase, RemapCursor(state.Cursor(phase), oldIndex, newIndex, length));
 
-	public static PlaybackState ReindexAfterShuffle(PlaybackState state, GamePhase phase, int[] permutation) =>
-		WithCursor(
-			state,
-			phase,
-			state.Cursor(phase) is { } cursor ? Array.IndexOf(permutation, cursor) : null);
+	public static PlaybackState ReindexAfterShuffle(PlaybackState state, GamePhase phase) 
+		=> WithCursor(state, phase, state.Cursor(phase) is null ? null : 0);
+
+	public static int? CursorOfStartedSong(PlaybackState state, GamePhase phase) 
+		=> HasStartedCurrentSong(state, phase) ? state.Cursor(phase) : null;
 
 	public static PlaybackState ReindexAfterRemove(
 		PlaybackState state,
@@ -94,22 +102,32 @@ public static class PlaybackTimeline
 			: state with { Position = state.Position with { Offset = elapsed, AnchorTimestamp = now } };
 	}
 
-	public static bool PlaybackJumped(PlaybackState before, PlaybackState after, long now) =>
-		before.CurrentSongId != after.CurrentSongId
-		|| DerivePosition(after.Position, now) < DerivePosition(before.Position, now);
+	public static bool PlaybackJumped(PlaybackState before, PlaybackState after, long now)
+	{
+		return before.CurrentSongId != after.CurrentSongId
+		       || DerivePosition(after.Position, now) < DerivePosition(before.Position, now);
+	}
 
-	public static double DerivePosition(PositionAnchor anchor, long now) =>
-		anchor.IsPlaying
-			? anchor.Offset + ((now - anchor.AnchorTimestamp) / 1000.0)
-			: anchor.Offset;
+	public static double DerivePosition(PositionAnchor anchor, long now)
+	{
+		return anchor.IsPlaying
+				? anchor.Offset + (now - anchor.AnchorTimestamp) / 1000.0
+				: anchor.Offset;
+	}
 
 	private static PlaybackState Advance(PlaybackState state, Track[] activeTracks, long now)
 	{
 		if (state.ActiveCursor is not { } index || activeTracks.Length == 0)
 			return state;
-
 		var nextIndex = (index + 1) % activeTracks.Length;
 		return Select(state, state.ActivePhase, nextIndex, activeTracks[nextIndex], now);
+	}
+
+	private static bool HasStartedCurrentSong(PlaybackState state, GamePhase phase)
+	{
+		return phase == state.ActivePhase
+				? state.Position.SongId is not null
+				: state.Phase(phase).ResumeOffset > 0;
 	}
 
 	private static PlaybackState RememberResumeOffset(PlaybackState state, Track? activeCurrent, long now)
@@ -130,8 +148,8 @@ public static class PlaybackTimeline
 			? state with { Day = transform(state.Day) }
 			: state with { Night = transform(state.Night) };
 
-	private static PlaybackState WithCursor(PlaybackState state, GamePhase phase, int? cursor) =>
-		WithPhase(state, phase, playback => playback with { Cursor = cursor });
+	private static PlaybackState WithCursor(PlaybackState state, GamePhase phase, int? cursor) 
+		=> WithPhase(state, phase, playback => playback with { Cursor = cursor });
 
 	private static int? RemapCursor(int? cursor, int oldIndex, int newIndex, int length)
 	{
@@ -161,6 +179,6 @@ public static class PlaybackTimeline
 		return index < remaining ? index : 0;
 	}
 
-	private static Track? At(Track[] tracks, int? index) =>
-		index is { } i && i >= 0 && i < tracks.Length ? tracks[i] : null;
+	private static Track? At(Track[] tracks, int? index) 
+		=> index is { } i and >= 0 && i < tracks.Length ? tracks[i] : null;
 }

@@ -12,7 +12,7 @@ public class Shuffling
 	{
 		var entries = Songs("a", "b", "c", "d", "e");
 
-		var (shuffled, _) = Playlists.Shuffle(entries, new Random(1));
+		var shuffled = Playlists.Shuffle(entries, pinnedIndex: null, new Random(1));
 
 		var entryIds = shuffled.Select(entry => entry.Id).ToArray();
 		await Assert.That(entryIds).HasCount(5)
@@ -28,11 +28,37 @@ public class Shuffling
 	{
 		var entries = Songs("a", "b", "c", "d", "e");
 
-		var (first, _) = Playlists.Shuffle(entries, new Random(42));
-		var (second, _) = Playlists.Shuffle(entries, new Random(42));
+		var first = Playlists.Shuffle(entries, pinnedIndex: null, new Random(42));
+		var second = Playlists.Shuffle(entries, pinnedIndex: null, new Random(42));
 
 		var firstOrder = string.Join(",", first.Select(entry => entry.Id));
 		var secondOrder = string.Join(",", second.Select(entry => entry.Id));
 		await Assert.That(firstOrder).IsEqualTo(secondOrder);
+	}
+
+	[Test]
+	public async Task PlacesThePinnedEntryFirst()
+	{
+		var entries = Songs("a", "b", "c", "d", "e");
+
+		var shuffled = Playlists.Shuffle(entries, pinnedIndex: 2, new Random(1));
+
+		await Assert.That(shuffled[0].Id).IsEqualTo("c");
+	}
+
+	[Test]
+	public async Task KeepsEveryEntryWhenPinning()
+	{
+		var entries = Songs("a", "b", "c", "d", "e");
+
+		var shuffled = Playlists.Shuffle(entries, pinnedIndex: 4, new Random(3));
+
+		var entryIds = shuffled.Select(entry => entry.Id).ToArray();
+		await Assert.That(entryIds).HasCount(5)
+				.And.Contains("a")
+				.And.Contains("b")
+				.And.Contains("c")
+				.And.Contains("d")
+				.And.Contains("e");
 	}
 }

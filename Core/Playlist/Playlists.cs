@@ -32,15 +32,22 @@ public static class Playlists
 		return list.ToArray();
 	}
 
-	public static (PlaylistEntry[] Entries, int[] Permutation) Shuffle(PlaylistEntry[] entries, Random random)
+	public static PlaylistEntry[] Shuffle(PlaylistEntry[] entries, int? pinnedIndex, Random random)
 	{
-		var permutation = Enumerable.Range(0, entries.Length).ToArray();
-		for (var i = permutation.Length - 1; i > 0; i--)
+		var order = Enumerable.Range(0, entries.Length).ToArray();
+		var start = 0;
+		if (pinnedIndex is { } pinned)
 		{
-			var j = random.Next(i + 1);
-			(permutation[i], permutation[j]) = (permutation[j], permutation[i]);
+			(order[0], order[pinned]) = (order[pinned], order[0]);
+			start = 1;
 		}
 
-		return (permutation.Select(index => entries[index]).ToArray(), permutation);
+		for (var i = order.Length - 1; i > start; i--)
+		{
+			var j = start + random.Next(i - start + 1);
+			(order[i], order[j]) = (order[j], order[i]);
+		}
+
+		return order.Select(index => entries[index]).ToArray();
 	}
 }

@@ -159,9 +159,10 @@ public sealed class PlaybackSession(
 	{
 		lock (gate)
 		{
-			var (shuffled, permutation) = Playlists.Shuffle(playlists.Entries(phase), Random.Shared);
+			var pinned = PlaybackTimeline.CursorOfStartedSong(playback, phase);
+			var shuffled = Playlists.Shuffle(playlists.Entries(phase), pinned, Random.Shared);
 			playlists = playlists.Replace(phase, shuffled);
-			playback = PlaybackTimeline.ReindexAfterShuffle(playback, phase, permutation);
+			playback = PlaybackTimeline.ReindexAfterShuffle(playback, phase);
 			Save(phase, shuffled);
 			Broadcast();
 		}
