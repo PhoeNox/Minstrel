@@ -3,11 +3,6 @@ import { FADE_SECONDS, type AudioOperation } from './reconciler';
 
 const GAIN_RAMP_SECONDS = 0.3;
 
-// The reconciler warms two buffers ahead of the lead — the active playlist's
-// next song and the inactive phase's Current Entry — so both are held against
-// eviction until a fresher prefetch displaces them.
-const PREFETCH_RETAIN = 2;
-
 interface Voice {
 	source: AudioBufferSourceNode;
 	gain: GainNode;
@@ -33,7 +28,7 @@ export class AudioEngine {
 	private gongBuffer: AudioBuffer | null = null;
 	private leadHandle: number | null = null;
 	private nextHandle = 0;
-	private readonly prefetched: string[] = [];
+	private retainedIds: string[] = [];
 
 	get leadSongId(): string | null {
 		return this.lead?.songId ?? null;
@@ -52,6 +47,10 @@ export class AudioEngine {
 		return [...this.buffers.keys()];
 	}
 
+	get retainedSongIds(): string[] {
+		return [...this.retainedIds];
+	}
+
 	private get lead(): Voice | null {
 		return this.leadHandle === null ? null : this.voices.get(this.leadHandle) ?? null;
 	}
@@ -62,8 +61,10 @@ export class AudioEngine {
 				await this.play(operation.songId, operation.offset, operation.gain);
 			} else if (operation.type === 'set-gain') {
 				this.setLeadGain(operation.gain);
+			} else if (operation.type === 'retain') {
+				this.retainedIds = [...operation.songIds];
 			} else if (operation.type === 'prefetch') {
-				await this.prefetch(operation.songId);
+				await this.load(operation.songId);
 			} else {
 				this.fadeOutLead();
 			}
@@ -158,20 +159,6 @@ export class AudioEngine {
 		}
 	}
 
-	private async prefetch(songId: string): Promise<void> {
-		this.remember(songId);
-		await this.load(songId);
-	}
-
-	private remember(songId: string): void {
-		const existing = this.prefetched.indexOf(songId);
-		if (existing !== -1) {
-			this.prefetched.splice(existing, 1);
-		}
-		this.prefetched.unshift(songId);
-		this.prefetched.length = Math.min(this.prefetched.length, PREFETCH_RETAIN);
-	}
-
 	private async load(songId: string): Promise<AudioBuffer> {
 		const cached = this.buffers.get(songId);
 		if (cached) {
@@ -204,6 +191,6 @@ export class AudioEngine {
 	}
 
 	private retained(): string[] {
-		return [this.leadSongId, ...this.prefetched].filter((id): id is string => id !== null);
+		return [this.leadSongId, ...this.retainedIds].filter((id): id is string => id !== null);
 	}
 }

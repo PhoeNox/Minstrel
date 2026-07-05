@@ -23,6 +23,7 @@ class FakeEngine implements SyncEngine {
 	leadPosition: number | null = null;
 	leadGain: number | null = null;
 	loadedSongIds: string[] = [];
+	retainedSongIds: string[] = [];
 	readonly applied: AudioOperation[][] = [];
 	rejection: unknown = null;
 	private gate: (() => void) | null = null;

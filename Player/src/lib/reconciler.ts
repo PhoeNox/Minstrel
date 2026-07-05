@@ -7,6 +7,7 @@ export type AudioOperation =
 	| { type: 'play'; songId: string; offset: number; gain: number }
 	| { type: 'set-gain'; gain: number }
 	| { type: 'stop' }
+	| { type: 'retain'; songIds: string[] }
 	| { type: 'prefetch'; songId: string };
 
 export interface AudioGraph {
@@ -14,6 +15,7 @@ export interface AudioGraph {
 	leadPosition: number | null;
 	leadGain: number | null;
 	loadedSongIds: string[];
+	retainedSongIds: string[];
 }
 
 export function reconcile(desired: PlaybackState, current: AudioGraph, now: number): AudioOperation[] {
@@ -35,7 +37,11 @@ export function reconcile(desired: PlaybackState, current: AudioGraph, now: numb
 		operations.push({ type: 'set-gain', gain });
 	}
 
-	for (const songId of warmTargets(desired, wanted, next)) {
+	const targets = warmTargets(desired, wanted, next);
+	if (!sameMembers(targets, current.retainedSongIds)) {
+		operations.push({ type: 'retain', songIds: targets });
+	}
+	for (const songId of targets) {
 		if (!current.loadedSongIds.includes(songId)) {
 			operations.push({ type: 'prefetch', songId });
 		}
@@ -44,11 +50,17 @@ export function reconcile(desired: PlaybackState, current: AudioGraph, now: numb
 	return operations;
 }
 
+function sameMembers(a: string[], b: string[]): boolean {
+	return a.length === b.length && a.every((id) => b.includes(id));
+}
+
 // The two buffers worth warming ahead of need: the active playlist's next song
 // (auto-advance) and the inactive phase's Current Entry (so a phase switch can
-// crossfade at once instead of stalling on a cold fetch + decode). Prefetch ops
-// follow the play/gain op so a switch begins fading immediately and the warming
-// loads behind it.
+// crossfade at once instead of stalling on a cold fetch + decode). The retain
+// op replaces the engine's retained set with these targets before any prefetch
+// load runs, so eviction during a warming load can never drop a buffer that is
+// still wanted. Prefetch ops follow the play/gain op so a switch begins fading
+// immediately and the warming loads behind it.
 function warmTargets(desired: PlaybackState, wanted: string, next: string | null): string[] {
 	const targets: string[] = [];
 	if (next !== null && next !== wanted) {
