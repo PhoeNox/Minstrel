@@ -58,6 +58,12 @@ function fakeEngine(): FakeEngine {
 		setGain(gain: number) {
 			calls.push(`setGain ${gain}`);
 		},
+		scheduleGong(afterSeconds: number, gain: number) {
+			calls.push(`scheduleGong @${afterSeconds} g${gain}`);
+		},
+		cancelGong() {
+			calls.push('cancelGong');
+		},
 		onEnded: () => {},
 		onMediaPlay: () => {},
 		onMediaPause: () => {},

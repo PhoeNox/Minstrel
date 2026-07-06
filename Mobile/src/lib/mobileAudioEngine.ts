@@ -7,6 +7,7 @@
 
 export const FADE_SECONDS = 5;
 const GAIN_RAMP_SECONDS = 0.3;
+const GONG_URL = '/gong.mp3';
 
 // The denormalized song the engine needs to play one entry and label it on the lock screen.
 export interface EngineTrack {
@@ -23,6 +24,11 @@ export interface PlaybackEngine {
 	pause(): void;
 	stop(): void;
 	setGain(gain: number): void;
+	// The Gong one-shot, armed on the AudioContext clock `afterSeconds` ahead so it still
+	// sounds when the Timer expires with the app backgrounded (where a JS interval is
+	// throttled or paused); cancelGong disarms it if the Timer is stopped before expiry.
+	scheduleGong(afterSeconds: number, gain: number): void;
+	cancelGong(): void;
 	readonly currentSongId: string | null;
 	// Raised when the lead song reaches its natural end, or the lock-screen transport is used.
 	onEnded: () => void;
@@ -47,6 +53,8 @@ export class MobileAudioEngine implements PlaybackEngine {
 	private readonly context = new AudioContext();
 	private readonly channels: [Channel, Channel];
 	private leadIndex: number | null = null;
+	private gongBuffer: AudioBuffer | null = null;
+	private gongSource: AudioBufferSourceNode | null = null;
 
 	onEnded: () => void = () => {};
 	onMediaPlay: () => void = () => {};
@@ -101,6 +109,54 @@ export class MobileAudioEngine implements PlaybackEngine {
 		lead.gain.gain.cancelScheduledValues(now);
 		lead.gain.gain.setValueAtTime(lead.gain.gain.value, now);
 		lead.gain.gain.linearRampToValueAtTime(gain, now + GAIN_RAMP_SECONDS);
+	}
+
+	async scheduleGong(afterSeconds: number, gain: number): Promise<void> {
+		this.cancelGong();
+		await this.resume();
+		// Anchor the play time before awaiting the decode so a first-timer decode does not
+		// push the Gong late; a re-used buffer resolves instantly and the anchor is exact.
+		const startAt = this.context.currentTime + afterSeconds;
+		const buffer = await this.loadGong();
+		const source = this.context.createBufferSource();
+		source.buffer = buffer;
+		const amplifier = this.context.createGain();
+		amplifier.gain.value = gain;
+		source.connect(amplifier).connect(this.context.destination);
+		source.onended = () => {
+			source.disconnect();
+			amplifier.disconnect();
+			if (this.gongSource === source) {
+				this.gongSource = null;
+			}
+		};
+		source.start(Math.max(startAt, this.context.currentTime));
+		this.gongSource = source;
+	}
+
+	cancelGong(): void {
+		if (this.gongSource === null) {
+			return;
+		}
+		try {
+			// stop() cancels a still-pending start as well as halting a sounding Gong.
+			this.gongSource.stop();
+		} catch {
+			// stop() throws only if the source already ended; onended has cleared it, so ignore.
+		}
+		this.gongSource = null;
+	}
+
+	private async loadGong(): Promise<AudioBuffer> {
+		if (this.gongBuffer !== null) {
+			return this.gongBuffer;
+		}
+		const response = await fetch(GONG_URL);
+		if (!response.ok) {
+			throw new Error(`Gong fetch failed (${response.status})`);
+		}
+		this.gongBuffer = await this.context.decodeAudioData(await response.arrayBuffer());
+		return this.gongBuffer;
 	}
 
 	private get lead(): Channel | null {

@@ -7,7 +7,7 @@
 	import Playlist from '$shared/ui/Playlist.svelte';
 	import { commandError, report } from '$shared/ui/commandError';
 	import { emptyState, type PlaybackState } from '$shared/ui/state';
-	import { derivePosition } from '$shared/core';
+	import { derivePosition, deriveTimeLeft, formatTimeLeft, type TimerAnchor } from '$shared/core';
 
 	type Tab = 'day' | 'night' | 'library';
 
@@ -16,6 +16,9 @@
 	let ready = $state(false);
 
 	let snapshot = $state<PlaybackState>(emptyState);
+	let timerAnchor = $state<TimerAnchor | null>(null);
+	let durationMinutes = $state(5);
+	let timerDialogOpen = $state(false);
 	let now = $state(Date.now());
 	let songs: SongRecord[] = $state([]);
 	let evicted: SongRecord[] = $state([]);
@@ -47,16 +50,27 @@
 	);
 	let canPlay = $derived(activePlaylist.currentIndex !== null);
 
+	// The countdown display derives from the anchor against the same 250ms ticker as the
+	// position; the ticker also polls `tick()` so an expired timer retires itself.
+	let timeLeft = $derived(timerAnchor ? deriveTimeLeft(timerAnchor, now) : null);
+	let timerRunning = $derived(timeLeft !== null);
+	let urgent = $derived(timeLeft !== null && timeLeft <= 10);
+
 	onMount(() => {
 		store = browserMusicStore();
 		const engine = new MobileAudioEngine((id) => store.audioBlob(id));
 		session = createLocalSession(store, () => Date.now(), Math.random, engine);
 		pickerFolders = supportsDirectoryPicker();
 		const unsubscribe = session.snapshot.subscribe((next) => (snapshot = next.state));
-		const ticker = setInterval(() => (now = Date.now()), 250);
+		const unsubscribeTimer = session.timer.subscribe((next) => (timerAnchor = next));
+		const ticker = setInterval(() => {
+			now = Date.now();
+			session?.tick();
+		}, 250);
 		void start();
 		return () => {
 			unsubscribe();
+			unsubscribeTimer();
 			clearInterval(ticker);
 		};
 	});
@@ -64,6 +78,22 @@
 	function togglePlay(): void {
 		if (!session) return;
 		void report(snapshot.isPlaying ? session.pause() : session.play());
+	}
+
+	function stepMinutes(delta: number): void {
+		durationMinutes = Math.min(180, Math.max(1, durationMinutes + delta));
+	}
+
+	function handleStartTimer(): void {
+		if (!session) return;
+		void report(session.startTimer(durationMinutes * 60));
+		timerDialogOpen = false;
+	}
+
+	function handleStopTimer(): void {
+		if (!session) return;
+		void report(session.stopTimer());
+		timerDialogOpen = false;
 	}
 
 	async function start(): Promise<void> {
@@ -139,6 +169,10 @@
 		return `${minutes}:${remainder.toString().padStart(2, '0')}`;
 	}
 </script>
+
+<svelte:window
+	onkeydown={(e) => e.key === 'Escape' && timerDialogOpen && (timerDialogOpen = false)}
+/>
 
 <div class="app" class:night={tab === 'night'}>
 	<header class="head">
@@ -247,6 +281,33 @@
 		>
 			<span class="switch-glyph">{snapshot.phase === 'Night' ? '☀' : '☾'}</span>
 		</button>
+		<button
+			class="timerbtn"
+			class:running={timerRunning}
+			class:urgent
+			aria-label="Timer"
+			onclick={() => (timerDialogOpen = true)}
+		>
+			{#if timeLeft !== null}
+				<span class="timerbtn-clock">{formatTimeLeft(timeLeft)}</span>
+			{:else}
+				<svg
+					class="timerbtn-glyph"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true"
+				>
+					<line x1="9" y1="2" x2="15" y2="2" />
+					<line x1="12" y1="2" x2="12" y2="4.5" />
+					<circle cx="12" cy="14" r="8" />
+					<line x1="12" y1="14" x2="12" y2="9.5" />
+				</svg>
+			{/if}
+		</button>
 	</footer>
 
 	<nav class="tabbar">
@@ -263,6 +324,31 @@
 			<span class="tab-label">Library</span>
 		</button>
 	</nav>
+
+	{#if timerDialogOpen}
+		<div
+			class="scrim"
+			role="presentation"
+			onclick={(e) => e.target === e.currentTarget && (timerDialogOpen = false)}
+		>
+			<div class="dialog" role="dialog" aria-label="Timer" tabindex="-1">
+				<p class="dialog-title">Timer</p>
+				{#if timeLeft !== null}
+					<span class="dialog-clock" class:urgent>{formatTimeLeft(timeLeft)}</span>
+					<button class="timer-stop" onclick={handleStopTimer}>Stop timer</button>
+				{:else}
+					<div class="stepper">
+						<span class="step-value">{durationMinutes}<small>min</small></span>
+						<div class="step-row">
+							<button class="step" onclick={() => stepMinutes(-1)} aria-label="Less time">−</button>
+							<button class="step" onclick={() => stepMinutes(1)} aria-label="More time">+</button>
+						</div>
+					</div>
+					<button class="timer-start" onclick={handleStartTimer}>Start timer</button>
+				{/if}
+			</div>
+		</div>
+	{/if}
 
 	{#if error}
 		<div class="toast" role="alert">{error}</div>
@@ -625,6 +711,175 @@
 		color: var(--accent);
 		font-size: 1.25rem;
 		cursor: pointer;
+	}
+
+	.timerbtn {
+		flex: none;
+		min-width: 3.4rem;
+		height: 3.4rem;
+		padding: 0 0.6rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--line);
+		border-radius: 13px;
+		background: rgba(0, 0, 0, 0.25);
+		color: var(--dim);
+		cursor: pointer;
+	}
+
+	.timerbtn-glyph {
+		width: 1.5rem;
+		height: 1.5rem;
+		color: var(--accent);
+	}
+
+	.timerbtn-clock {
+		font-family: var(--display);
+		font-weight: 700;
+		font-size: 1.1rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--accent);
+	}
+
+	.timerbtn.running {
+		border-color: rgba(var(--accent-rgb), 0.35);
+		background: rgba(var(--accent-rgb), 0.1);
+	}
+
+	.timerbtn.urgent {
+		border-color: rgba(226, 59, 52, 0.5);
+	}
+
+	.timerbtn.urgent .timerbtn-clock {
+		color: var(--blood-bright);
+		animation: throb 1s ease-in-out infinite;
+	}
+
+	@keyframes throb {
+		50% {
+			opacity: 0.45;
+		}
+	}
+
+	.scrim {
+		position: fixed;
+		inset: 0;
+		z-index: 20;
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		padding: 0.85rem;
+		padding-bottom: calc(env(safe-area-inset-bottom) + 0.85rem);
+		background: rgba(5, 3, 3, 0.62);
+		backdrop-filter: blur(2px);
+	}
+
+	.dialog {
+		width: 100%;
+		max-width: 26rem;
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 1.4rem;
+		padding: 1.6rem 1.5rem;
+		border: 1px solid var(--panel-edge);
+		border-radius: 18px;
+		background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.06), rgba(0, 0, 0, 0.2)), var(--panel);
+		box-shadow: 0 -18px 40px -16px rgba(0, 0, 0, 0.7);
+	}
+
+	.dialog-title {
+		margin: 0;
+		font-family: var(--display);
+		font-weight: 600;
+		font-size: 1rem;
+		letter-spacing: 0.28em;
+		text-transform: uppercase;
+		color: var(--accent);
+		text-align: center;
+	}
+
+	.dialog-clock {
+		font-family: var(--display);
+		font-weight: 700;
+		font-size: 5rem;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+		color: var(--accent);
+		text-align: center;
+	}
+
+	.dialog-clock.urgent {
+		color: var(--blood-bright);
+		animation: throb 1s ease-in-out infinite;
+	}
+
+	.stepper {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.9rem;
+	}
+
+	.step-value {
+		text-align: center;
+		font-family: var(--display);
+		font-weight: 600;
+		font-size: 3.4rem;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+		color: var(--text);
+	}
+
+	.step-value small {
+		font-family: var(--body);
+		font-size: 1.1rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--muted);
+		margin-left: 0.4rem;
+	}
+
+	.step-row {
+		display: flex;
+		gap: 0.9rem;
+	}
+
+	.step {
+		flex: 1;
+		height: 3.6rem;
+		border: 1px solid var(--line);
+		border-radius: 13px;
+		background: var(--row);
+		color: var(--accent);
+		font-size: 2rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	.step:active {
+		background: rgba(var(--accent-rgb), 0.16);
+	}
+
+	.timer-start,
+	.timer-stop {
+		width: 100%;
+		height: 3.7rem;
+		padding: 0 1.1rem;
+		border-radius: 13px;
+		border: 1px solid rgba(var(--accent-rgb), 0.35);
+		background: rgba(var(--accent-rgb), 0.12);
+		color: var(--accent);
+		font-family: var(--body);
+		font-size: 1.25rem;
+		letter-spacing: 0.04em;
+		cursor: pointer;
+	}
+
+	.timer-start:active,
+	.timer-stop:active {
+		background: rgba(var(--accent-rgb), 0.22);
 	}
 
 	.tabbar {

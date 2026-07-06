@@ -1,13 +1,16 @@
 import { writable, type Readable } from 'svelte/store';
 import {
+	countdownTimer,
 	derivePosition,
 	IDLE_PLAYBACK,
+	IDLE_TIMER,
 	playbackTimeline,
 	playlists,
 	type GamePhase,
 	type PlaybackState as CoreState,
 	type PlaylistEntry,
 	type Rng,
+	type TimerAnchor,
 	type Track
 } from '$shared/core';
 import type { MinstrelApi, Snapshot } from '$shared/ui/minstrelApi';
@@ -23,9 +26,19 @@ export interface SessionStore {
 	saveSession(session: PersistedSession): Promise<void>;
 }
 
-// LocalSession adds one lifecycle hook over MinstrelApi: `load` hydrates the in-memory
-// state from the persisted session before the surface binds to the snapshot.
-export type LocalSession = MinstrelApi & { load(): Promise<void> };
+// The Gong gain — the Mobile analog of the Backend's configurable `GongOptions.Gain`,
+// pitched to carry over the music without startling the table.
+const GONG_GAIN = 3;
+
+// LocalSession adds three hooks over MinstrelApi: `load` hydrates the in-memory state from
+// the persisted session before the surface binds; `timer` is the countdown store the surface
+// renders (the in-process stand-in for the Backend's `/timer/sse`); `tick` is the derive
+// interval's expiry poll, the analog of `TimerSession.Tick` that retires an expired anchor.
+export type LocalSession = MinstrelApi & {
+	load(): Promise<void>;
+	tick(): void;
+	readonly timer: Readable<TimerAnchor | null>;
+};
 
 interface Book {
 	day: PlaylistEntry[];
@@ -44,7 +57,9 @@ export function createLocalSession(
 ): LocalSession {
 	let playback: CoreState = IDLE_PLAYBACK;
 	let book: Book = { day: [], night: [] };
+	let countdown: TimerAnchor = IDLE_TIMER;
 	const state = writable<Snapshot>({ state: emptyState, connected: true });
+	const timer = writable<TimerAnchor | null>(null);
 
 	function entries(phase: GamePhase): PlaylistEntry[] {
 		return phase === 'Day' ? book.day : book.night;
@@ -127,6 +142,12 @@ export function createLocalSession(
 		state.set({ state: toSnapshot(), connected: true });
 	}
 
+	// The countdown surfaces as a nullable anchor, matching the Backend's timer wire shape
+	// (a running anchor, or null when idle) so the shared countdown derivations read alike.
+	function publishTimer(): void {
+		timer.set(countdown.running ? countdown : null);
+	}
+
 	function toSnapshot(): PlaybackState {
 		return {
 			phase: playback.activePhase,
@@ -149,6 +170,7 @@ export function createLocalSession(
 
 	const api: LocalSession = {
 		snapshot: { subscribe: state.subscribe } as Readable<Snapshot>,
+		timer: { subscribe: timer.subscribe } as Readable<TimerAnchor | null>,
 
 		async load() {
 			const persisted = await store.loadSession();
@@ -266,10 +288,31 @@ export function createLocalSession(
 			await persist();
 		},
 
-		// The Timer is a separate concern built on this coordinator in a later slice; the
-		// playlist-management surface never raises these.
-		async startTimer() {},
-		async stopTimer() {}
+		// The countdown runs concurrently with playback off the same coordinator: start arms
+		// the anchor and the Gong (pre-scheduled on the audio clock so a backgrounded expiry
+		// still sounds); stop retires both. No persistence — a countdown does not outlive a
+		// restart, matching the Backend's in-memory TimerSession.
+		async startTimer(duration) {
+			countdown = countdownTimer.start(duration, now());
+			publishTimer();
+			engine?.scheduleGong(duration, GONG_GAIN);
+		},
+
+		async stopTimer() {
+			countdown = IDLE_TIMER;
+			publishTimer();
+			engine?.cancelGong();
+		},
+
+		// The derive interval's expiry poll: once the anchor has run out, retire it so the
+		// surface returns to idle. The Gong is not fired here — it was armed at start — so a
+		// throttled background interval delays only the visual reset, never the cue.
+		tick() {
+			if (countdown.running && countdownTimer.hasExpired(countdown, now())) {
+				countdown = IDLE_TIMER;
+				publishTimer();
+			}
+		}
 	};
 
 	// The engine's own events fold back into the coordinator: a song ending or the
