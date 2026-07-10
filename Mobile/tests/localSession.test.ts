@@ -129,7 +129,7 @@ describe('moveSong', () => {
 });
 
 describe('shuffle', () => {
-	it('keeps the current entry on its song through a shuffle', async () => {
+	it('keeps a started song first when shuffling', async () => {
 		const session = newSession([song('a'), song('b'), song('c')]);
 		await session.addSong('Day', 'a');
 		await session.addSong('Day', 'b');
@@ -140,8 +140,23 @@ describe('shuffle', () => {
 
 		const day = dayOf(session);
 		expect(day.songs).toHaveLength(3);
-		expect(day.songs[day.currentIndex!].id).toBe('b');
+		expect(day.currentIndex).toBe(0);
+		expect(day.songs[0].id).toBe('b');
 		expect(get(session.snapshot).state.currentSongId).toBe('b');
+	});
+
+	it('promotes the shuffled front when no song has started', async () => {
+		const session = newSession([song('a'), song('b'), song('c')]);
+		await session.addSong('Day', 'a');
+		await session.addSong('Day', 'b');
+		await session.addSong('Day', 'c');
+
+		await session.shuffle('Day');
+
+		const day = dayOf(session);
+		expect(day.songs).toHaveLength(3);
+		expect(day.currentIndex).toBe(0);
+		expect(get(session.snapshot).state.currentSongId).toBeNull();
 	});
 });
 

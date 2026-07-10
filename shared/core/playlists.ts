@@ -34,14 +34,20 @@ export function move(entries: PlaylistEntry[], oldIndex: number, newIndex: numbe
 
 export function shuffle(
 	entries: PlaylistEntry[],
+	pinnedIndex: number | null,
 	rng: Rng
-): { entries: PlaylistEntry[]; permutation: number[] } {
-	const permutation = entries.map((_, index) => index);
-	for (let i = permutation.length - 1; i > 0; i--) {
-		const j = Math.floor(rng() * (i + 1));
-		[permutation[i], permutation[j]] = [permutation[j], permutation[i]];
+): PlaylistEntry[] {
+	const order = entries.map((_, index) => index);
+	let start = 0;
+	if (pinnedIndex !== null) {
+		[order[0], order[pinnedIndex]] = [order[pinnedIndex], order[0]];
+		start = 1;
 	}
-	return { entries: permutation.map((index) => entries[index]), permutation };
+	for (let i = order.length - 1; i > start; i--) {
+		const j = start + Math.floor(rng() * (i - start + 1));
+		[order[i], order[j]] = [order[j], order[i]];
+	}
+	return order.map((index) => entries[index]);
 }
 
 function clamp(value: number, low: number, high: number): number {

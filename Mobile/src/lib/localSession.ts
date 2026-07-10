@@ -235,9 +235,10 @@ export function createLocalSession(
 		},
 
 		async shuffle(phase) {
-			const { entries: shuffled, permutation } = playlists.shuffle(entries(phase), rng);
+			const pinned = playbackTimeline.cursorOfStartedSong(playback, phase);
+			const shuffled = playlists.shuffle(entries(phase), pinned, rng);
 			replace(phase, shuffled);
-			playback = playbackTimeline.reindexAfterShuffle(playback, phase, permutation);
+			playback = playbackTimeline.reindexAfterShuffle(playback, phase);
 			publish();
 			renderAudio();
 			await persist();

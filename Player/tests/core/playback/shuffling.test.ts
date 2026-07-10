@@ -1,52 +1,85 @@
 import { describe, expect, it } from 'vitest';
 import * as playbackTimeline from '$shared/core/playbackTimeline';
-import * as playlists from '$shared/core/playlists';
-import { IDLE_PLAYBACK, type PlaybackState, type PlaylistEntry } from '$shared/core';
-import { entry, seededRng } from '../fixtures';
+import { IDLE_PLAYBACK, type PlaybackState } from '$shared/core';
 
-function activePlaying(
-	cursor: number,
-	...ids: string[]
-): { entries: PlaylistEntry[]; state: PlaybackState } {
-	const entries = ids.map((id) => entry(id, 100));
-	const state = playbackTimeline.playAt(
+function activePlaying(cursor: number, songId: string): PlaybackState {
+	return playbackTimeline.playAt(
 		{ ...IDLE_PLAYBACK, day: { cursor, gain: 1.0, resumeOffset: 0 } },
-		ids[cursor],
+		songId,
 		30,
 		1000
 	);
-	return { entries, state };
 }
 
+describe('cursorOfStartedSong', () => {
+	it('pins the active phase cursor when its song is playing', () => {
+		const state = activePlaying(1, 'b');
+
+		const pinned = playbackTimeline.cursorOfStartedSong(state, 'Day');
+
+		expect(pinned).toBe(1);
+	});
+
+	it('pins the active phase cursor when its song is paused midway', () => {
+		const state = playbackTimeline.pause(activePlaying(2, 'c'), 2000);
+
+		const pinned = playbackTimeline.cursorOfStartedSong(state, 'Day');
+
+		expect(pinned).toBe(2);
+	});
+
+	it('pins nothing when the active phase never started a song', () => {
+		const state = { ...IDLE_PLAYBACK, day: { cursor: 1, gain: 1.0, resumeOffset: 0 } };
+
+		const pinned = playbackTimeline.cursorOfStartedSong(state, 'Day');
+
+		expect(pinned).toBeNull();
+	});
+
+	it('pins the inactive phase cursor when its song was started before switching away', () => {
+		const state = { ...IDLE_PLAYBACK, night: { cursor: 2, gain: 1.0, resumeOffset: 35 } };
+
+		const pinned = playbackTimeline.cursorOfStartedSong(state, 'Night');
+
+		expect(pinned).toBe(2);
+	});
+
+	it('pins nothing when the inactive phase song never started', () => {
+		const state = { ...IDLE_PLAYBACK, night: { cursor: 2, gain: 1.0, resumeOffset: 0 } };
+
+		const pinned = playbackTimeline.cursorOfStartedSong(state, 'Night');
+
+		expect(pinned).toBeNull();
+	});
+});
+
 describe('reindexAfterShuffle', () => {
-	it('tracks the current entry to its new index without disturbing playback', () => {
-		const { entries, state } = activePlaying(1, 'a', 'b', 'c', 'd', 'e');
+	it('moves the cursor to the front without disturbing playback', () => {
+		const state = activePlaying(3, 'd');
 
-		const { entries: shuffled, permutation } = playlists.shuffle(entries, seededRng(12345));
-		const reindexed = playbackTimeline.reindexAfterShuffle(state, 'Day', permutation);
+		const reindexed = playbackTimeline.reindexAfterShuffle(state, 'Day');
 
-		expect(shuffled[reindexed.day.cursor!].id).toBe('b');
-		expect(reindexed.position.songId).toBe('b');
+		expect(reindexed.day.cursor).toBe(0);
 		expect(reindexed.position).toEqual(state.position);
 	});
 
-	it('preserves the inactive playlist current entry', () => {
-		const night = ['x', 'y', 'z', 'w'].map((id) => entry(id, 100));
-		const state = playbackTimeline.playAt(
-			{
-				...IDLE_PLAYBACK,
-				day: { cursor: 0, gain: 1.0, resumeOffset: 0 },
-				night: { cursor: 2, gain: 1.0, resumeOffset: 0 }
-			},
-			'a',
-			30,
-			1000
-		);
+	it('moves the inactive phase cursor to the front', () => {
+		const state = {
+			...activePlaying(0, 'a'),
+			night: { cursor: 2, gain: 1.0, resumeOffset: 0 }
+		};
 
-		const { entries: shuffled, permutation } = playlists.shuffle(night, seededRng(7));
-		const reindexed = playbackTimeline.reindexAfterShuffle(state, 'Night', permutation);
+		const reindexed = playbackTimeline.reindexAfterShuffle(state, 'Night');
 
-		expect(shuffled[reindexed.night.cursor!].id).toBe('z');
+		expect(reindexed.night.cursor).toBe(0);
 		expect(reindexed.position).toEqual(state.position);
+	});
+
+	it('keeps a missing cursor missing', () => {
+		const state = IDLE_PLAYBACK;
+
+		const reindexed = playbackTimeline.reindexAfterShuffle(state, 'Day');
+
+		expect(reindexed.day.cursor).toBeNull();
 	});
 });

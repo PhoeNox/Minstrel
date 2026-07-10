@@ -1,6 +1,7 @@
 // Pure playback transforms — the TS mirror of C# `Core.Playback.PlaybackTimeline`.
 // The cursor stays index-based (ADR-0005): each reindex carries the structural detail
-// so the Current Entry follows its song across add/remove/move/shuffle.
+// so the Current Entry follows its song across add/remove/move; shuffle instead pins
+// a started song to the front and lands the cursor there.
 
 import {
 	IDLE_POSITION,
@@ -96,13 +97,12 @@ export function reindexAfterMove(
 	return withCursor(state, phase, remapCursor(cursorOf(state, phase), oldIndex, newIndex, length));
 }
 
-export function reindexAfterShuffle(
-	state: PlaybackState,
-	phase: GamePhase,
-	permutation: number[]
-): PlaybackState {
-	const cursor = cursorOf(state, phase);
-	return withCursor(state, phase, cursor === null ? null : permutation.indexOf(cursor));
+export function reindexAfterShuffle(state: PlaybackState, phase: GamePhase): PlaybackState {
+	return withCursor(state, phase, cursorOf(state, phase) === null ? null : 0);
+}
+
+export function cursorOfStartedSong(state: PlaybackState, phase: GamePhase): number | null {
+	return hasStartedCurrentSong(state, phase) ? cursorOf(state, phase) : null;
 }
 
 export function reindexAfterRemove(
@@ -170,6 +170,12 @@ export function cursorOf(state: PlaybackState, phase: GamePhase): number | null 
 
 export function activeCursor(state: PlaybackState): number | null {
 	return phaseOf(state, state.activePhase).cursor;
+}
+
+function hasStartedCurrentSong(state: PlaybackState, phase: GamePhase): boolean {
+	return phase === state.activePhase
+		? state.position.songId !== null
+		: phaseOf(state, phase).resumeOffset > 0;
 }
 
 function rememberResumeOffset(
