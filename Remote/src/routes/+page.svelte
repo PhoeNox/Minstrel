@@ -138,7 +138,7 @@
 				progress={playProgress}
 			/>
 		{:else}
-			<Library {api} songs={library} />
+			<Library {api} songs={library} playlists={snapshot.playlists} />
 		{/if}
 	</main>
 

@@ -1,14 +1,22 @@
 <script lang="ts">
 	import { report } from '$shared/ui/commandError';
 	import type { MinstrelApi } from '$shared/ui/minstrelApi';
-	import type { SongDto } from '$shared/ui/state';
+	import type { PlaylistsDto, SongDto } from '$shared/ui/state';
+	import { unusedSongs } from '$shared/ui/unused';
 
-	let { api, songs }: { api: MinstrelApi; songs: SongDto[] } = $props();
+	let {
+		api,
+		songs,
+		playlists
+	}: { api: MinstrelApi; songs: SongDto[]; playlists: PlaylistsDto } = $props();
 
 	let search = $state('');
+	let unusedOnly = $state(false);
+
+	const searchable = $derived(unusedOnly ? unusedSongs(songs, playlists) : songs);
 
 	const filtered = $derived(
-		songs.filter((song) => {
+		searchable.filter((song) => {
 			const query = search.toLowerCase();
 			return (
 				song.artist.toLowerCase().includes(query) || song.title.toLowerCase().includes(query)
@@ -27,11 +35,23 @@
 	<div class="searchbar">
 		<span class="search-glyph">⌕</span>
 		<input class="search" type="search" placeholder="Search the library…" bind:value={search} />
+		<button
+			class="chip"
+			class:on={unusedOnly}
+			aria-pressed={unusedOnly}
+			onclick={() => (unusedOnly = !unusedOnly)}>Unused</button
+		>
 		<span class="result-count">{filtered.length}</span>
 	</div>
 
 	{#if filtered.length === 0}
-		<p class="empty">{songs.length === 0 ? 'The library is empty.' : 'No matches.'}</p>
+		<p class="empty">
+			{songs.length === 0
+				? 'The library is empty.'
+				: unusedOnly && search === ''
+					? 'Every song is already in a playlist.'
+					: 'No matches.'}
+		</p>
 	{:else}
 		<ul>
 			{#each filtered as song (song.id)}
@@ -94,6 +114,24 @@
 
 	.search::-webkit-search-cancel-button {
 		filter: grayscale(1) opacity(0.5);
+	}
+
+	.chip {
+		flex: none;
+		font-family: var(--body);
+		font-size: 0.82rem;
+		color: var(--muted);
+		background: none;
+		border: 1px solid var(--line);
+		padding: 0.12rem 0.55rem;
+		border-radius: 999px;
+		cursor: pointer;
+	}
+
+	.chip.on {
+		color: var(--accent);
+		border-color: rgba(var(--accent-rgb), 0.4);
+		background: rgba(var(--accent-rgb), 0.12);
 	}
 
 	.result-count {

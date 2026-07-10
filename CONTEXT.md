@@ -46,6 +46,10 @@ Every song available under the music directory — the pool a Playlist draws fro
 _On Mobile_: a pool of songs imported into the app rather than auto-scanned from a directory; still the pool a Playlist draws from.
 _Avoid_: Database, catalog, song database.
 
+**Unused**:
+A Library song that appears in neither phase's Playlist — not yet drawn from the pool. A checkable property of the data, live at all times: adding the song to any Playlist makes it used, removing its last occurrence makes it Unused again.
+_Avoid_: New, undiscovered, unplayed.
+
 **Position**:
 The playback offset within the current song. Owned by the Backend, so any Player resumes at the same point.
 _Avoid_: Progress, time, offset (in user-facing language).
