@@ -28,6 +28,7 @@
 	let importing = $state(false);
 	let error: string | null = $state(null);
 	let notice: string | null = $state(null);
+	let noticeTimeout: ReturnType<typeof setTimeout> | undefined;
 	let pickerFolders = $state(false);
 	let fileInput: HTMLInputElement | undefined = $state();
 	let folderInput: HTMLInputElement | undefined = $state();
@@ -116,12 +117,18 @@
 		try {
 			const result = await store.importFiles(files);
 			await refresh();
-			notice = summarise(result.added.length, result.duplicates.length);
+			showNotice(summarise(result.added.length, result.duplicates.length));
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Import failed';
 		} finally {
 			importing = false;
 		}
+	}
+
+	function showNotice(text: string): void {
+		notice = text;
+		clearTimeout(noticeTimeout);
+		noticeTimeout = setTimeout(() => (notice = null), 4000);
 	}
 
 	function summarise(added: number, duplicates: number): string {
