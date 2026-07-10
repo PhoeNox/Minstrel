@@ -1,3 +1,5 @@
+import type { PlaylistsDto } from '$shared/ui/state';
+import { unusedSongs } from '$shared/ui/unused';
 import type { SongRecord } from './musicStore';
 
 export interface ImportPartition {
@@ -28,4 +30,20 @@ export function partitionNew(existingIds: Set<string>, candidates: SongRecord[])
 // so the Storyteller re-imports before the game rather than hitting silence mid-session.
 export function findEvicted(records: SongRecord[], presentBytes: Set<string>): SongRecord[] {
 	return records.filter((record) => !presentBytes.has(record.id));
+}
+
+// The Library tab's visible list: the Unused chip narrows to songs in neither Playlist
+// (evicted records included — they stay discoverable for re-import), then the search
+// query narrows by title or artist; the two combine as AND.
+export function filterLibrary(
+	songs: SongRecord[],
+	playlists: PlaylistsDto,
+	search: string,
+	unusedOnly: boolean
+): SongRecord[] {
+	const searchable = unusedOnly ? unusedSongs(songs, playlists) : songs;
+	const query = search.toLowerCase();
+	return searchable.filter(
+		(song) => song.artist.toLowerCase().includes(query) || song.title.toLowerCase().includes(query)
+	);
 }

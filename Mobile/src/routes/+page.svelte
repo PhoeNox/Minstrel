@@ -4,6 +4,7 @@
 	import { createLocalSession, type LocalSession } from '$lib/localSession';
 	import { MobileAudioEngine } from '$lib/mobileAudioEngine';
 	import { audioFiles, pickDirectoryFiles, supportsDirectoryPicker } from '$lib/importPicker';
+	import { filterLibrary } from '$lib/library';
 	import Playlist from '$shared/ui/Playlist.svelte';
 	import { commandError, report } from '$shared/ui/commandError';
 	import { emptyState, type PlaybackState } from '$shared/ui/state';
@@ -23,6 +24,9 @@
 	let songs: SongRecord[] = $state([]);
 	let evicted: SongRecord[] = $state([]);
 	let evictedIds = $derived(new Set(evicted.map((entry) => entry.id)));
+	let search = $state('');
+	let unusedOnly = $state(false);
+	let filtered = $derived(filterLibrary(songs, snapshot.playlists, search, unusedOnly));
 
 	let tab: Tab = $state('day');
 	let importing = $state(false);
@@ -208,32 +212,59 @@
 			{#if songs.length === 0}
 				<p class="empty">No songs yet. Import some to begin.</p>
 			{:else}
-				<ul class="songs">
-					{#each songs as song (song.id)}
-						<li class="song" class:gone={evictedIds.has(song.id)}>
-							<span class="details">
-								<span class="title">{song.title}</span>
-								<span class="artist">{song.artist}</span>
-							</span>
-							{#if evictedIds.has(song.id)}
-								<span class="reimport">re-import</span>
-							{:else}
-								<span class="length">{formatLength(song.length)}</span>
-							{/if}
-							<button
-								class="add day"
-								title="Add to Day playlist"
-								onclick={() => session && report(session.addSong('Day', song.id))}>☀</button
-							>
-							<button
-								class="add night"
-								title="Add to Night playlist"
-								onclick={() => session && report(session.addSong('Night', song.id))}>☾</button
-							>
-							<button class="remove" aria-label="Remove" onclick={() => removeFromLibrary(song)}>✕</button>
-						</li>
-					{/each}
-				</ul>
+				<div class="searchbar">
+					<span class="search-glyph">⌕</span>
+					<input
+						class="search"
+						type="search"
+						placeholder="Search the library…"
+						bind:value={search}
+					/>
+					<button
+						class="chip"
+						class:on={unusedOnly}
+						aria-pressed={unusedOnly}
+						onclick={() => (unusedOnly = !unusedOnly)}>Unused</button
+					>
+					<span class="result-count">{filtered.length}</span>
+				</div>
+
+				{#if filtered.length === 0}
+					<p class="empty">
+						{unusedOnly && search === ''
+							? 'Every song is already in a playlist.'
+							: 'No matches.'}
+					</p>
+				{:else}
+					<ul class="songs">
+						{#each filtered as song (song.id)}
+							<li class="song" class:gone={evictedIds.has(song.id)}>
+								<span class="details">
+									<span class="title">{song.title}</span>
+									<span class="artist">{song.artist}</span>
+								</span>
+								{#if evictedIds.has(song.id)}
+									<span class="reimport">re-import</span>
+								{:else}
+									<span class="length">{formatLength(song.length)}</span>
+								{/if}
+								<button
+									class="add day"
+									title="Add to Day playlist"
+									onclick={() => session && report(session.addSong('Day', song.id))}>☀</button
+								>
+								<button
+									class="add night"
+									title="Add to Night playlist"
+									onclick={() => session && report(session.addSong('Night', song.id))}>☾</button
+								>
+								<button class="remove" aria-label="Remove" onclick={() => removeFromLibrary(song)}
+									>✕</button
+								>
+							</li>
+						{/each}
+					</ul>
+				{/if}
 			{/if}
 
 			<input
@@ -455,6 +486,71 @@
 		text-align: center;
 		color: var(--muted);
 		font-style: italic;
+	}
+
+	.searchbar {
+		position: sticky;
+		top: -1rem;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.6rem 0.75rem;
+		margin: 0 0 0.75rem;
+		border: 1px solid var(--panel-edge);
+		border-radius: 12px;
+		background: var(--panel);
+	}
+
+	.search-glyph {
+		font-size: 1.1rem;
+		color: var(--muted);
+	}
+
+	.search {
+		flex: 1;
+		min-width: 0;
+		border: none;
+		background: none;
+		color: var(--text);
+		font-family: var(--body);
+		font-size: 1.05rem;
+		outline: none;
+	}
+
+	.search::placeholder {
+		color: var(--muted);
+	}
+
+	.search::-webkit-search-cancel-button {
+		filter: grayscale(1) opacity(0.5);
+	}
+
+	.chip {
+		flex: none;
+		font-family: var(--body);
+		font-size: 0.82rem;
+		color: var(--muted);
+		background: none;
+		border: 1px solid var(--line);
+		padding: 0.12rem 0.55rem;
+		border-radius: 999px;
+		cursor: pointer;
+	}
+
+	.chip.on {
+		color: var(--accent);
+		border-color: rgba(var(--accent-rgb), 0.4);
+		background: rgba(var(--accent-rgb), 0.12);
+	}
+
+	.result-count {
+		font-size: 0.82rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--muted);
+		background: var(--row);
+		padding: 0.12rem 0.55rem;
+		border-radius: 999px;
 	}
 
 	.songs {
