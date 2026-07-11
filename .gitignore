@@ -18,4 +18,5 @@ Player/.svelte-kit/
 Remote/.svelte-kit/
 Mobile/.svelte-kit/
 Mobile/build/
+Mobile/test-results/
 Backend/wwwroot/

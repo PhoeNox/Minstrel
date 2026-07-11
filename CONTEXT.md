@@ -16,6 +16,10 @@ _Avoid_: Playing client, display, output.
 A frontend that projects backend state into a control surface and emits commands (play, pause, switch phase, select song, set gain, run timer). Holds no playback state of its own.
 _Avoid_: Controller, control client, admin.
 
+**Desktop**:
+The original multi-device deployment of Minstrel: one **Backend** on a laptop or TV-connected machine, a **Player** on the device wired to the speakers, and a **Remote** on a phone, joined over local Wi-Fi. The counterpart of **Mobile**; same domain and language, different topology.
+_Avoid_: Classic, host(ed), server version.
+
 **Mobile**:
 The standalone single-device variant of Minstrel, for running a game off a phone alone. It collapses the **Backend**, **Player**, and **Remote** roles into one offline app: it owns its own state, renders its own sound, and is its own control surface, with no network between them. Same domain and language as the desktop deployment (Game Phases, Playlists, Library, Timer, Fade); only the topology differs.
 _Avoid_: App, native app, mini.

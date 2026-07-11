@@ -33,9 +33,10 @@ test: player
 	cd Remote && npm install && npm test
 	cd Mobile && npm install && npm test
 
-# Run only the Playwright E2E snapshot suite (builds the frontends first). Local-only: too unstable for CI.
-e2e: player remote
+# Run only the Playwright E2E snapshot suites (build the frontends first). Local-only: too unstable for CI.
+e2e: player remote mobile
 	dotnet test --project E2E.Tests/E2E.Tests.csproj -c {{configuration}} --ignore-exit-code 8
+	cd Mobile && npx playwright install chromium && npx playwright test
 
 # Build the Player + Remote bundles then run the Backend (serves both, auto-opens the Player).
 run: player remote
