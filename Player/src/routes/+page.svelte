@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { playbackStore } from '$lib/sseStore';
-	import { AudioEngine } from '$lib/audioEngine';
-	import { PlaybackSync } from '$lib/playbackSync';
-	import { emptyState, type PlaybackState } from '$lib/state';
-	import { fetchRemoteUrl } from '$lib/connection';
-	import { fetchVersion } from '$lib/version';
-	import { qrSvg } from '$lib/qr';
+	import { playbackStore } from '#lib/sseStore.js';
+	import { AudioEngine } from '#lib/audioEngine.js';
+	import { PlaybackSync } from '#lib/playbackSync.js';
+	import { emptyState, type PlaybackState } from '#lib/state.js';
+	import { fetchRemoteUrl } from '#lib/connection.js';
+	import { fetchVersion } from '#lib/version.js';
+	import { qrSvg } from '#lib/qr.js';
 	import { timerStore } from '$shared/timer';
 	import { deriveTimeLeft, type TimerAnchor } from '$shared/core';
 

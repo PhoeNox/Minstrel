@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { browserMusicStore, type MusicStore, type SongRecord } from '$lib/musicStore';
-	import { createLocalSession, type LocalSession } from '$lib/localSession';
-	import { MobileAudioEngine } from '$lib/mobileAudioEngine';
-	import { audioFiles, pickDirectoryFiles, supportsDirectoryPicker } from '$lib/importPicker';
-	import { filterLibrary } from '$lib/library';
+	import { browserMusicStore, type MusicStore, type SongRecord } from '#lib/musicStore.js';
+	import { createLocalSession, type LocalSession } from '#lib/localSession.js';
+	import { MobileAudioEngine } from '#lib/mobileAudioEngine.js';
+	import { audioFiles, pickDirectoryFiles, supportsDirectoryPicker } from '#lib/importPicker.js';
+	import { filterLibrary } from '#lib/library.js';
 	import Playlist from '$shared/ui/Playlist.svelte';
 	import { commandError, report } from '$shared/ui/commandError';
 	import { emptyState, type PlaybackState } from '$shared/ui/state';

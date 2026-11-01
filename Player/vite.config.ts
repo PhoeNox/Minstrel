@@ -1,3 +1,5 @@
+import adapter from '@sveltejs/adapter-static';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
@@ -15,5 +17,15 @@ export default defineConfig({
 			'/system': backend
 		}
 	},
-	plugins: [sveltekit()]
+	plugins: [
+		sveltekit({
+			preprocess: vitePreprocess(),
+			adapter: adapter({
+				pages: '../Backend/wwwroot',
+				assets: '../Backend/wwwroot',
+				fallback: 'index.html'
+			}),
+			alias: { $shared: '../shared' }
+		})
+	]
 });

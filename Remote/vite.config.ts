@@ -1,3 +1,5 @@
+import adapter from '@sveltejs/adapter-static';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
@@ -19,5 +21,20 @@ export default defineConfig({
 			'/playlist': backend
 		}
 	},
-	plugins: [sveltekit()]
+	plugins: [
+		sveltekit({
+			preprocess: vitePreprocess(),
+			adapter: adapter({
+				pages: '../Backend/wwwroot/remote',
+				assets: '../Backend/wwwroot/remote',
+				fallback: 'index.html'
+			}),
+			paths: {
+				// BASE_PATH is the bare segment (e.g. "remote"); the leading slash is added here so the
+				// build recipe never passes a POSIX-looking path that Git Bash mangles on Windows.
+				base: process.env.BASE_PATH ? '/' + process.env.BASE_PATH : ''
+			},
+			alias: { $shared: '../shared' }
+		})
+	]
 });
