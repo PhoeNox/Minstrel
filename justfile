@@ -4,7 +4,13 @@ configuration := "Release"
 # Primary pre-push gate: full build + every test, including the local-only E2E snapshot suite.
 push-check: build test e2e
 
-ci: build test
+ci: build check test
+
+# Typecheck the SvelteKit frontends (svelte-check).
+check:
+	cd Player && npm install && npm run check
+	cd Remote && npm install && npm run check
+	cd Mobile && npm install && npm run check
 
 # Build the SvelteKit Player bundle into Backend/wwwroot.
 player:
