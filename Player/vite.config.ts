@@ -24,8 +24,7 @@ export default defineConfig({
 				pages: '../Backend/wwwroot',
 				assets: '../Backend/wwwroot',
 				fallback: 'index.html'
-			}),
-			alias: { $shared: '../shared' }
+			})
 		})
 	]
 });

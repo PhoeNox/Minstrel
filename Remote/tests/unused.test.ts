@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { PlaylistDto, PlaylistsDto, SongDto } from '$shared/ui/state';
-import { unusedSongs } from '$shared/ui/unused';
+import type { PlaylistDto, PlaylistsDto, SongDto } from 'minstrel-shared/ui/state';
+import { unusedSongs } from 'minstrel-shared/ui/unused';
 
 const chime: SongDto = { id: 'chime', title: 'Chime', artist: 'Bell', length: 90, replayGain: null };
 const dirge: SongDto = { id: 'dirge', title: 'Dirge', artist: 'Choir', length: 120, replayGain: null };

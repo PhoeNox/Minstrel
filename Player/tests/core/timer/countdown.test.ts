@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import * as countdownTimer from '$shared/core/countdownTimer';
-import { IDLE_TIMER } from '$shared/core';
+import * as countdownTimer from 'minstrel-shared/core/countdownTimer';
+import { IDLE_TIMER } from 'minstrel-shared/core';
 
 describe('start / deriveTimeLeft', () => {
 	it('counts down with elapsed time while running', () => {

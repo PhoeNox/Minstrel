@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { report } from '$shared/ui/commandError';
-	import type { MinstrelApi } from '$shared/ui/minstrelApi';
-	import type { PlaylistsDto, SongDto } from '$shared/ui/state';
-	import { unusedSongs } from '$shared/ui/unused';
+	import { report } from 'minstrel-shared/ui/commandError';
+	import type { MinstrelApi } from 'minstrel-shared/ui/minstrelApi';
+	import type { PlaylistsDto, SongDto } from 'minstrel-shared/ui/state';
+	import { unusedSongs } from 'minstrel-shared/ui/unused';
 
 	let {
 		api,

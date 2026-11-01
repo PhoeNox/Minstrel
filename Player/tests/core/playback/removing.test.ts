@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import * as playbackTimeline from '$shared/core/playbackTimeline';
-import * as playlists from '$shared/core/playlists';
+import * as playbackTimeline from 'minstrel-shared/core/playbackTimeline';
+import * as playlists from 'minstrel-shared/core/playlists';
 import {
 	IDLE_PLAYBACK,
 	type GamePhase,
 	type PlaybackState,
 	type PlaylistEntry,
 	type Track
-} from '$shared/core';
+} from 'minstrel-shared/core';
 import { entry } from '../fixtures';
 
 function activePlaying(

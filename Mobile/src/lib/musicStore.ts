@@ -4,7 +4,7 @@ import { idbSession } from './idbSession';
 import { musicMetadataParser, type TagParser } from './metadata';
 import { deriveSongId } from './songId';
 import { findEvicted, partitionNew } from './library';
-import type { GamePhase, PlaylistEntry } from '$shared/core';
+import type { GamePhase, PlaylistEntry } from 'minstrel-shared/core';
 
 // Library metadata for one imported song: a stable content id, the Title/Artist/Length/ReplayGain
 // read at import, plus the source file name and import time (ADR-0008). Superset of the

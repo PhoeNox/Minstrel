@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import * as playbackTimeline from '$shared/core/playbackTimeline';
-import { IDLE_PLAYBACK, type PlaybackState, type Track } from '$shared/core';
+import * as playbackTimeline from 'minstrel-shared/core/playbackTimeline';
+import { IDLE_PLAYBACK, type PlaybackState, type Track } from 'minstrel-shared/core';
 import { tracks } from '../fixtures';
 
 function playing(...songs: [string, number][]): { songs: Track[]; state: PlaybackState } {

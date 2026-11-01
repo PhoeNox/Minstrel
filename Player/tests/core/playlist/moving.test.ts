@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import * as playlists from '$shared/core/playlists';
+import * as playlists from 'minstrel-shared/core/playlists';
 import { entry } from '../fixtures';
 
 const songs = (...ids: string[]) => ids.map((id) => entry(id, 10));

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import * as playbackTimeline from '$shared/core/playbackTimeline';
-import { IDLE_PLAYBACK } from '$shared/core';
+import * as playbackTimeline from 'minstrel-shared/core/playbackTimeline';
+import { IDLE_PLAYBACK } from 'minstrel-shared/core';
 
 describe('tick', () => {
 	it('advances the anchor while playing', () => {

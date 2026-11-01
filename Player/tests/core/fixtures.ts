@@ -1,5 +1,5 @@
-import * as playbackTimeline from '$shared/core/playbackTimeline';
-import type { GamePhase, PlaybackState, PlaylistEntry, Rng, Track } from '$shared/core';
+import * as playbackTimeline from 'minstrel-shared/core/playbackTimeline';
+import type { GamePhase, PlaybackState, PlaylistEntry, Rng, Track } from 'minstrel-shared/core';
 
 export function entry(id: string, length: number): PlaylistEntry {
 	return { id, path: `${id}.mp3`, title: id, artist: id, length, replayGain: null };

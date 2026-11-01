@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import * as playbackTimeline from '$shared/core/playbackTimeline';
-import { FADE_SECONDS } from '$shared/core/playbackTimeline';
-import { IDLE_PLAYBACK, IDLE_POSITION, type PlaybackState } from '$shared/core';
+import * as playbackTimeline from 'minstrel-shared/core/playbackTimeline';
+import { FADE_SECONDS } from 'minstrel-shared/core/playbackTimeline';
+import { IDLE_PLAYBACK, IDLE_POSITION, type PlaybackState } from 'minstrel-shared/core';
 import { book, entry, selectIn, switchPhase } from '../fixtures';
 
 const withPlaylists = () =>

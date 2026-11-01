@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { PlaylistDto, PlaylistsDto } from '$shared/ui/state';
+import type { PlaylistDto, PlaylistsDto } from 'minstrel-shared/ui/state';
 import { filterLibrary, findEvicted, partitionNew } from '../src/lib/library';
 import type { SongRecord } from '../src/lib/musicStore';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import * as playbackTimeline from '$shared/core/playbackTimeline';
-import type { PositionAnchor } from '$shared/core';
+import * as playbackTimeline from 'minstrel-shared/core/playbackTimeline';
+import type { PositionAnchor } from 'minstrel-shared/core';
 
 describe('derivePosition', () => {
 	it('advances with elapsed time while playing', () => {

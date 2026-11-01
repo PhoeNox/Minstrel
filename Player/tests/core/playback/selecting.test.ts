@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import * as playbackTimeline from '$shared/core/playbackTimeline';
-import { IDLE_PLAYBACK, type PlaybackState } from '$shared/core';
+import * as playbackTimeline from 'minstrel-shared/core/playbackTimeline';
+import { IDLE_PLAYBACK, type PlaybackState } from 'minstrel-shared/core';
 import { track } from '../fixtures';
 
 const withCursors = (): PlaybackState => ({

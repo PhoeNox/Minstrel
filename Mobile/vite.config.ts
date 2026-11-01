@@ -25,8 +25,7 @@ export default defineConfig({
 				// leading slash is added here so the build recipe never passes a POSIX-looking
 				// path that Git Bash mangles on Windows.
 				base: process.env.BASE_PATH ? '/' + process.env.BASE_PATH : ''
-			},
-			alias: { $shared: '../shared' }
+			}
 		})
 	]
 });

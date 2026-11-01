@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PlaylistEntry } from '$shared/core';
+import type { PlaylistEntry } from 'minstrel-shared/core';
 import { sessionWithReplayGain, withReplayGain } from '../src/lib/legacyReplayGain';
 import type { PersistedSession, SongRecord } from '../src/lib/musicStore';
 

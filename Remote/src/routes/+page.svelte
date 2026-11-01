@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { RestApi } from '#lib/restApi.js';
-	import type { MinstrelApi } from '$shared/ui/minstrelApi';
-	import { commandError, report } from '$shared/ui/commandError';
-	import Playlist from '$shared/ui/Playlist.svelte';
+	import type { MinstrelApi } from 'minstrel-shared/ui/minstrelApi';
+	import { commandError, report } from 'minstrel-shared/ui/commandError';
+	import Playlist from 'minstrel-shared/ui/Playlist.svelte';
 	import Library from '#lib/Library.svelte';
-	import { emptyState, type PlaybackState, type SongDto } from '$shared/ui/state';
-	import { timerStore } from '$shared/timer';
-	import { deriveTimeLeft, formatTimeLeft, derivePosition, type TimerAnchor } from '$shared/core';
+	import { emptyState, type PlaybackState, type SongDto } from 'minstrel-shared/ui/state';
+	import { timerStore } from 'minstrel-shared/timer';
+	import { deriveTimeLeft, formatTimeLeft, derivePosition, type TimerAnchor } from 'minstrel-shared/core';
 
 	type Tab = 'day' | 'night' | 'library';
 

@@ -1,4 +1,4 @@
-import { derivePosition } from '$shared/core';
+import { derivePosition } from 'minstrel-shared/core';
 import { activePlaylist, inactivePlaylist, type PlaybackState, type PlaylistDto, type SongDto } from './state';
 
 export const FADE_SECONDS = 5;

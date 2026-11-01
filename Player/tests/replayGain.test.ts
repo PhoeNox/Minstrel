@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { replayGainFactor } from '$shared/replayGain';
+import { replayGainFactor } from 'minstrel-shared/replayGain';
 
 describe('replayGainFactor', () => {
 	it('leaves a song without ReplayGain uncorrected', () => {

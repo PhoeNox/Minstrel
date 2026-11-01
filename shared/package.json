@@ -1,0 +1,11 @@
+{
+  "name": "minstrel-shared",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./core": "./core/index.ts",
+    "./*.svelte": "./*.svelte",
+    "./*": "./*.ts"
+  }
+}

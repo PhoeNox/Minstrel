@@ -1,5 +1,5 @@
-import type { PlaylistsDto } from '$shared/ui/state';
-import { unusedSongs } from '$shared/ui/unused';
+import type { PlaylistsDto } from 'minstrel-shared/ui/state';
+import { unusedSongs } from 'minstrel-shared/ui/unused';
 import type { SongRecord } from './musicStore';
 
 export interface ImportPartition {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { get } from 'svelte/store';
-import type { Rng } from '$shared/core';
+import type { Rng } from 'minstrel-shared/core';
 import { createLocalSession, type SessionStore } from '../src/lib/localSession';
 import type { PersistedSession, SongRecord } from '../src/lib/musicStore';
 

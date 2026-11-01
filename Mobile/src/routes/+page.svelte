@@ -5,10 +5,10 @@
 	import { MobileAudioEngine } from '#lib/mobileAudioEngine.js';
 	import { audioFiles, pickDirectoryFiles, supportsDirectoryPicker } from '#lib/importPicker.js';
 	import { filterLibrary } from '#lib/library.js';
-	import Playlist from '$shared/ui/Playlist.svelte';
-	import { commandError, report } from '$shared/ui/commandError';
-	import { emptyState, type PlaybackState } from '$shared/ui/state';
-	import { derivePosition, deriveTimeLeft, formatTimeLeft, type TimerAnchor } from '$shared/core';
+	import Playlist from 'minstrel-shared/ui/Playlist.svelte';
+	import { commandError, report } from 'minstrel-shared/ui/commandError';
+	import { emptyState, type PlaybackState } from 'minstrel-shared/ui/state';
+	import { derivePosition, deriveTimeLeft, formatTimeLeft, type TimerAnchor } from 'minstrel-shared/core';
 
 	type Tab = 'day' | 'night' | 'library';
 

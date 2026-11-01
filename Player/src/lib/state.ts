@@ -1,4 +1,4 @@
-import type { PositionAnchor } from '$shared/core';
+import type { PositionAnchor } from 'minstrel-shared/core';
 
 export type Phase = 'Day' | 'Night';
 

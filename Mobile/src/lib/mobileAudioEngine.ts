@@ -5,7 +5,7 @@
 // app-background where Player's decoded-buffer engine would not. The decoded-PCM bufferCache
 // falls away: the browser streams each blob, so there is nothing to cache or evict.
 
-import { replayGainFactor } from '$shared/replayGain';
+import { replayGainFactor } from 'minstrel-shared/replayGain';
 
 export const FADE_SECONDS = 5;
 const GAIN_RAMP_SECONDS = 0.3;

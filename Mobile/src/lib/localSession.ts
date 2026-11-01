@@ -12,9 +12,9 @@ import {
 	type Rng,
 	type TimerAnchor,
 	type Track
-} from '$shared/core';
-import type { MinstrelApi, Snapshot } from '$shared/ui/minstrelApi';
-import { emptyState, type PlaybackState, type PlaylistDto, type SongDto } from '$shared/ui/state';
+} from 'minstrel-shared/core';
+import type { MinstrelApi, Snapshot } from 'minstrel-shared/ui/minstrelApi';
+import { emptyState, type PlaybackState, type PlaylistDto, type SongDto } from 'minstrel-shared/ui/state';
 import type { EngineTrack, PlaybackEngine } from './mobileAudioEngine';
 import type { PersistedPlaylist, PersistedSession, SongRecord } from './musicStore';
 
