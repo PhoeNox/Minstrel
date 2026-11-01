@@ -178,7 +178,7 @@ public class CrossSurfaceTests
 	}
 
 	// Strip motion and the live playback-progress fill (grows with the clock), then
-	// settle web fonts, so the Remote snapshot is stable.
+	// settle web fonts and let two frames repaint, so the Remote snapshot is stable.
 	private static async Task StabilizeRemoteAsync(IPage remote)
 	{
 		await remote.AddStyleTagAsync(new PageAddStyleTagOptions
@@ -189,6 +189,8 @@ public class CrossSurfaceTests
 				""",
 		});
 		await remote.EvaluateAsync("async () => { await document.fonts.ready; }");
+		await remote.EvaluateAsync(
+			"() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))");
 	}
 
 	// Reads the first full snapshot off the given SSE stream and returns its JSON.
