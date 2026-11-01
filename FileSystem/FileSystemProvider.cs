@@ -54,7 +54,8 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options, ILogger<F
 					Path: fullPath,
 					Title: tags.Tag.Title ?? Path.GetFileNameWithoutExtension(fullPath),
 					Artist: string.Join(", ", tags.Tag.Performers),
-					Length: tags.Properties.Duration
+					Length: tags.Properties.Duration,
+					ReplayGain: ReplayGainOf(tags.Tag)
 			);
 			return [song];
 		}
@@ -67,4 +68,7 @@ public class FileSystemProvider(IOptionsMonitor<MusicOptions> options, ILogger<F
 			return [];
 		}
 	}
+
+	private static double? ReplayGainOf(TagLib.Tag tag)
+		=> double.IsNaN(tag.ReplayGainTrackGain) ? null : tag.ReplayGainTrackGain;
 }

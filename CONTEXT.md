@@ -45,6 +45,10 @@ _Avoid_: Stopped, empty, off.
 The per-phase output level applied to a Playlist's playback. Live playback state, not persisted with the Playlist. Distinct from Fade, which shapes loudness over time at a song's start or stop.
 _Avoid_: Volume, level.
 
+**ReplayGain**:
+A per-song loudness correction read from the song's tags, applied on top of Gain so songs play at a consistent loudness. Static song data, not playback state. Only ever attenuates; a song without it plays uncorrected. Never applied to the Gong.
+_Avoid_: Normalization, track gain, loudness.
+
 **Library**:
 Every song available under the music directory — the pool a Playlist draws from. Static reference data, loaded once; not part of replicable playback state.
 _On Mobile_: a pool of songs imported into the app rather than auto-scanned from a directory; still the pool a Playlist draws from.

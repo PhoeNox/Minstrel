@@ -1,5 +1,6 @@
 import { BUFFER_CACHE_BYTES, evictions, type CachedBuffer } from './bufferCache';
 import { FADE_SECONDS, type AudioOperation } from './reconciler';
+import { replayGainFactor } from './replayGain';
 
 const GAIN_RAMP_SECONDS = 0.3;
 
@@ -58,7 +59,7 @@ export class AudioEngine {
 	async apply(operations: AudioOperation[]): Promise<void> {
 		for (const operation of operations) {
 			if (operation.type === 'play') {
-				await this.play(operation.songId, operation.offset, operation.gain);
+				await this.play(operation.songId, operation.offset, operation.gain, operation.replayGain);
 			} else if (operation.type === 'set-gain') {
 				this.setLeadGain(operation.gain);
 			} else if (operation.type === 'retain') {
@@ -98,7 +99,7 @@ export class AudioEngine {
 		return this.gongBuffer;
 	}
 
-	private async play(songId: string, offset: number, target: number): Promise<void> {
+	private async play(songId: string, offset: number, target: number, replayGain: number | null): Promise<void> {
 		await this.context.resume();
 		// Fade the outgoing voice out before awaiting the incoming buffer: a cold
 		// fetch + decode must not hold the current song at full volume. With the
@@ -114,9 +115,13 @@ export class AudioEngine {
 		gain.gain.linearRampToValueAtTime(target, now + FADE_SECONDS);
 		gain.connect(this.context.destination);
 
+		const replayGainNode = this.context.createGain();
+		replayGainNode.gain.value = replayGainFactor(replayGain);
+		replayGainNode.connect(gain);
+
 		const source = this.context.createBufferSource();
 		source.buffer = buffer;
-		source.connect(gain);
+		source.connect(replayGainNode);
 		source.start(0, offset);
 
 		const handle = this.nextHandle++;

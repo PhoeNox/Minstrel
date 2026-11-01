@@ -182,4 +182,17 @@ public class PlaybackEndpointsTests
 
 		await Verify(snapshot);
 	}
+
+	[Test]
+	public async Task Sse_CarriesEachSongsReplayGain()
+	{
+		var tagged = TestSongs.At("a.mp3") with { ReplayGain = -6.5 };
+		await using var app = new MinstrelApp(new FakeFileSystem(day: [tagged], night: []));
+		var client = app.CreateClient();
+
+		var data = await Sse.FirstData(client, "/playback/sse");
+
+		var snapshot = JsonSerializer.Deserialize<StateSnapshot>(data!, Json)!;
+		await Assert.That(snapshot.Playlists.Day.Songs.Single().ReplayGain).IsEqualTo(-6.5);
+	}
 }

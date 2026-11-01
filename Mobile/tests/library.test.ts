@@ -13,7 +13,7 @@ const record = (id: string): SongRecord => ({
 });
 
 const playlist = (songs: SongRecord[]): PlaylistDto => ({
-	songs,
+	songs: songs.map((song) => ({ ...song, replayGain: null })),
 	currentIndex: null,
 	gain: 1,
 	resumeOffset: 0

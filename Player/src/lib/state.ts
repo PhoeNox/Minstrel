@@ -7,6 +7,7 @@ export interface SongDto {
 	title: string;
 	artist: string;
 	length: number;
+	replayGain: number | null;
 }
 
 export interface PlaylistDto {

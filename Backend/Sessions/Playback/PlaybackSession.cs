@@ -237,7 +237,7 @@ public sealed class PlaybackSession(
 
 	private static PlaylistEntry ToEntry(PoolEntry entry)
 		=> new(entry.Id, entry.Song.Path, entry.Song.Title, entry.Song.Artist,
-					entry.Song.Length.TotalSeconds);
+					entry.Song.Length.TotalSeconds, entry.Song.ReplayGain);
 
 	private static Track[] ToTracks(PlaylistEntry[] entries)
 		=> entries.Select(entry => ToTrack(entry)!).ToArray();

@@ -37,6 +37,30 @@ public class FileSystemProviderTests
 		await Assert.That(warning.Message).Contains("corrupt.mp3");
 		await Assert.That(warning.Exception).IsNotNull();
 	}
+
+	[Test]
+	public async Task ReadsTheReplayGainTrackGainInDecibels()
+	{
+		using var music = new TempMusicDirectory();
+		music.CopyReplayGainTaggedSong("tagged.mp3", replayGain: -6.5);
+		var provider = new FileSystemProvider(StaticOptions.For(music.Path), new CapturingLogger<FileSystemProvider>());
+
+		var song = provider.ReadSongs(provider.EnumerateSongs()).Single();
+
+		await Assert.That(song.ReplayGain).IsEqualTo(-6.5);
+	}
+
+	[Test]
+	public async Task ReadsNoReplayGainWhenTheTagIsAbsent()
+	{
+		using var music = new TempMusicDirectory();
+		music.CopyReadableSong("untagged.mp3");
+		var provider = new FileSystemProvider(StaticOptions.For(music.Path), new CapturingLogger<FileSystemProvider>());
+
+		var song = provider.ReadSongs(provider.EnumerateSongs()).Single();
+
+		await Assert.That(song.ReplayGain).IsNull();
+	}
 }
 
 file sealed class TempMusicDirectory : IDisposable
@@ -52,6 +76,15 @@ file sealed class TempMusicDirectory : IDisposable
 
 	public void CopyReadableSong(string name)
 		=> File.Copy(Fixture, System.IO.Path.Combine(Path, name));
+
+	public void CopyReplayGainTaggedSong(string name, double replayGain)
+	{
+		var path = System.IO.Path.Combine(Path, name);
+		File.Copy(Fixture, path);
+		using var file = TagLib.File.Create(path);
+		file.GetTag(TagLib.TagTypes.Id3v2, create: true).ReplayGainTrackGain = replayGain;
+		file.Save();
+	}
 
 	public void WriteUnreadableFile(string name)
 		=> File.WriteAllBytes(System.IO.Path.Combine(Path, name), [0x00, 0x01, 0x02, 0x03]);

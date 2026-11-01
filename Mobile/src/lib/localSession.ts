@@ -343,5 +343,5 @@ function toTracks(entries: PlaylistEntry[]): Track[] {
 }
 
 function toSongDto(record: SongRecord | PlaylistEntry): SongDto {
-	return { id: record.id, title: record.title, artist: record.artist, length: record.length };
+	return { id: record.id, title: record.title, artist: record.artist, length: record.length, replayGain: null };
 }

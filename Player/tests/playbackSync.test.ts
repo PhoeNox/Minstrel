@@ -75,7 +75,7 @@ describe('PlaybackSync', () => {
 		sync.attach(engine);
 		await flush();
 
-		expect(engine.applied).toEqual([[{ type: 'play', songId: 'a', offset: 0, gain: 1 }]]);
+		expect(engine.applied).toEqual([[{ type: 'play', songId: 'a', offset: 0, gain: 1, replayGain: null }]]);
 		sync.stop();
 	});
 
@@ -121,7 +121,7 @@ describe('PlaybackSync', () => {
 		sync.attach(engine);
 		await flush();
 
-		expect(engine.applied).toEqual([[{ type: 'play', songId: 'a', offset: 0, gain: 1 }]]);
+		expect(engine.applied).toEqual([[{ type: 'play', songId: 'a', offset: 0, gain: 1, replayGain: null }]]);
 		sync.stop();
 	});
 

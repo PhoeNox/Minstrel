@@ -42,7 +42,7 @@ describe('AudioEngine audio fetch boundary', () => {
 		);
 		const engine = new AudioEngine();
 
-		await expect(engine.apply([{ type: 'play', songId: 'gone', offset: 0, gain: 1 }])).rejects.toThrow(
+		await expect(engine.apply([{ type: 'play', songId: 'gone', offset: 0, gain: 1, replayGain: null }])).rejects.toThrow(
 			/404/
 		);
 		expect(context.decodeAudioData).not.toHaveBeenCalled();
@@ -110,10 +110,10 @@ describe('AudioEngine audio fetch boundary', () => {
 		);
 
 		const engine = new AudioEngine();
-		await engine.apply([{ type: 'play', songId: 'first', offset: 0, gain: 1 }]);
+		await engine.apply([{ type: 'play', songId: 'first', offset: 0, gain: 1, replayGain: null }]);
 		const leadGain = gains[0];
 
-		const pending = engine.apply([{ type: 'play', songId: 'second', offset: 0, gain: 1 }]);
+		const pending = engine.apply([{ type: 'play', songId: 'second', offset: 0, gain: 1, replayGain: null }]);
 		await Promise.resolve();
 		await Promise.resolve();
 
@@ -148,5 +148,30 @@ describe('AudioEngine audio fetch boundary', () => {
 
 		expect(source.disconnect).toHaveBeenCalled();
 		expect(amplifier.disconnect).toHaveBeenCalled();
+	});
+
+	it('routes each voice through a fixed ReplayGain node ahead of its fade node', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => Promise.resolve(response({ ok: true, status: 200 })))
+		);
+		const node = () => ({
+			gain: { value: 1, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
+			connect: vi.fn()
+		});
+		const fade = node();
+		const replayGain = node();
+		const source = { buffer: null as AudioBuffer | null, connect: vi.fn(), start: vi.fn() };
+		context.createGain.mockReturnValueOnce(fade).mockReturnValueOnce(replayGain);
+		context.createBufferSource.mockReturnValue(source);
+		const engine = new AudioEngine();
+
+		await engine.apply([{ type: 'play', songId: 'quiet', offset: 0, gain: 0.8, replayGain: -6 }]);
+
+		expect(source.connect).toHaveBeenCalledWith(replayGain);
+		expect(replayGain.gain.value).toBeCloseTo(0.501187, 6);
+		expect(replayGain.connect).toHaveBeenCalledWith(fade);
+		expect(fade.connect).toHaveBeenCalledWith(context.destination);
+		expect(fade.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.8, expect.any(Number));
 	});
 });

@@ -9,7 +9,13 @@ const at = (offset: number, anchorTimestamp: number, isPlaying = true) => ({
 	isPlaying
 });
 
-const song = (id: string, length = 100): SongDto => ({ id, title: id, artist: id, length });
+const song = (id: string, length = 100, replayGain: number | null = null): SongDto => ({
+	id,
+	title: id,
+	artist: id,
+	length,
+	replayGain
+});
 
 const emptyGraph: AudioGraph = {
 	leadSongId: null,
@@ -38,7 +44,7 @@ describe('reconcile', () => {
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'play', songId: 'X', offset: 13, gain: 1 }]);
+		expect(operations).toEqual([{ type: 'play', songId: 'X', offset: 13, gain: 1, replayGain: null }]);
 	});
 
 	it('does nothing when the lead already plays the desired song in step', () => {
@@ -68,7 +74,7 @@ describe('reconcile', () => {
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'play', songId: 'a', offset: 0, gain: 1 }]);
+		expect(operations).toEqual([{ type: 'play', songId: 'a', offset: 0, gain: 1, replayGain: null }]);
 	});
 
 	it('crossfades into the next song as the current one nears its end', () => {
@@ -78,7 +84,7 @@ describe('reconcile', () => {
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'play', songId: 'b', offset: 0, gain: 1 }]);
+		expect(operations).toEqual([{ type: 'play', songId: 'b', offset: 0, gain: 1, replayGain: null }]);
 	});
 
 	it('crossfades a single-song playlist into a fresh copy of itself when it loops', () => {
@@ -88,7 +94,7 @@ describe('reconcile', () => {
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'play', songId: 'a', offset: 0, gain: 1 }]);
+		expect(operations).toEqual([{ type: 'play', songId: 'a', offset: 0, gain: 1, replayGain: null }]);
 	});
 
 	it('does not crossfade before the current song nears its end', () => {
@@ -243,6 +249,22 @@ describe('reconcile', () => {
 			4000
 		);
 
-		expect(operations).toEqual([{ type: 'play', songId: 'b', offset: 0, gain: 0.4 }]);
+		expect(operations).toEqual([{ type: 'play', songId: 'b', offset: 0, gain: 0.4, replayGain: null }]);
+	});
+
+	it('fades the desired song in with its ReplayGain', () => {
+		const operations = reconcile(playingDay('a', [song('a', 100, -6.5)]), emptyGraph, 4000);
+
+		expect(operations).toEqual([{ type: 'play', songId: 'a', offset: 0, gain: 1, replayGain: -6.5 }]);
+	});
+
+	it('crossfades the next song in with its own ReplayGain as the current one ends', () => {
+		const operations = reconcile(
+			playingDay('a', [song('a', 100, -2), song('b', 100, -9)]),
+			{ leadSongId: 'a', leadPosition: 96, leadGain: 1, loadedSongIds: ['a', 'b'], retainedSongIds: ['b'] },
+			4000
+		);
+
+		expect(operations).toEqual([{ type: 'play', songId: 'b', offset: 0, gain: 1, replayGain: -9 }]);
 	});
 });

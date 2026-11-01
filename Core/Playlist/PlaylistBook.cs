@@ -23,4 +23,5 @@ public sealed record PlaylistEntry(
 		string Path,
 		string Title,
 		string Artist,
-		double Length);
+		double Length,
+		double? ReplayGain);

@@ -4,7 +4,7 @@ using Core;
 using Core.Playlist;
 using Core.Playback;
 
-public sealed record SongDto(string Id, string Title, string Artist, double Length);
+public sealed record SongDto(string Id, string Title, string Artist, double Length, double? ReplayGain);
 
 public sealed record PlaylistDto(SongDto[] Songs, int? CurrentIndex, double Gain, double ResumeOffset);
 
@@ -39,7 +39,7 @@ public static class SnapshotMapper
 			phase.ResumeOffset);
 
 	private static SongDto ToSongDto(PlaylistEntry entry) =>
-		new(entry.Id, entry.Title, entry.Artist, entry.Length);
+		new(entry.Id, entry.Title, entry.Artist, entry.Length, entry.ReplayGain);
 
 	private static PositionDto ToPositionDto(PositionAnchor anchor) =>
 		new(anchor.SongId, anchor.Offset, anchor.AnchorTimestamp, anchor.IsPlaying);

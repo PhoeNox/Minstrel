@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { PlaylistDto, PlaylistsDto, SongDto } from '$shared/ui/state';
 import { unusedSongs } from '$shared/ui/unused';
 
-const chime: SongDto = { id: 'chime', title: 'Chime', artist: 'Bell', length: 90 };
-const dirge: SongDto = { id: 'dirge', title: 'Dirge', artist: 'Choir', length: 120 };
-const reel: SongDto = { id: 'reel', title: 'Reel', artist: 'Fiddle', length: 150 };
+const chime: SongDto = { id: 'chime', title: 'Chime', artist: 'Bell', length: 90, replayGain: null };
+const dirge: SongDto = { id: 'dirge', title: 'Dirge', artist: 'Choir', length: 120, replayGain: null };
+const reel: SongDto = { id: 'reel', title: 'Reel', artist: 'Fiddle', length: 150, replayGain: null };
 const library: SongDto[] = [chime, dirge, reel];
 
 function playlist(songs: SongDto[]): PlaylistDto {

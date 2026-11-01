@@ -20,6 +20,6 @@ public static class LibraryEndpoints
 	private static SongDto ToSongDto(PoolEntry entry)
 	{
 		var song = entry.Song;
-		return new SongDto(entry.Id, song.Title, song.Artist, song.Length.TotalSeconds);
+		return new SongDto(entry.Id, song.Title, song.Artist, song.Length.TotalSeconds, song.ReplayGain);
 	}
 }

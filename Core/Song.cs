@@ -4,4 +4,5 @@ public record Song(
 	string Path,
 	string Title,
 	string Artist,
-	TimeSpan Length);
+	TimeSpan Length,
+	double? ReplayGain = null);

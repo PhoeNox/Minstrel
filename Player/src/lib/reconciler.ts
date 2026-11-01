@@ -1,10 +1,10 @@
 import { derivePosition } from '$shared/core';
-import { activePlaylist, inactivePlaylist, type PlaybackState, type PlaylistDto } from './state';
+import { activePlaylist, inactivePlaylist, type PlaybackState, type PlaylistDto, type SongDto } from './state';
 
 export const FADE_SECONDS = 5;
 
 export type AudioOperation =
-	| { type: 'play'; songId: string; offset: number; gain: number }
+	| { type: 'play'; songId: string; offset: number; gain: number; replayGain: number | null }
 	| { type: 'set-gain'; gain: number }
 	| { type: 'stop' }
 	| { type: 'retain'; songIds: string[] }
@@ -30,9 +30,9 @@ export function reconcile(desired: PlaybackState, current: AudioGraph, now: numb
 
 	const anticipated = next !== null && current.leadSongId === next;
 	if (current.leadSongId !== wanted && !anticipated) {
-		operations.push({ type: 'play', songId: wanted, offset: derivePosition(desired.position, now), gain });
+		operations.push(playOperation(desired, wanted, derivePosition(desired.position, now)));
 	} else if (current.leadSongId === wanted && nearingEnd(desired, current, wanted, next)) {
-		operations.push({ type: 'play', songId: next as string, offset: 0, gain });
+		operations.push(playOperation(desired, next as string, 0));
 	} else if (gain !== current.leadGain) {
 		operations.push({ type: 'set-gain', gain });
 	}
@@ -48,6 +48,11 @@ export function reconcile(desired: PlaybackState, current: AudioGraph, now: numb
 	}
 
 	return operations;
+}
+
+function playOperation(desired: PlaybackState, songId: string, offset: number): AudioOperation {
+	const gain = activePlaylist(desired).gain;
+	return { type: 'play', songId, offset, gain, replayGain: replayGainOf(desired, songId) };
 }
 
 function sameMembers(a: string[], b: string[]): boolean {
@@ -109,6 +114,13 @@ function nextSongId(desired: PlaybackState): string | null {
 }
 
 function songLength(desired: PlaybackState, songId: string): number | null {
-	const song = activePlaylist(desired).songs.find((entry) => entry.id === songId);
-	return song ? song.length : null;
+	return activeSong(desired, songId)?.length ?? null;
+}
+
+function replayGainOf(desired: PlaybackState, songId: string): number | null {
+	return activeSong(desired, songId)?.replayGain ?? null;
+}
+
+function activeSong(desired: PlaybackState, songId: string): SongDto | undefined {
+	return activePlaylist(desired).songs.find((entry) => entry.id === songId);
 }
