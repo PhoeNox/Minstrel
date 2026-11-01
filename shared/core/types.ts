@@ -15,6 +15,7 @@ export interface PlaylistEntry {
 	title: string;
 	artist: string;
 	length: number;
+	replayGain: number | null;
 }
 
 export interface PositionAnchor {

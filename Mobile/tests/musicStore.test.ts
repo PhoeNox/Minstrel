@@ -31,9 +31,14 @@ function fakeMetadata(): SongMetadataStore {
 
 // Tags keyed off the file name so each fixture has deterministic, distinct metadata
 // without decoding real audio.
-function fakeTags(): TagParser {
+function fakeTags(replayGain: number | null = null): TagParser {
 	return {
-		read: async (file) => ({ title: `Title of ${file.name}`, artist: `Artist of ${file.name}`, length: 123 })
+		read: async (file) => ({
+			title: `Title of ${file.name}`,
+			artist: `Artist of ${file.name}`,
+			length: 123,
+			replayGain
+		})
 	};
 }
 
@@ -45,13 +50,17 @@ function fakeSession(): SessionMetadataStore {
 	};
 }
 
-function makeStore(audio: AudioBytesStore = fakeAudio()): {
+function makeStore(
+	audio: AudioBytesStore = fakeAudio(),
+	tags: TagParser = fakeTags(),
+	metadata: SongMetadataStore = fakeMetadata()
+): {
 	store: MusicStore;
 	audio: AudioBytesStore;
 	persistCalls: () => number;
 } {
 	let persistCalls = 0;
-	const store = createMusicStore(audio, fakeMetadata(), fakeSession(), fakeTags(), async () => {
+	const store = createMusicStore(audio, metadata, fakeSession(), tags, async () => {
 		persistCalls += 1;
 		return true;
 	});
@@ -98,6 +107,27 @@ describe('importFiles', () => {
 		expect(result.added).toHaveLength(0);
 		expect(result.duplicates).toHaveLength(1);
 		expect(await store.songs()).toHaveLength(1);
+	});
+
+	it('records the ReplayGain read from the tags', async () => {
+		const { store } = makeStore(fakeAudio(), fakeTags(-6.5));
+
+		await store.importFiles([file()]);
+
+		const [song] = await store.songs();
+		expect(song.replayGain).toBe(-6.5);
+	});
+
+	it('refreshes the tags of a song already present when it is re-imported', async () => {
+		const audio = fakeAudio();
+		const metadata = fakeMetadata();
+		await makeStore(audio, fakeTags(null), metadata).store.importFiles([file()]);
+		const { store } = makeStore(audio, fakeTags(-9), metadata);
+
+		await store.importFiles([file()]);
+
+		const [song] = await store.songs();
+		expect(song.replayGain).toBe(-9);
 	});
 
 	it('requests persistence once across repeated imports', async () => {

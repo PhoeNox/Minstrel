@@ -2,7 +2,7 @@ import * as playbackTimeline from '$shared/core/playbackTimeline';
 import type { GamePhase, PlaybackState, PlaylistEntry, Rng, Track } from '$shared/core';
 
 export function entry(id: string, length: number): PlaylistEntry {
-	return { id, path: `${id}.mp3`, title: id, artist: id, length };
+	return { id, path: `${id}.mp3`, title: id, artist: id, length, replayGain: null };
 }
 
 export function track(id: string, length: number): Track {

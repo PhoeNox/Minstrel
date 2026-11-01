@@ -8,12 +8,13 @@ const record = (id: string): SongRecord => ({
 	title: `Title ${id}`,
 	artist: `Artist ${id}`,
 	length: 100,
+	replayGain: null,
 	name: `${id}.mp3`,
 	importedAt: 0
 });
 
 const playlist = (songs: SongRecord[]): PlaylistDto => ({
-	songs: songs.map((song) => ({ ...song, replayGain: null })),
+	songs,
 	currentIndex: null,
 	gain: 1,
 	resumeOffset: 0

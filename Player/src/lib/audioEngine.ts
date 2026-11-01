@@ -1,6 +1,6 @@
 import { BUFFER_CACHE_BYTES, evictions, type CachedBuffer } from './bufferCache';
 import { FADE_SECONDS, type AudioOperation } from './reconciler';
-import { replayGainFactor } from './replayGain';
+import { replayGainFactor } from '$shared/replayGain';
 
 const GAIN_RAMP_SECONDS = 0.3;
 

@@ -1,4 +1,4 @@
-// Title/Artist/Length read from an audio file at import — the JS-tag-parser
+// Title/Artist/Length/ReplayGain read from an audio file at import — the JS-tag-parser
 // replacement for TagLibSharp (FileSystem/), which cannot run client-side. The
 // concrete music-metadata call is the only edge, kept behind TagParser so tests
 // inject a deterministic fake instead of decoding real audio.
@@ -6,6 +6,7 @@ export interface SongTags {
 	title: string;
 	artist: string;
 	length: number;
+	replayGain: number | null;
 }
 
 export interface TagParser {
@@ -22,7 +23,8 @@ export function musicMetadataParser(): TagParser {
 			return {
 				title: metadata.common.title ?? stripExtension(file.name),
 				artist: metadata.common.artist ?? 'Unknown Artist',
-				length: metadata.format.duration ?? 0
+				length: metadata.format.duration ?? 0,
+				replayGain: metadata.common.replaygain_track_gain?.dB ?? null
 			};
 		}
 	};

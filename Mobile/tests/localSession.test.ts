@@ -16,7 +16,7 @@ function memoryStore(songs: SongRecord[] = []): SessionStore {
 }
 
 function song(id: string, length = 100): SongRecord {
-	return { id, title: `Title ${id}`, artist: `Artist ${id}`, length, name: `${id}.mp3`, importedAt: 0 };
+	return { id, title: `Title ${id}`, artist: `Artist ${id}`, length, replayGain: null, name: `${id}.mp3`, importedAt: 0 };
 }
 
 // A deterministic [0, 1) generator (mulberry32) so `shuffle` is reproducible in tests.

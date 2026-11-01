@@ -6,7 +6,7 @@ import { deriveSongId } from './songId';
 import { findEvicted, partitionNew } from './library';
 import type { GamePhase, PlaylistEntry } from '$shared/core';
 
-// Library metadata for one imported song: a stable content id, the Title/Artist/Length
+// Library metadata for one imported song: a stable content id, the Title/Artist/Length/ReplayGain
 // read at import, plus the source file name and import time (ADR-0008). Superset of the
 // `SongDto` the shared Library UI binds to.
 export interface SongRecord {
@@ -14,6 +14,7 @@ export interface SongRecord {
 	title: string;
 	artist: string;
 	length: number;
+	replayGain: number | null;
 	name: string;
 	importedAt: number;
 }
@@ -101,8 +102,8 @@ export function createMusicStore(
 	async function readCandidate(file: File): Promise<Candidate> {
 		const bytes = await file.arrayBuffer();
 		const id = await deriveSongId(bytes);
-		const { title, artist, length } = await tags.read(file);
-		return { record: { id, title, artist, length, name: file.name, importedAt: Date.now() }, bytes };
+		const songTags = await tags.read(file);
+		return { record: { id, ...songTags, name: file.name, importedAt: Date.now() }, bytes };
 	}
 
 	return {
@@ -118,10 +119,12 @@ export function createMusicStore(
 				candidates.map((candidate) => candidate.record)
 			);
 
-			// Bytes are written for every imported file — duplicates restore evicted bytes
-			// under the same id; metadata is written only for genuinely new songs.
-			for (const record of [...added, ...duplicates]) await audio.put(record.id, byId.get(record.id)!);
-			for (const record of added) await metadata.put(record);
+			// Bytes and metadata are written for every imported file — duplicates restore
+			// evicted bytes under the same id and refresh their tags.
+			for (const record of [...added, ...duplicates]) {
+				await audio.put(record.id, byId.get(record.id)!);
+				await metadata.put(record);
+			}
 
 			return { added, duplicates };
 		},

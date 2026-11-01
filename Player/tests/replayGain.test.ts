@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { replayGainFactor } from '../src/lib/replayGain';
+import { replayGainFactor } from '$shared/replayGain';
 
 describe('replayGainFactor', () => {
 	it('leaves a song without ReplayGain uncorrected', () => {

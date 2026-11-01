@@ -1,5 +1,6 @@
 import type { PersistedSession, SessionMetadataStore } from './musicStore';
 import { openMinstrelDb, promisify, SESSION_STORE } from './idb';
+import { sessionWithReplayGain } from './legacyReplayGain';
 
 // There is one session, so its snapshot lives under a single fixed key.
 const KEY = 'current';
@@ -14,7 +15,7 @@ export function idbSession(): SessionMetadataStore {
 				db.transaction(SESSION_STORE, 'readonly').objectStore(SESSION_STORE).get(KEY)
 			);
 			db.close();
-			return session ?? null;
+			return session === undefined ? null : sessionWithReplayGain(session);
 		},
 		async save(session) {
 			const db = await openMinstrelDb();

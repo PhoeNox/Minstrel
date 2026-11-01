@@ -1,5 +1,6 @@
 import type { SongMetadataStore, SongRecord } from './musicStore';
 import { openMinstrelDb, promisify, SONGS_STORE } from './idb';
+import { withReplayGain } from './legacyReplayGain';
 
 // Song metadata in IndexedDB, the durable index the OPFS bytes hang off.
 export function idbSongMetadata(): SongMetadataStore {
@@ -15,7 +16,7 @@ export function idbSongMetadata(): SongMetadataStore {
 				db.transaction(SONGS_STORE, 'readonly').objectStore(SONGS_STORE).getAll()
 			);
 			db.close();
-			return records;
+			return records.map(withReplayGain);
 		},
 		async delete(id) {
 			const db = await openMinstrelDb();

@@ -1,9 +1,11 @@
 // Mobile's audio layer (ADR-0008): the media-element rebuild of Player's `audioEngine.ts`.
-// Two `HTMLAudioElement → MediaElementAudioSourceNode → GainNode → destination` channels
+// Two `HTMLAudioElement → MediaElementAudioSourceNode → ReplayGain → fade/Gain → destination` channels
 // alternate as the lead so a song can crossfade into the next while the old one fades out,
 // and — being media elements streaming from object URLs — playback survives screen-lock and
 // app-background where Player's decoded-buffer engine would not. The decoded-PCM bufferCache
 // falls away: the browser streams each blob, so there is nothing to cache or evict.
+
+import { replayGainFactor } from '$shared/replayGain';
 
 export const FADE_SECONDS = 5;
 const GAIN_RAMP_SECONDS = 0.3;
@@ -15,6 +17,7 @@ export interface EngineTrack {
 	title: string;
 	artist: string;
 	length: number;
+	replayGain: number | null;
 }
 
 // The imperative surface LocalSession drives after each command. Kept DOM-free so the session
@@ -39,6 +42,7 @@ export interface PlaybackEngine {
 
 interface Channel {
 	el: HTMLAudioElement;
+	replayGain: GainNode;
 	gain: GainNode;
 	songId: string | null;
 	url: string | null;
@@ -83,6 +87,7 @@ export class MobileAudioEngine implements PlaybackEngine {
 		const incoming = this.idle;
 		incoming.length = track.length;
 		incoming.advanced = false;
+		incoming.replayGain.gain.value = replayGainFactor(track.replayGain);
 		await this.start(incoming, track.id, blob, offset);
 		this.fadeIn(incoming, gain);
 		if (outgoing !== null && outgoing !== incoming) {
@@ -229,11 +234,17 @@ export class MobileAudioEngine implements PlaybackEngine {
 	private createChannel(): Channel {
 		const el = new Audio();
 		el.preload = 'auto';
+		const replayGain = this.context.createGain();
 		const gain = this.context.createGain();
 		gain.gain.value = 0;
-		this.context.createMediaElementSource(el).connect(gain).connect(this.context.destination);
+		this.context
+			.createMediaElementSource(el)
+			.connect(replayGain)
+			.connect(gain)
+			.connect(this.context.destination);
 		const channel: Channel = {
 			el,
+			replayGain,
 			gain,
 			songId: null,
 			url: null,

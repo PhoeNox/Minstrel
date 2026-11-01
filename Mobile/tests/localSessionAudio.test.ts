@@ -15,8 +15,8 @@ function memoryStore(songs: SongRecord[] = []): SessionStore {
 	};
 }
 
-function song(id: string, length = 100): SongRecord {
-	return { id, title: `Title ${id}`, artist: `Artist ${id}`, length, name: `${id}.mp3`, importedAt: 0 };
+function song(id: string, length = 100, replayGain: number | null = null): SongRecord {
+	return { id, title: `Title ${id}`, artist: `Artist ${id}`, length, replayGain, name: `${id}.mp3`, importedAt: 0 };
 }
 
 function seededRng(seed: number): Rng {
@@ -33,18 +33,22 @@ function seededRng(seed: number): Rng {
 // the lead — the one piece of engine state renderAudio reads back to choose play vs re-gain.
 interface FakeEngine extends PlaybackEngine {
 	readonly calls: string[];
+	readonly played: EngineTrack[];
 }
 
 function fakeEngine(): FakeEngine {
 	const calls: string[] = [];
+	const played: EngineTrack[] = [];
 	let lead: string | null = null;
 	return {
 		calls,
+		played,
 		get currentSongId() {
 			return lead;
 		},
 		play(track: EngineTrack, offset: number, gain: number) {
 			calls.push(`play ${track.id} @${offset} g${gain}`);
+			played.push(track);
 			lead = track.id;
 		},
 		pause() {
@@ -90,6 +94,16 @@ describe('play', () => {
 		await session.play();
 
 		expect(engine.calls).toContain('play a @0 g1');
+	});
+
+	it('hands the engine the entry with its ReplayGain', async () => {
+		const engine = fakeEngine();
+		const session = newSession([song('a', 100, -6.5)], engine);
+		await session.addSong('Day', 'a');
+
+		await session.play();
+
+		expect(engine.played.at(-1)?.replayGain).toBe(-6.5);
 	});
 });
 

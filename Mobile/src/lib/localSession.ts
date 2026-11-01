@@ -82,7 +82,13 @@ export function createLocalSession(
 			return null;
 		}
 		const entry = list[index];
-		return { id: entry.id, title: entry.title, artist: entry.artist, length: entry.length };
+		return {
+			id: entry.id,
+			title: entry.title,
+			artist: entry.artist,
+			length: entry.length,
+			replayGain: entry.replayGain
+		};
 	}
 
 	// Drives the engine from the playback state a command just produced — the in-process
@@ -334,7 +340,8 @@ function toEntry(record: SongRecord): PlaylistEntry {
 		path: record.name,
 		title: record.title,
 		artist: record.artist,
-		length: record.length
+		length: record.length,
+		replayGain: record.replayGain
 	};
 }
 
@@ -343,5 +350,5 @@ function toTracks(entries: PlaylistEntry[]): Track[] {
 }
 
 function toSongDto(record: SongRecord | PlaylistEntry): SongDto {
-	return { id: record.id, title: record.title, artist: record.artist, length: record.length, replayGain: null };
+	return { id: record.id, title: record.title, artist: record.artist, length: record.length, replayGain: record.replayGain };
 }
