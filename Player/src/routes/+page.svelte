@@ -319,6 +319,7 @@
 		z-index: 1;
 		min-height: 100vh;
 		min-height: 100dvh;
+		box-sizing: border-box;
 		margin: 0;
 		padding: clamp(2rem, 4vmin, 4rem);
 		display: grid;
