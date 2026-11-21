@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { browserMusicStore, type MusicStore, type SongRecord } from '#lib/musicStore.js';
+	import {
+		browserMusicStore,
+		type ImportProgress,
+		type MusicStore,
+		type SongRecord
+	} from '#lib/musicStore.js';
 	import { createLocalSession, type LocalSession } from '#lib/localSession.js';
 	import { MobileAudioEngine } from '#lib/mobileAudioEngine.js';
 	import { audioFiles, pickDirectoryFiles, supportsDirectoryPicker } from '#lib/importPicker.js';
@@ -11,6 +16,9 @@
 	import { derivePosition, deriveTimeLeft, formatTimeLeft, type TimerAnchor } from 'minstrel-shared/core';
 
 	type Tab = 'day' | 'night' | 'library';
+	// 'gathering' spans the wait before the files arrive: the picker itself, then the
+	// device copying the picked files into the browser, which on Android can take minutes.
+	type ImportStatus = { stage: 'gathering' } | ImportProgress;
 
 	let store: MusicStore;
 	let session = $state<LocalSession>();
@@ -29,7 +37,11 @@
 	let filtered = $derived(filterLibrary(songs, snapshot.playlists, search, unusedOnly));
 
 	let tab: Tab = $state('day');
-	let importing = $state(false);
+	let importStatus = $state<ImportStatus | null>(null);
+	let importing = $derived(importStatus !== null);
+	let importFraction = $derived(
+		importStatus && importStatus.stage !== 'gathering' ? importStatus.done / importStatus.total : null
+	);
 	let error: string | null = $state(null);
 	let notice: string | null = $state(null);
 	let noticeTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -114,19 +126,32 @@
 	}
 
 	async function importFiles(files: File[]): Promise<void> {
-		if (files.length === 0) return;
-		importing = true;
+		if (files.length === 0) {
+			importStatus = null;
+			return;
+		}
 		error = null;
 		notice = null;
 		try {
-			const result = await store.importFiles(files);
+			const result = await store.importFiles(files, (progress) => (importStatus = progress));
 			await refresh();
 			showNotice(summarise(result.added.length, result.duplicates.length));
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Import failed';
 		} finally {
-			importing = false;
+			importStatus = null;
 		}
+	}
+
+	function describeImport(status: ImportStatus): string {
+		if (status.stage === 'gathering') return 'Preparing files…';
+		const verb = status.stage === 'reading' ? 'Reading' : 'Saving';
+		return `${verb} ${status.done} of ${status.total}…`;
+	}
+
+	function openPicker(input: HTMLInputElement | undefined): void {
+		importStatus = { stage: 'gathering' };
+		input?.click();
 	}
 
 	function showNotice(text: string): void {
@@ -144,15 +169,20 @@
 
 	async function pickFolder(): Promise<void> {
 		if (!pickerFolders) {
-			folderInput?.click();
+			openPicker(folderInput);
 			return;
 		}
+		importStatus = { stage: 'gathering' };
+		let files: File[];
 		try {
-			await importFiles(await pickDirectoryFiles());
+			files = await pickDirectoryFiles();
 		} catch (e) {
+			importStatus = null;
 			if (e instanceof DOMException && e.name === 'AbortError') return;
 			error = e instanceof Error ? e.message : 'Import failed';
+			return;
 		}
+		await importFiles(files);
 	}
 
 	async function handleFolder(event: Event): Promise<void> {
@@ -274,6 +304,7 @@
 				webkitdirectory
 				multiple
 				onchange={handleFolder}
+				oncancel={() => (importStatus = null)}
 			/>
 			<input
 				bind:this={fileInput}
@@ -282,11 +313,12 @@
 				accept="audio/*"
 				multiple
 				onchange={handleFiles}
+				oncancel={() => (importStatus = null)}
 			/>
 			<button class="import" disabled={importing} onclick={pickFolder}>
 				{importing ? 'Importing…' : 'Import a folder'}
 			</button>
-			<button class="import-files" disabled={importing} onclick={() => fileInput?.click()}>
+			<button class="import-files" disabled={importing} onclick={() => openPicker(fileInput)}>
 				Import individual files
 			</button>
 		{/if}
@@ -388,7 +420,18 @@
 		</div>
 	{/if}
 
-	{#if error}
+	{#if importStatus}
+		<div class="toast notice import-progress" role="status">
+			<span>{describeImport(importStatus)}</span>
+			<span class="import-bar">
+				<span
+					class="import-fill"
+					class:indeterminate={importStatus.stage === 'gathering'}
+					style:width={importFraction === null ? undefined : `${importFraction * 100}%`}
+				></span>
+			</span>
+		</div>
+	{:else if error}
 		<div class="toast" role="alert">{error}</div>
 	{:else if notice}
 		<div class="toast notice" role="status">{notice}</div>
@@ -1054,5 +1097,42 @@
 		border-color: rgba(227, 193, 119, 0.4);
 		background: linear-gradient(180deg, #221a10, #161009);
 		color: var(--accent);
+	}
+
+	.import-progress {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		width: 16rem;
+	}
+
+	.import-bar {
+		position: relative;
+		height: 4px;
+		border-radius: 2px;
+		background: rgba(var(--accent-rgb), 0.15);
+		overflow: hidden;
+	}
+
+	.import-fill {
+		position: absolute;
+		inset: 0 auto 0 0;
+		border-radius: 2px;
+		background: var(--accent);
+		transition: width 150ms linear;
+	}
+
+	.import-fill.indeterminate {
+		width: 35%;
+		animation: import-sweep 1.2s ease-in-out infinite;
+	}
+
+	@keyframes import-sweep {
+		from {
+			left: -35%;
+		}
+		to {
+			left: 100%;
+		}
 	}
 </style>

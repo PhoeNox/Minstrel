@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	createMusicStore,
 	type AudioBytesStore,
+	type ImportProgress,
 	type MusicStore,
 	type PersistedSession,
 	type SessionMetadataStore,
@@ -96,6 +97,20 @@ describe('importFiles', () => {
 
 		expect(result.added).toHaveLength(3);
 		expect(await store.songs()).toHaveLength(3);
+	});
+
+	it('reports progress after each file is read and after each is saved', async () => {
+		const { store } = makeStore();
+		const progress: ImportProgress[] = [];
+
+		await store.importFiles([file('a.mp3', [1]), file('b.mp3', [2])], (step) => progress.push(step));
+
+		expect(progress).toEqual([
+			{ stage: 'reading', done: 1, total: 2 },
+			{ stage: 'reading', done: 2, total: 2 },
+			{ stage: 'saving', done: 1, total: 2 },
+			{ stage: 'saving', done: 2, total: 2 }
+		]);
 	});
 
 	it('does not duplicate songs when the same files are re-imported', async () => {

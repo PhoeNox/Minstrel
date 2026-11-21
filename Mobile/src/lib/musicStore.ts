@@ -27,6 +27,12 @@ export interface ImportResult {
 	duplicates: SongRecord[];
 }
 
+export interface ImportProgress {
+	stage: 'reading' | 'saving';
+	done: number;
+	total: number;
+}
+
 // Audio bytes live in OPFS, keyed by song id. get returns null when the bytes are
 // missing; ids enumerates what is actually stored, the input to eviction detection.
 export interface AudioBytesStore {
@@ -67,7 +73,10 @@ export interface SessionMetadataStore {
 }
 
 export interface MusicStore {
-	importFiles(files: File[]): Promise<ImportResult>;
+	importFiles(
+		files: File[],
+		onProgress?: (progress: ImportProgress) => void
+	): Promise<ImportResult>;
 	songs(): Promise<SongRecord[]>;
 	remove(id: string): Promise<void>;
 	evictedSongs(): Promise<SongRecord[]>;
@@ -107,11 +116,20 @@ export function createMusicStore(
 	}
 
 	return {
-		async importFiles(files) {
+		async importFiles(files, onProgress = () => {}) {
 			if (files.length === 0) return { added: [], duplicates: [] };
 			await ensurePersistence();
 
-			const candidates = await Promise.all(files.map(readCandidate));
+			const candidates: Candidate[] = [];
+			for (const file of files) {
+				candidates.push(await readCandidate(file));
+				const progress: ImportProgress = {
+					stage: 'reading',
+					done: candidates.length,
+					total: files.length
+				};
+				onProgress(progress);
+			}
 			const byId = new Map(candidates.map((candidate) => [candidate.record.id, candidate.bytes]));
 			const existing = await metadata.all();
 			const { added, duplicates } = partitionNew(
@@ -121,9 +139,16 @@ export function createMusicStore(
 
 			// Bytes and metadata are written for every imported file — duplicates restore
 			// evicted bytes under the same id and refresh their tags.
-			for (const record of [...added, ...duplicates]) {
+			const imported = [...added, ...duplicates];
+			for (const [index, record] of imported.entries()) {
 				await audio.put(record.id, byId.get(record.id)!);
 				await metadata.put(record);
+				const progress: ImportProgress = {
+					stage: 'saving',
+					done: index + 1,
+					total: imported.length
+				};
+				onProgress(progress);
 			}
 
 			return { added, duplicates };
