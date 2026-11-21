@@ -5,11 +5,12 @@
 // app-background where Player's decoded-buffer engine would not. The decoded-PCM bufferCache
 // falls away: the browser streams each blob, so there is nothing to cache or evict.
 
+import { asset } from '$app/paths';
 import { replayGainFactor } from 'minstrel-shared/replayGain';
 
 export const FADE_SECONDS = 5;
 const GAIN_RAMP_SECONDS = 0.3;
-const GONG_URL = '/gong.mp3';
+const GONG_URL = asset('/gong.mp3');
 
 // The denormalized song the engine needs to play one entry and label it on the lock screen.
 export interface EngineTrack {
